@@ -1,0 +1,47 @@
+{% extends "layouts/public.html" %}
+{% block title %}Đợt hiến máu{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Đợt hiến máu" lead="Chọn một đợt phù hợp với thời gian và khu vực của bạn. Đơn đăng ký chỉ là ý định tham gia — số lần hiến được tính khi bệnh viện xác nhận lượt hiến." %}{% endblock %}
+{% block content %}
+<div class="container page-body">
+  <div class="tabs" role="tablist">
+    <a href="{% qs when='upcoming' page=None %}" class="tab {% if when == 'upcoming' %}active{% endif %}" role="tab">{% icon "calendar-clock" %} Sắp và đang diễn ra</a>
+    <a href="{% qs when='past' page=None %}" class="tab {% if when == 'past' %}active{% endif %}" role="tab">{% icon "calendar-check-2" %} Đã diễn ra</a>
+  </div>
+
+  <form method="get" class="filters" style="margin-bottom:22px">
+    <input type="hidden" name="when" value="{{ when }}">
+    <div class="field grow">
+      <label for="q">Tìm kiếm</label>
+      <div class="search-input">{% icon "search" %}<input id="q" name="q" value="{{ q }}" class="field-input" placeholder="Tên đợt, địa điểm, bệnh viện…"></div>
+    </div>
+    <div class="field">
+      <label for="province">Tỉnh/thành</label>
+      <select id="province" name="province" class="field-select">
+        <option value="">Tất cả</option>
+        {% for p in provinces %}<option value="{{ p }}" {% if p == province %}selected{% endif %}>{{ p }}</option>{% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn primary">{% icon "filter" %} Lọc</button>
+    {% if filtered %}<a href="?when={{ when }}" class="btn ghost">Xóa lọc</a>{% endif %}
+  </form>
+
+  {% if page.object_list %}
+    <div class="campaign-list">
+      {% for c in page %}{% include "public/_campaign_card.html" %}{% endfor %}
+    </div>
+    {% include "partials/pagination.html" with plain=True %}
+  {% else %}
+    <div class="panel"><div class="empty">
+      <div class="empty-icon">{% icon "calendar-search" %}</div>
+      {% if filtered %}
+        <h3>Không có đợt hiến phù hợp bộ lọc</h3>
+        <p>Thử bỏ bớt điều kiện tìm kiếm hoặc chọn tỉnh/thành khác.</p>
+        <a href="?when={{ when }}" class="btn secondary">Xóa bộ lọc</a>
+      {% else %}
+        <h3>{% if when == "upcoming" %}Chưa có đợt hiến nào sắp diễn ra{% else %}Chưa có đợt hiến nào đã diễn ra{% endif %}</h3>
+        <p>Các bệnh viện sẽ công bố đợt hiến mới tại đây.</p>
+      {% endif %}
+    </div></div>
+  {% endif %}
+</div>
+{% endblock %}

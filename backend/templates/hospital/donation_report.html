@@ -1,0 +1,47 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Báo cáo lượng máu tiếp nhận{% endblock %}
+{% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Báo cáo tiếp nhận</span>{% endblock %}
+{% block ws_title %}Báo cáo lượng máu tiếp nhận{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Tính từ lượt hiến đã xác nhận. Máu tiếp nhận không tự quy đổi thành đơn vị chế phẩm trong kho.</p>{% endblock %}
+{% block content %}
+<section class="panel" style="margin-bottom:20px"><div class="panel-body">
+  <form method="get" class="filters">
+    <div class="field"><label for="rf">Từ ngày</label><input id="rf" type="date" name="from" value="{{ from|date:'Y-m-d' }}" class="field-input"></div>
+    <div class="field"><label for="rt">Đến ngày</label><input id="rt" type="date" name="to" value="{{ to|date:'Y-m-d' }}" class="field-input"></div>
+    <div class="field grow"><label for="rc">Đợt hiến</label><select id="rc" name="campaign" class="field-select"><option value="">Tất cả</option>{% for c in campaigns %}<option value="{{ c.pk }}" {% if campaign_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }} ({{ c.start_time|vn_date }})</option>{% endfor %}</select></div>
+    <button class="btn primary" type="submit">{% icon "filter" %} Xem báo cáo</button>
+  </form>
+</div></section>
+
+<div class="grid grid-4" style="margin-bottom:20px">
+  <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lượt hiến xác nhận</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">{{ voided }} lượt đã hủy hiệu lực (không tính)</div></div>
+  <div class="stat"><div class="stat-label">{% icon "droplet" %} Toàn phần</div><div class="stat-value">{{ summary.whole_ml|vnum }}<small>ml</small></div><div class="stat-note">{{ summary.whole_count }} lượt</div></div>
+  <div class="stat"><div class="stat-label">{% icon "flask-conical" %} Thành phần</div><div class="stat-value">{{ summary.component_count }}<small>lượt</small></div><div class="stat-note">{% for c in summary.components %}{{ c.component_product__name }}: {{ c.qty|vnum }} {{ c.component_unit }}{% if not forloop.last %} · {% endif %}{% empty %}Thống kê theo loại & đơn vị{% endfor %}</div></div>
+  <div class="stat"><div class="stat-label">{% icon "circle-ellipsis" %} Hình thức khác</div><div class="stat-value">{{ summary.other_count }}<small>lượt</small></div></div>
+</div>
+
+<div class="grid grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "calendar-range" %} Theo tháng</h2></div>
+    {% if by_month %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Tháng</th><th class="num">Lượt</th><th class="num">Toàn phần (ml)</th><th class="num">Thành phần</th><th style="width:30%"></th></tr></thead>
+      <tbody>{% for m in by_month %}
+        <tr><td>{{ m.m|date:"m/Y" }}</td><td class="num">{{ m.n }}</td><td class="num">{{ m.ml|default:0|vnum }}</td><td class="num">{{ m.comp }}</td><td><div class="progress" style="height:10px" title="{{ m.n }} lượt"><span class="p-received" style="width:{{ m.n|pct:max_n }}%"></span></div></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><div class="empty-icon">{% icon "chart-column" %}</div><h3>Không có lượt hiến trong khoảng đã chọn</h3><p>Chọn khoảng thời gian rộng hơn hoặc bỏ lọc đợt hiến.</p></div>{% endif %}
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "calendar-heart" %} Theo đợt hiến</h2></div>
+    {% if by_campaign %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Đợt</th><th class="num">Lượt</th><th class="num">Toàn phần (ml)</th><th class="num">Thành phần</th></tr></thead>
+      <tbody>{% for r in by_campaign %}
+        <tr><td>{% if r.registration__campaign_id %}<a class="link" href="{% url 'bloodbank:hospital_campaign_detail' r.registration__campaign_id %}?tab=summary">{{ r.registration__campaign__name }}</a>{% else %}Ngoài đợt{% endif %}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.ml|default:0|vnum }}</td><td class="num">{{ r.comp }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><h3>Không có dữ liệu</h3></div>{% endif %}
+  </section>
+</div>
+{% endblock %}

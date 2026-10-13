@@ -1,0 +1,18 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Đặt lại mật khẩu{% endblock %}
+{% block card %}
+<h2>Đặt lại mật khẩu</h2>
+{% if invalid %}
+  <div class="notice danger" role="alert">{% icon "link-2-off" %}<div>Liên kết không hợp lệ, đã được dùng hoặc đã hết hạn.</div></div>
+  <a href="{% url 'accounts:forgot_password' %}" class="btn primary block">Gửi lại liên kết mới</a>
+{% else %}
+  <p class="lead">Chọn mật khẩu mới cho tài khoản của bạn.</p>
+  {% include "partials/form_errors.html" %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/field.html" with field=form.password %}
+    {% include "partials/field.html" with field=form.password2 %}
+    <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "key-round" %} Lưu mật khẩu mới</button>
+  </form>
+{% endif %}
+{% endblock %}

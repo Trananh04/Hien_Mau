@@ -1,0 +1,78 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+{% block title %}Bản đồ điểm hiến máu{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Bản đồ bệnh viện & điểm hiến" lead="Bệnh viện tham gia nền tảng và địa điểm các đợt hiến đang nhận đăng ký. Trang không lưu vị trí của bạn." %}{% endblock %}
+{% block content %}
+<div class="container page-body">
+  <div class="map-layout">
+    <div class="map-side">
+      <div class="map-filter">
+        <select class="field-select" data-map-province aria-label="Lọc theo tỉnh/thành" style="flex:1">
+          <option value="">Tất cả tỉnh/thành</option>
+          {% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+        </select>
+        <select class="field-select" data-map-type aria-label="Loại điểm" style="flex:1">
+          <option value="">Bệnh viện &amp; đợt hiến</option>
+          <option value="hospital">Chỉ bệnh viện</option>
+          <option value="campaign">Chỉ đợt hiến</option>
+        </select>
+      </div>
+      <div class="map-list" data-map-list aria-live="polite">
+        <div class="empty"><span class="skeleton" style="width:60%"></span><span class="skeleton" style="width:40%"></span></div>
+      </div>
+    </div>
+    <div id="map" role="region" aria-label="Bản đồ"></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script>
+(function () {
+  var listEl = document.querySelector('[data-map-list]');
+  var provinceSel = document.querySelector('[data-map-province]');
+  var typeSel = document.querySelector('[data-map-type]');
+  L.Icon.Default.imagePath = '{% static "vendor/leaflet/images/" %}';
+  var map = L.map('map').setView([16.0544, 108.2022], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  var campaignIcon = L.divIcon({ className: '', html: '<span class="blood sm" style="--drop:#0369a1"><span></span></span>', iconSize: [30, 30], iconAnchor: [15, 28] });
+  var all = []; var layer = L.layerGroup().addTo(map);
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+  function render() {
+    layer.clearLayers(); listEl.innerHTML = '';
+    var p = provinceSel.value, t = typeSel.value, shown = [];
+    all.forEach(function (it) {
+      if ((p && it.province !== p) || (t && it.type !== t)) return;
+      shown.push(it);
+      var popup = '<strong>' + esc(it.name) + '</strong><br>' + esc(it.address) + (it.time ? '<br>' + esc(it.time) : '') +
+        (it.url ? '<br><a href="' + it.url + '">Xem &amp; đăng ký</a>' : '') +
+        '<br><a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + it.lat + ',' + it.lng + '">Chỉ đường</a>';
+      it.marker = L.marker([it.lat, it.lng], it.type === 'campaign' ? { icon: campaignIcon } : {}).bindPopup(popup).addTo(layer);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'map-item';
+      btn.innerHTML = '<span class="mi-icon ' + (it.type === 'campaign' ? 'c' : 'h') + '"><i data-lucide="' + (it.type === 'campaign' ? 'calendar-heart' : 'hospital') + '"></i></span>' +
+        '<span><strong>' + esc(it.name) + '</strong><span>' + esc(it.type === 'campaign' ? it.time + ' · ' + it.area : it.area) + '</span><span>' + esc(it.address) + '</span></span>';
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.map-item.active').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active'); map.setView([it.lat, it.lng], 15); it.marker.openPopup();
+      });
+      listEl.appendChild(btn);
+    });
+    if (!shown.length) {
+      listEl.innerHTML = '<div class="empty"><h3>Không có điểm phù hợp</h3><p>Thử chọn tỉnh/thành hoặc loại điểm khác.</p></div>';
+    } else {
+      map.fitBounds(L.latLngBounds(shown.map(function (s) { return [s.lat, s.lng]; })).pad(0.2), { maxZoom: 14 });
+    }
+    window.renderIcons(listEl);
+  }
+  fetch('{% url "bloodbank:map_data" %}').then(function (r) { return r.json(); }).then(function (data) {
+    all = data.hospitals.concat(data.campaigns); render();
+  }).catch(function () {
+    listEl.innerHTML = '<div class="empty"><h3>Không tải được dữ liệu bản đồ</h3><p>Vui lòng tải lại trang.</p></div>';
+  });
+  provinceSel.addEventListener('change', render); typeSel.addEventListener('change', render);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "layouts/public.html" %}
+{% block band %}
+{% include "partials/band.html" with title=page_title greeting=greeting crumb=page_title lead=page_lead %}
+{% endblock %}
+{% block content %}
+<div class="container page-body">
+  <nav class="member-tabs" aria-label="Khu vực cá nhân">
+    <a href="{% url 'bloodbank:profile' %}" class="member-tab {% if tab == 'profile' %}active{% endif %}">{% icon "user-round" %} Hồ sơ</a>
+    <a href="{% url 'bloodbank:my_registrations' %}" class="member-tab {% if tab == 'registrations' %}active{% endif %}">{% icon "calendar-check" %} Đơn đăng ký hiến</a>
+    <a href="{% url 'bloodbank:my_history' %}" class="member-tab {% if tab == 'history' %}active{% endif %}">{% icon "droplet" %} Lịch sử hiến máu</a>
+    <a href="{% url 'bloodbank:my_patient_requests' %}" class="member-tab {% if tab == 'patient' %}active{% endif %}">{% icon "heart-pulse" %} Yêu cầu cần máu</a>
+    <a href="{% url 'bloodbank:notifications' %}" class="member-tab {% if tab == 'notifications' %}active{% endif %}">{% icon "bell" %} Thông báo{% if unread_count %} <span class="badge danger plain count">{{ unread_count }}</span>{% endif %}</a>
+  </nav>
+  {% block member %}{% endblock %}
+</div>
+{% endblock %}

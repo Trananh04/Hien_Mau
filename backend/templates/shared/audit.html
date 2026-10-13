@@ -1,0 +1,48 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{% if scope == "system" %}Nhật ký hệ thống{% else %}Nhật ký bệnh viện{% endif %}{% endblock %}
+{% block crumbs %}<span>{% if scope == "system" %}Quản trị{% else %}Bệnh viện{% endif %}</span>{% icon "chevron-right" 14 %}<span>Nhật ký</span>{% endblock %}
+{% block ws_title %}{% if scope == "system" %}Nhật ký hệ thống{% else %}Nhật ký bệnh viện{% endif %}{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Nhật ký chỉ thêm — không sửa, không xóa. Gồm thay đổi dữ liệu, truy cập bị từ chối và lần xem dữ liệu nhạy cảm.</p>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" class="filters" style="flex:1">
+      {% if scope == "system" %}<div class="field"><label for="ah">Bệnh viện</label><select id="ah" name="hospital" class="field-select"><option value="">Tất cả</option>{% for h in hospitals %}<option value="{{ h.pk }}" {% if f.hospital == h.pk|stringformat:"s" %}selected{% endif %}>{{ h.name }}</option>{% endfor %}</select></div>{% endif %}
+      <div class="field"><label for="ae">Đối tượng</label><select id="ae" name="entity" class="field-select"><option value="">Tất cả</option>{% for e in entities %}<option value="{{ e }}" {% if f.entity == e %}selected{% endif %}>{{ e|entity_label }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="aa">Hành động</label><select id="aa" name="action" class="field-select"><option value="">Tất cả</option>{% for a in actions %}<option value="{{ a }}" {% if f.action == a %}selected{% endif %}>{{ a|action_label }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="au">Người thực hiện</label><input id="au" name="actor" value="{{ f.actor }}" class="field-input" placeholder="Email hoặc tên"></div>
+      <div class="field"><label for="af">Từ ngày</label><input id="af" type="date" name="from" value="{{ f.from }}" class="field-input"></div>
+      <div class="field"><label for="at">Đến ngày</label><input id="at" type="date" name="to" value="{{ f.to }}" class="field-input"></div>
+      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+    </form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Thời điểm</th><th>Người thực hiện</th><th>Hành động</th><th>Đối tượng</th>{% if scope == "system" %}<th>Bệnh viện</th>{% endif %}<th>Chi tiết</th><th>IP</th></tr></thead>
+    <tbody>{% for log in page %}
+      <tr class="{% if log.action == 'access_denied' %}row-danger{% elif log.action == 'view_sensitive' %}row-warn{% endif %}">
+        <td data-label="Thời điểm" class="nowrap small">{{ log.created_at|vn_dt:"%H:%M:%S %d/%m/%Y" }}</td>
+        <td data-label="Người">{{ log.actor.full_name|default:"Hệ thống" }}{% if log.actor %}<span class="cell-sub">{{ log.actor.email }}</span>{% endif %}</td>
+        <td data-label="Hành động"><span class="badge {% if log.action == 'access_denied' or log.action == 'login_failed' %}danger{% elif log.action == 'view_sensitive' %}warn{% else %}neutral{% endif %} plain">{{ log.action|action_label }}</span></td>
+        <td data-label="Đối tượng">{{ log.entity_type|entity_label }} #{{ log.entity_id }}</td>
+        {% if scope == "system" %}<td data-label="Bệnh viện">{{ log.hospital.name|default:"—" }}</td>{% endif %}
+        <td data-label="Chi tiết" class="small" style="max-width:360px">
+          {% if log.old_values or log.new_values %}
+          <details><summary class="link" style="cursor:pointer">Xem dữ liệu</summary>
+            <div style="margin-top:6px;font-size:12px;line-height:1.5;overflow-wrap:anywhere">
+              {% if log.old_values %}<div><strong>Trước:</strong> {% for k, v in log.old_values.items %}{{ k }}={{ v|default_if_none:"—" }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+              {% if log.new_values %}<div><strong>Sau:</strong> {% for k, v in log.new_values.items %}{{ k }}={{ v|default_if_none:"—" }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+            </div>
+          </details>
+          {% else %}<span class="muted">—</span>{% endif %}
+        </td>
+        <td data-label="IP" class="small">{{ log.ip_address|default:"—" }}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "scroll-text" %}</div><h3>Không có bản ghi nhật ký phù hợp</h3></div>
+  {% endif %}
+</section>
+{% endblock %}

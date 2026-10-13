@@ -1,0 +1,17 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Quên mật khẩu{% endblock %}
+{% block card %}
+<h2>Quên mật khẩu</h2>
+{% if sent %}
+  <div class="notice ok" role="status">{% icon "mail-check" %}<div>Nếu email này đã đăng ký, chúng tôi vừa gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (kể cả mục Spam).</div></div>
+  <a href="{% url 'accounts:login' %}" class="btn secondary block">{% icon "arrow-left" %} Quay lại đăng nhập</a>
+{% else %}
+  <p class="lead">Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/field.html" with field=form.email %}
+    <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "send" %} Gửi liên kết</button>
+  </form>
+  <p class="auth-switch"><a href="{% url 'accounts:login' %}" class="link">Quay lại đăng nhập</a></p>
+{% endif %}
+{% endblock %}

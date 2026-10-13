@@ -1,0 +1,39 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Tài khoản công tác{% endblock %}
+{% block crumbs %}<span>Tài khoản</span>{% icon "chevron-right" 14 %}<span>Tài khoản công tác</span>{% endblock %}
+{% block ws_title %}Tài khoản công tác{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{{ user.get_role_display }} · đăng nhập tại cổng {% if user.role == "admin" %}Quản trị hệ thống{% else %}Bệnh viện{% endif %}.</p>{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "id-card" %} Thông tin tài khoản</h2></div>
+    <form method="post" novalidate>
+      {% csrf_token %}<input type="hidden" name="form" value="profile">
+      <div class="panel-body stack" style="gap:14px">
+        {% include "partials/form_errors.html" %}
+        <div class="field"><label>Email đăng nhập</label><input class="field-input" value="{{ user.email }}" disabled></div>
+        {% include "partials/field.html" with field=form.full_name %}
+        {% include "partials/field.html" with field=form.phone %}
+        {% if staff_assignments %}
+        <div class="field"><label>Bệnh viện được phân công</label>
+          <div class="row" style="gap:6px">{% for s in staff_assignments %}<span class="badge info plain">{% icon "hospital" 14 %} {{ s.hospital.name }}</span>{% endfor %}</div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="panel-foot"><button type="submit" class="btn primary">{% icon "save" %} Lưu thay đổi</button></div>
+    </form>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "key-round" %} Đổi mật khẩu</h2></div>
+    <form method="post" novalidate>
+      {% csrf_token %}<input type="hidden" name="form" value="password">
+      <div class="panel-body stack" style="gap:14px">
+        {% include "partials/field.html" with field=pw_form.old_password %}
+        {% include "partials/field.html" with field=pw_form.password %}
+        {% include "partials/field.html" with field=pw_form.password2 %}
+      </div>
+      <div class="panel-foot"><button type="submit" class="btn secondary">Đổi mật khẩu</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

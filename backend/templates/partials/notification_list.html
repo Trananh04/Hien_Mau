@@ -1,0 +1,35 @@
+{# Danh sách thông báo dùng chung: khu cá nhân (Người dùng) và khu làm việc (Bệnh viện / Quản trị). #}
+<section class="panel">
+  <div class="panel-head">
+    <div class="tabs" style="margin:0;border:0">
+      <a href="?" class="tab {% if not unread_only %}active{% endif %}">Tất cả</a>
+      <a href="?unread=1" class="tab {% if unread_only %}active{% endif %}">Chưa đọc {% if unread_count %}<span class="count">{{ unread_count }}</span>{% endif %}</a>
+    </div>
+    {% if unread_count %}
+    <form method="post" action="{% url 'bloodbank:notifications_read' %}">{% csrf_token %}<button type="submit" class="btn secondary sm">{% icon "check-check" %} Đánh dấu đã đọc tất cả</button></form>
+    {% endif %}
+  </div>
+  {% if page.object_list %}
+  <ul class="list-select" style="list-style:none">
+    {% for n in page %}
+    <li style="display:flex;gap:14px;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--line);{% if not n.read_at %}background:#fffafa{% endif %}">
+      <span class="empty-icon" style="width:40px;height:40px;margin:0;flex-shrink:0">{% icon "bell-ring" 18 %}</span>
+      <div style="flex:1;min-width:0">
+        <strong style="display:block;color:var(--ink);font-size:14.5px">{{ n.title }}</strong>
+        {% if n.body %}<span class="muted small" style="display:block;margin-top:2px">{{ n.body }}</span>{% endif %}
+        <span class="muted small">{{ n.created_at|vn_dt }}</span>
+      </div>
+      <form method="post" action="{% url 'bloodbank:notifications_read' %}">
+        {% csrf_token %}<input type="hidden" name="id" value="{{ n.pk }}">
+        {% if n.link %}<input type="hidden" name="next" value="{{ n.link }}">{% endif %}
+        {% if n.link %}<button type="submit" class="btn ghost sm">Xem {% icon "arrow-right" %}</button>
+        {% elif not n.read_at %}<button type="submit" class="btn ghost sm">Đã đọc</button>{% endif %}
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "bell-off" %}</div><h3>{% if unread_only %}Không có thông báo chưa đọc{% else %}Chưa có thông báo{% endif %}</h3><p>Thông báo xuất hiện khi đơn, lượt hiến hay yêu cầu của bạn thay đổi trạng thái.</p></div>
+  {% endif %}
+</section>

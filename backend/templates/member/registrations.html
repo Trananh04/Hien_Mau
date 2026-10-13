@@ -1,0 +1,49 @@
+{% extends "member/base.html" %}
+{% block title %}Đơn đăng ký hiến{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Đơn đăng ký hiến" lead="Đơn đăng ký là ý định tham gia. Lượt hiến chỉ được tính khi bệnh viện xác nhận tại điểm hiến." %}{% endblock %}
+{% block member %}
+<section class="panel">
+  <div class="panel-head">
+    <div class="tabs" style="margin:0;border:0">
+      <a href="?" class="tab {% if not status %}active{% endif %}">Tất cả</a>
+      <a href="?status=active" class="tab {% if status == 'active' %}active{% endif %}">Đang hiệu lực</a>
+      <a href="?status=done" class="tab {% if status == 'done' %}active{% endif %}">Đã kết thúc</a>
+    </div>
+    <a href="{% url 'bloodbank:campaigns' %}" class="btn primary sm">{% icon "plus" %} Đăng ký đợt mới</a>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap">
+    <table class="table stack-mobile">
+      <thead><tr><th>Đợt hiến</th><th>Thời gian</th><th>Hình thức dự kiến</th><th>Trạng thái</th><th class="num">Thao tác</th></tr></thead>
+      <tbody>
+      {% for r in page %}
+        <tr>
+          <td data-label="Đợt hiến"><a href="{% url 'bloodbank:campaign_detail' r.campaign.pk %}" class="cell-title">{{ r.campaign.name }}</a><span class="cell-sub">{{ r.campaign.hospital.name }} · {{ r.code }}</span></td>
+          <td data-label="Thời gian" class="nowrap">{{ r.campaign.start_time|vn_dt }}</td>
+          <td data-label="Hình thức">{{ r.get_donation_type_display|default:"Chưa rõ" }}</td>
+          <td data-label="Trạng thái">{% status_badge r %}</td>
+          <td data-label="Thao tác"><div class="table-actions">
+            {% if r.can_cancel %}
+              <form method="post" action="{% url 'bloodbank:cancel_registration' r.pk %}" data-confirm="Hủy đơn đăng ký đợt “{{ r.campaign.name }}”?" data-confirm-detail="Bạn có thể đăng ký lại nếu đợt vẫn đang nhận đăng ký." data-confirm-label="Hủy đơn">{% csrf_token %}<button type="submit" class="btn danger sm">Hủy đăng ký</button></form>
+            {% elif r.can_reregister %}
+              <form method="post" action="{% url 'bloodbank:reregister' r.pk %}">{% csrf_token %}<button type="submit" class="btn secondary sm">{% icon "rotate-ccw" %} Đăng ký lại</button></form>
+            {% elif r.status == "donated" %}
+              <a href="{% url 'bloodbank:my_history' %}" class="btn ghost sm">Xem lượt hiến</a>
+            {% else %}<span class="muted small">—</span>{% endif %}
+          </div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% icon "calendar-plus" %}</div>
+    {% if status %}<h3>Không có đơn trong nhóm này</h3><p>Chọn “Tất cả” để xem mọi đơn của bạn.</p>
+    {% else %}<h3>Bạn chưa đăng ký đợt hiến nào</h3><p>Chọn một đợt hiến gần bạn để gửi đơn đăng ký.</p>
+    <a href="{% url 'bloodbank:campaigns' %}" class="btn primary">{% icon "search" %} Tìm đợt hiến</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

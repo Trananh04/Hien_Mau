@@ -1,0 +1,54 @@
+{% extends "member/base.html" %}
+{% block title %}Yêu cầu {{ prq.request_code }}{% endblock %}
+{% block band %}{% url 'bloodbank:my_patient_requests' as lst %}{% include "partials/band.html" with title="Yêu cầu "|add:prq.request_code parent_url=lst parent_label="Yêu cầu cần máu" crumb=prq.request_code %}{% endblock %}
+{% block member %}
+{% if just_created %}
+<div class="notice ok" role="status">{% icon "circle-check" %}
+  <div><strong>Đã tiếp nhận yêu cầu {{ prq.request_code }}.</strong> Bước tiếp theo: {{ prq.hospital.name }} sẽ xác minh thông tin và liên hệ theo số {{ prq.contact_phone|phone }}. Hãy giữ điện thoại bên mình; bạn cũng sẽ nhận thông báo khi trạng thái thay đổi.</div>
+</div>
+{% endif %}
+<div class="grid grid-main-side">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "file-heart" %} Thông tin yêu cầu</h2>{% status_badge prq %}</div>
+    <div class="panel-body">
+      <dl class="dl">
+        <dt>Mã yêu cầu</dt><dd style="font-size:18px">{{ prq.request_code }}</dd>
+        <dt>Bệnh viện điều trị</dt><dd>{{ prq.hospital.name }}{% if prq.hospital.phone %} · <a class="link" href="tel:{{ prq.hospital.phone }}">{{ prq.hospital.phone|phone }}</a>{% endif %}</dd>
+        <dt>Nhóm máu</dt><dd>{% blood prq.blood_group "sm" %} {% if not prq.blood_group %}<span class="muted">Chờ bệnh viện xác minh</span>{% endif %}</dd>
+        <dt>Chế phẩm</dt><dd>{{ prq.blood_product.name|default:"Chưa rõ" }}</dd>
+        <dt>Số đơn vị</dt><dd>{{ prq.quantity_units }}</dd>
+        <dt>Cần trước</dt><dd>{{ prq.needed_by|vn_dt }}</dd>
+        <dt>Người liên hệ</dt><dd>{{ prq.contact_name }} · {{ prq.contact_phone|phone }}</dd>
+        {% if prq.patient_name %}<dt>Tên bệnh nhân</dt><dd>{{ prq.patient_name }}</dd>{% endif %}
+        {% if prq.note %}<dt>Ghi chú</dt><dd style="white-space:pre-line">{{ prq.note }}</dd>{% endif %}
+        <dt>Gửi lúc</dt><dd>{{ prq.created_at|vn_dt }}</dd>
+        {% if prq.reject_reason %}<dt>Lý do từ chối</dt><dd>{{ prq.reject_reason }}</dd>{% endif %}
+        {% if prq.resolution_note %}<dt>Kết quả xử lý</dt><dd style="white-space:pre-line">{{ prq.resolution_note }}</dd>{% endif %}
+      </dl>
+    </div>
+    {% if can_cancel %}
+    <div class="panel-foot">
+      <form method="post" action="{% url 'bloodbank:cancel_patient_request' prq.pk %}" data-confirm="Hủy yêu cầu {{ prq.request_code }}?" data-confirm-detail="Bệnh viện sẽ ngừng xử lý yêu cầu này. Thao tác không hoàn tác được." data-confirm-label="Hủy yêu cầu">{% csrf_token %}<button type="submit" class="btn danger">{% icon "x" %} Hủy yêu cầu</button></form>
+    </div>
+    {% endif %}
+  </section>
+
+  <aside class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "route" %} Tiến trình</h2></div>
+    <div class="panel-body">
+      {% if prq.status == "rejected" or prq.status == "cancelled" %}
+        <div class="notice {% if prq.status == 'rejected' %}danger{% else %}neutral{% endif %}">{% icon "circle-x" %}<div>Yêu cầu {{ prq.get_status_display|lower }}.</div></div>
+      {% endif %}
+      <ol class="timeline">
+        {% for code, label, text in steps %}
+        <li style="{% if forloop.counter0 > current %}opacity:.45{% endif %}">
+          <div class="t-title">{{ label }}{% if forloop.counter0 == current %} · <span class="badge info plain">Hiện tại</span>{% endif %}</div>
+          <div class="t-time">{{ text }}</div>
+        </li>
+        {% endfor %}
+      </ol>
+      <p class="field-help">Bạn sẽ không thấy nguồn cấp hay tồn kho của bệnh viện — bệnh viện liên hệ trực tiếp khi có kết quả.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}

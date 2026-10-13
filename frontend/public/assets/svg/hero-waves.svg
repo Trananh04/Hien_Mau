@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1672 200" preserveAspectRatio="none" aria-hidden="true"><defs>
+ <linearGradient id="dark" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#d90024"/><stop offset=".2" stop-color="#e70b2b"/><stop offset=".45" stop-color="#b60025"/><stop offset=".7" stop-color="#ee2c42"/><stop offset="1" stop-color="#d80020"/></linearGradient>
+ <linearGradient id="rose" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff8c8f" stop-opacity=".9"/><stop offset="1" stop-color="#ffbdb7" stop-opacity=".24"/></linearGradient>
+ <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f4495b" stop-opacity=".4"/><stop offset="1" stop-color="#fba4ac" stop-opacity="0"/></linearGradient>
+</defs>
+<!-- upper left red sweep -->
+<path d="M0 5 C112 5 160 49 277 121 C377 178 416 167 517 144 C605 124 636 118 721 132 C778 141 826 158 872 159 C720 146 666 124 613 132 C532 147 459 171 375 169 C230 169 145 113 0 95Z" fill="url(#dark)"/>
+<path d="M0 64 C120 75 186 138 313 158 C446 181 524 125 638 112 C715 104 763 134 831 154 C752 135 713 128 654 130 C544 129 469 189 315 181 C169 172 93 126 0 112Z" fill="#fa7480" opacity=".78"/>
+<!-- sweeping middle and pale back waves -->
+<path d="M0 91 C196 138 304 178 446 163 C581 151 619 121 722 133 C806 141 855 172 937 178 C1034 187 1184 158 1284 128 C1400 92 1539 109 1672 46 L1672 153 C1546 137 1450 149 1327 166 C1208 182 1093 181 985 179 C836 173 751 169 649 159 C524 169 398 195 273 187 C157 180 86 143 0 130Z" fill="url(#fog)"/>
+<!-- main right ribbon, flows below heart -->
+<path d="M1000 182 C1136 173 1210 163 1312 143 C1415 121 1446 103 1524 115 C1586 127 1618 73 1672 48 L1672 90 C1600 97 1551 162 1495 155 C1411 143 1366 176 1280 179 C1184 185 1089 194 1000 182Z" fill="url(#dark)"/>
+<path d="M957 192 C1141 184 1265 159 1368 127 C1438 103 1471 108 1515 130 C1557 151 1600 107 1672 102 L1672 130 C1590 134 1550 179 1487 147 C1458 132 1425 138 1364 158 C1265 191 1073 197 957 192Z" fill="url(#rose)"/>
+<!-- low ribbon highlight -->
+<path d="M0 142 C140 155 268 192 396 179 C502 168 574 148 655 153 C724 158 768 181 829 181 C909 181 954 168 1052 169 C1154 172 1246 190 1335 166 C1458 133 1543 165 1672 148 L1672 180 C1543 161 1457 165 1340 188 C1250 206 1119 189 1016 187 C909 183 822 195 717 181 C625 172 562 185 445 196 C269 212 119 174 0 172Z" fill="#ef5570" opacity=".31"/>
+</svg>

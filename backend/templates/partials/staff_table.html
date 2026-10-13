@@ -1,0 +1,27 @@
+{# Bảng nhân viên dùng chung cho SCR-38 (bệnh viện: chỉ xem) và SCR-51 (Quản trị hệ thống: thu hồi / kích hoạt lại). #}
+<section class="panel">
+  {% if staffs %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Nhân viên</th><th>Điện thoại</th><th>Trạng thái</th><th>Phân công từ</th>{% if admin_mode %}<th class="num">Thao tác</th>{% endif %}</tr></thead>
+    <tbody>{% for s in staffs %}
+      <tr {% if not s.is_active %}style="opacity:.6"{% endif %}>
+        <td data-label="Nhân viên"><div class="person-card"><span class="avatar">{{ s.user.full_name|initials }}</span><div><strong style="font-size:14px">{{ s.user.full_name }}</strong><span class="muted small">{{ s.user.email }}</span></div></div></td>
+        <td data-label="Điện thoại" class="nowrap">{{ s.user.phone|phone|default:"—" }}</td>
+        <td data-label="Trạng thái">{% if s.is_active %}<span class="badge ok">Đang hiệu lực</span>{% else %}<span class="badge neutral">Đã thu hồi</span>{% endif %}{% if s.user.status != "active" %} {% status_badge s.user %}{% endif %}</td>
+        <td data-label="Từ" class="small nowrap">{{ s.created_at|vn_date }}</td>
+        {% if admin_mode %}
+        <td data-label="Thao tác"><div class="table-actions">
+          <form method="post" action="{{ action_url }}" class="inline-form" {% if s.is_active %}data-confirm="Thu hồi phân công của {{ s.user.full_name }}?" data-confirm-detail="Người này mất quyền thao tác tại bệnh viện ngay ở lần truy cập kế tiếp." data-confirm-label="Thu hồi"{% endif %}>{% csrf_token %}
+            <input type="hidden" name="form" value="staff_update"><input type="hidden" name="op" value="{% if s.is_active %}deactivate{% else %}activate{% endif %}">
+            <input type="hidden" name="staff_id" value="{{ s.pk }}">
+            {% if s.is_active %}<button class="btn danger sm">Thu hồi</button>{% else %}<button class="btn secondary sm">Kích hoạt lại</button>{% endif %}
+          </form>
+        </div></td>
+        {% endif %}
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "users" %}</div><h3>Chưa có nhân viên</h3><p>{% if admin_mode %}Tạo tài khoản nhân viên cho bệnh viện này.{% else %}Liên hệ Quản trị hệ thống để được cấp tài khoản nhân viên.{% endif %}</p></div>
+  {% endif %}
+</section>

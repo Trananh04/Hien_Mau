@@ -1,0 +1,27 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Đăng ký tài khoản{% endblock %}
+{% block art_greeting %}Chào mừng{% endblock %}
+{% block art_title %}TRỞ THÀNH TÌNH NGUYỆN VIÊN{% endblock %}
+{% block art_text %}Một tài khoản giúp bạn đăng ký các đợt hiến máu, theo dõi lịch sử hiến được bệnh viện xác nhận, và gửi yêu cầu cần máu khi người thân cần.{% endblock %}
+{% block card %}
+<h2>Tạo tài khoản</h2>
+<p class="lead">Chỉ mất khoảng một phút. Trường có dấu <span class="field-req">*</span> là bắt buộc.</p>
+{% include "partials/form_errors.html" %}
+<form method="post" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% include "partials/field.html" with field=form.full_name %}
+  {% include "partials/field.html" with field=form.email %}
+  {% include "partials/field.html" with field=form.phone %}
+  <div class="form-grid" style="margin-top:14px">
+    {% include "partials/field.html" with field=form.blood_group %}
+    {% include "partials/field.html" with field=form.province %}
+  </div>
+  {% include "partials/field.html" with field=form.password %}
+  {% include "partials/field.html" with field=form.password2 %}
+  <div style="margin-top:16px">{% include "partials/field.html" with field=form.accept_terms %}</div>
+  <p class="field-help" style="margin-top:6px">Xem <button type="button" class="link" data-open-dialog="info-privacy">Chính sách bảo mật</button>. Nhóm máu bạn tự khai chỉ để tham khảo; bệnh viện luôn xét nghiệm lại.</p>
+  <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "user-plus" %} Tạo tài khoản</button>
+</form>
+<p class="auth-switch">Đã có tài khoản? <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link">Đăng nhập</a></p>
+{% endblock %}

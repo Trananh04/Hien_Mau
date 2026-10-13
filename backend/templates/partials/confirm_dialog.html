@@ -1,0 +1,19 @@
+<dialog class="modal-dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+  <div style="display:flex;flex-direction:column;width:100%">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <div class="modal-badge-icon">{% icon "triangle-alert" %}</div>
+        <h3 class="modal-title" id="confirm-title">Xác nhận thao tác</h3>
+      </div>
+      <button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button>
+    </div>
+    <div class="modal-body">
+      <p data-confirm-message></p>
+      <div class="consequence" data-confirm-detail hidden></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn secondary" data-close-dialog>Quay lại</button>
+      <button type="button" class="btn primary" data-confirm-ok>Xác nhận</button>
+    </div>
+  </div>
+</dialog>

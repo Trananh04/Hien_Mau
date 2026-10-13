@@ -1,0 +1,25 @@
+{# Menu tài khoản theo vai trò — chỉ liệt kê màn hình vai trò đó mở được (bloodbank/access.py). #}
+{% if not mobile %}
+<div class="user-menu-head">
+  <strong>{{ user.full_name }}</strong>
+  <span>{{ user.email }}</span>
+  <div style="margin-top:6px"><span class="badge {% if user.role == "admin" %}danger{% elif user.role == "hospital" %}info{% else %}neutral{% endif %} plain">{{ role_label }}</span></div>
+</div>
+{% endif %}
+{% if user.role == "member" %}
+<a href="{% url 'bloodbank:profile' %}" class="menu-item">{% icon "user-round" %} Hồ sơ của tôi</a>
+<a href="{% url 'bloodbank:my_registrations' %}" class="menu-item">{% icon "calendar-check" %} Đơn đăng ký hiến</a>
+<a href="{% url 'bloodbank:my_history' %}" class="menu-item">{% icon "droplet" %} Lịch sử hiến máu</a>
+<a href="{% url 'bloodbank:my_patient_requests' %}" class="menu-item">{% icon "heart-pulse" %} Yêu cầu cần máu</a>
+{% elif user.role == "hospital" %}
+<a href="{% url 'bloodbank:hospital_dashboard' %}" class="menu-item">{% icon "hospital" %} Khu vực bệnh viện</a>
+<a href="{% url 'bloodbank:work_account' %}" class="menu-item">{% icon "user-cog" %} Tài khoản công tác</a>
+{% elif user.role == "admin" %}
+<a href="{% url 'bloodbank:admin_stats' %}" class="menu-item">{% icon "shield-check" %} Quản trị hệ thống</a>
+<a href="{% url 'bloodbank:work_account' %}" class="menu-item">{% icon "user-cog" %} Tài khoản công tác</a>
+{% endif %}
+<div class="menu-sep"></div>
+<form method="post" action="{% url 'accounts:logout' %}">
+  {% csrf_token %}
+  <button type="submit" class="menu-item">{% icon "log-out" %} Đăng xuất</button>
+</form>

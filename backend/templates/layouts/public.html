@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+<div class="page-shell app-wrapper">
+  {% include "partials/navbar.html" %}
+  <main class="page-main" id="noi-dung">
+    {% block band %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/footer.html" %}
+</div>
+{% include "partials/info_dialogs.html" %}
+{% endblock %}

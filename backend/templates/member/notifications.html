@@ -1,0 +1,6 @@
+{% extends "member/base.html" %}
+{% block title %}Thông báo{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Thông báo" lead="Cập nhật về đơn đăng ký, lượt hiến và yêu cầu cần máu của bạn." %}{% endblock %}
+{% block member %}
+{% include "partials/notification_list.html" %}
+{% endblock %}

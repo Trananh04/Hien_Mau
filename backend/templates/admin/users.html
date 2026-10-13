@@ -1,0 +1,52 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Quản lý người dùng{% endblock %}
+{% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Người dùng</span>{% endblock %}
+{% block ws_title %}Quản lý người dùng{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Ba loại tài khoản tách biệt: Người dùng, Nhân viên bệnh viện, Quản trị hệ thống. Tài khoản nhân viên được tạo tại màn hình Bệnh viện. Khóa tài khoản có hiệu lực ngay ở lần truy cập kế tiếp. Không xóa cứng — “Xóa” là trạng thái cuối, dữ liệu lịch sử giữ nguyên.</p>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" class="filters" style="flex:1">
+      <div class="field grow"><label for="uq">Tìm kiếm</label><div class="search-input">{% icon "search" %}<input id="uq" name="q" value="{{ f.q }}" class="field-input" placeholder="Tên, email, số điện thoại"></div></div>
+      <div class="field"><label for="us">Trạng thái</label><select id="us" name="status" class="field-select"><option value="">Tất cả</option><option value="active" {% if f.status == "active" %}selected{% endif %}>Đang hoạt động</option><option value="locked" {% if f.status == "locked" %}selected{% endif %}>Đã khóa</option><option value="deleted" {% if f.status == "deleted" %}selected{% endif %}>Đã xóa</option></select></div>
+      <div class="field"><label for="ur">Vai trò</label><select id="ur" name="role" class="field-select"><option value="">Tất cả</option>{% for v, l in roles %}<option value="{{ v }}" {% if f.role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <button class="btn secondary">{% icon "filter" %} Lọc</button>
+    </form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Người dùng</th><th>Điện thoại</th><th>Vai trò</th><th class="num">Phân công</th><th>Trạng thái</th><th>Đăng nhập gần nhất</th><th class="num">Thao tác</th></tr></thead>
+    <tbody>{% for u in page %}
+      <tr>
+        <td data-label="Người dùng"><div class="person-card"><span class="avatar">{{ u.full_name|initials }}</span><div><strong style="font-size:14px">{{ u.full_name }}</strong><span class="muted small">{{ u.email }}{% if not u.email_verified_at %} · chưa xác thực{% endif %}</span></div></div></td>
+        <td data-label="Điện thoại">{{ u.phone|phone|default:"—" }}</td>
+        <td data-label="Vai trò">
+          {% if u.role == "hospital" %}
+            <span class="badge info plain">{% icon "hospital" 14 %} Nhân viên bệnh viện</span>
+          {% elif u.pk == user.pk or u.status == "deleted" %}
+            <span class="badge {% if u.role == 'admin' %}danger{% else %}neutral{% endif %} plain">{{ u.get_role_display }}</span>
+          {% else %}
+          <form method="post" class="row" style="gap:6px;flex-wrap:nowrap" data-confirm="Đổi vai trò của {{ u.email }}?" data-confirm-detail="Mỗi vai trò đăng nhập ở một cổng riêng và chỉ thấy màn hình của vai trò đó. Người này sẽ bị đăng xuất." data-confirm-label="Đổi vai trò">{% csrf_token %}<input type="hidden" name="action" value="role"><input type="hidden" name="user_id" value="{{ u.pk }}">
+            <select name="role" class="field-select" style="min-height:34px" aria-label="Vai trò"><option value="member" {% if u.role == "member" %}selected{% endif %}>Người dùng</option><option value="admin" {% if u.role == "admin" %}selected{% endif %}>Quản trị hệ thống</option></select>
+            <button class="btn secondary sm" title="Lưu">{% icon "check" %}</button>
+          </form>
+          {% endif %}
+        </td>
+        <td data-label="Phân công" class="num">{{ u.staff_count }}</td>
+        <td data-label="Trạng thái">{% status_badge u %}</td>
+        <td data-label="Đăng nhập" class="small nowrap">{{ u.last_login|vn_dt }}</td>
+        <td data-label="Thao tác"><div class="table-actions">{% if u.pk != user.pk and u.status != "deleted" %}
+          {% if u.status == "active" %}
+            <form method="post" class="inline-form" data-confirm="Khóa tài khoản {{ u.email }}?" data-confirm-detail="Người dùng bị đăng xuất và không đăng nhập được cho tới khi mở khóa." data-confirm-label="Khóa">{% csrf_token %}<input type="hidden" name="action" value="lock"><input type="hidden" name="user_id" value="{{ u.pk }}"><button class="btn secondary sm">{% icon "lock" %} Khóa</button></form>
+          {% else %}
+            <form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="unlock"><input type="hidden" name="user_id" value="{{ u.pk }}"><button class="btn secondary sm">{% icon "lock-open" %} Mở khóa</button></form>
+          {% endif %}
+          <form method="post" class="inline-form" data-confirm="Xóa tài khoản {{ u.email }}?" data-confirm-detail="Trạng thái cuối, không khôi phục được. Lịch sử hiến và nhật ký vẫn được giữ." data-confirm-label="Xóa tài khoản">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="user_id" value="{{ u.pk }}"><button class="btn danger sm">Xóa</button></form>
+        {% else %}<span class="muted small">—</span>{% endif %}</div></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}<div class="empty"><div class="empty-icon">{% icon "user-x" %}</div><h3>Không có người dùng phù hợp</h3></div>{% endif %}
+</section>
+{% endblock %}

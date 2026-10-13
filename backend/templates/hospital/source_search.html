@@ -1,0 +1,66 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Tìm nguồn liên viện{% endblock %}
+{% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Tìm nguồn</span>{% endblock %}
+{% block ws_title %}Tìm nguồn liên viện{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Chỉ hiển thị số bệnh viện khác cho phép chia sẻ (đã trừ phần giữ chỗ). Nền tảng không tự điều chuyển — bạn gửi đề nghị và bên cấp phản hồi.</p>{% endblock %}
+{% block content %}
+{% if patient_request %}<div class="notice info">{% icon "link" %}<div>Đang tìm nguồn cho yêu cầu người cần máu <strong>{{ patient_request.request_code }}</strong>; yêu cầu hỗ trợ tạo ra sẽ được liên kết.</div></div>{% endif %}
+<section class="panel" style="margin-bottom:20px"><div class="panel-body">
+  <form method="get" class="filters">
+    {% if patient_request %}<input type="hidden" name="patient_request" value="{{ patient_request.pk }}">{% endif %}
+    <div class="field"><label for="sb">Nhóm máu <span class="field-req">*</span></label><select id="sb" name="blood_group" class="field-select" required><option value="">-- Chọn --</option>{% for v, l in blood_groups %}<option value="{{ v }}" {% if g.blood_group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="spd">Chế phẩm <span class="field-req">*</span></label><select id="spd" name="product" class="field-select" required data-product-select="ssp"><option value="">-- Chọn --</option>{% for p in products %}<option value="{{ p.pk }}" {% if g.product == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="ssp">Quy cách</label><select id="ssp" name="spec" class="field-select"><option value="">Tất cả quy cách</option>{% for s in specs %}<option value="{{ s.pk }}" data-product="{{ s.product_id }}" {% if g.spec == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="smq">Tối thiểu có thể hỗ trợ</label><input id="smq" type="number" min="1" name="min_qty" value="{{ g.min_qty }}" class="field-input"></div>
+    <div class="field"><label for="spv">Khu vực</label><select id="spv" name="province" class="field-select"><option value="">Mọi khu vực</option>{% for p in provinces %}<option value="{{ p }}" {% if g.province == p %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
+    <input type="hidden" name="qty" value="{{ g.qty }}">
+    <button class="btn primary" type="submit">{% icon "search" %} Tìm</button>
+  </form>
+</div></section>
+
+{% if searched %}
+<form method="post" action="{% url 'bloodbank:support_request_create' %}" novalidate>
+  {% csrf_token %}
+  {% if patient_request %}<input type="hidden" name="patient_request_id" value="{{ patient_request.pk }}">{% endif %}
+  <div class="grid grid-main-side">
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">{% icon "hospital" %} Bệnh viện có thể hỗ trợ</h2><span class="muted small">{{ rows|length }} kết quả</span></div>
+      {% if rows %}
+      <div class="table-wrap"><table class="table stack-mobile">
+        <thead><tr><th></th><th>Bệnh viện</th><th>Khu vực</th><th>Quy cách</th><th class="num">Có thể hỗ trợ</th><th class="num">Đề nghị</th><th>Cập nhật</th></tr></thead>
+        <tbody>{% for r in rows %}
+          <tr>
+            <td><input type="checkbox" name="supplier" value="{{ r.hospital.pk }}" aria-label="Chọn {{ r.hospital.name }}" style="accent-color:var(--primary);width:18px;height:18px"></td>
+            <td data-label="Bệnh viện"><span class="cell-title">{{ r.hospital.name }}</span><span class="cell-sub">{{ r.hospital.phone|phone|default:"" }}</span></td>
+            <td data-label="Khu vực">{{ r.hospital.area }}</td>
+            <td data-label="Quy cách">{{ r.spec.name }}</td>
+            <td data-label="Có thể hỗ trợ" class="num"><strong>{{ r.can_support }}</strong></td>
+            <td data-label="Đề nghị" class="num"><input type="number" min="1" max="{{ r.can_support }}" name="qty_{{ r.hospital.pk }}" class="field-input" style="width:84px;min-height:34px" placeholder="{{ r.can_support }}" aria-label="Số đề nghị"></td>
+            <td data-label="Cập nhật" class="small nowrap">{{ r.updated_at|vn_dt }}</td>
+          </tr>
+        {% endfor %}</tbody>
+      </table></div>
+      {% else %}
+      <div class="empty"><div class="empty-icon">{% icon "search-x" %}</div><h3>Không bệnh viện nào đang chia sẻ chế phẩm phù hợp</h3><p>Thử bỏ lọc quy cách, khu vực hoặc số lượng tối thiểu. Bạn vẫn có thể tạo yêu cầu và mời bệnh viện sau.</p></div>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">{% icon "send" %} Tạo yêu cầu hỗ trợ</h2></div>
+      <div class="panel-body stack" style="gap:14px">
+        {% include "partials/field.html" with field=form.blood_group %}
+        {% include "partials/field.html" with field=form.product_spec_id %}
+        {% include "partials/field.html" with field=form.quantity_needed %}
+        {% include "partials/field.html" with field=form.priority %}
+        {% include "partials/field.html" with field=form.needed_by %}
+        {% include "partials/field.html" with field=form.note %}
+        <p class="field-help">Đánh dấu các bệnh viện ở bảng bên để gửi đề nghị ngay.</p>
+      </div>
+      <div class="panel-foot"><button class="btn primary">{% icon "send" %} Tạo yêu cầu &amp; gửi đề nghị</button></div>
+    </section>
+  </div>
+</form>
+{% else %}
+<div class="panel"><div class="empty"><div class="empty-icon">{% icon "search" %}</div><h3>Chọn nhóm máu và chế phẩm để tìm</h3><p>Kết quả chỉ gồm bệnh viện đang hoạt động, khớp đúng nhóm máu và có số chia sẻ hiệu lực.</p></div></div>
+{% endif %}
+{% endblock %}

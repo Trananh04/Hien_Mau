@@ -1,0 +1,25 @@
+<article class="campaign-card">
+  <div class="campaign-date">
+    <div class="date-block" aria-hidden="true"><b>TH {{ c.start_time|vn_dt:"%m" }}</b><span>{{ c.start_time|vn_dt:"%d" }}</span></div>
+    <div style="min-width:0">
+      <h3><a href="{% url 'bloodbank:campaign_detail' c.pk %}">{{ c.name }}</a></h3>
+      <div class="muted small">{{ c.hospital.name }}</div>
+    </div>
+  </div>
+  <div class="meta-list">
+    <div>{% icon "clock" %}<span>{{ c.start_time|vn_time }} – {{ c.end_time|vn_dt }}</span></div>
+    <div>{% icon "map-pin" %}<span>{{ c.location_name }}, {{ c.address }}</span></div>
+  </div>
+  <div class="card-foot">
+    {% with mine=my|get_item:c.pk %}
+      {% if mine and mine != "cancelled" %}
+        <span class="badge info">Bạn đã đăng ký</span>
+      {% else %}
+        {% status_badge c %}
+      {% endif %}
+    {% endwith %}
+    <a href="{% url 'bloodbank:campaign_detail' c.pk %}" class="btn {% if c.status == 'open' %}primary{% else %}secondary{% endif %} sm">
+      {% if c.status == "open" %}Xem &amp; đăng ký{% else %}Xem chi tiết{% endif %}
+    </a>
+  </div>
+</article>

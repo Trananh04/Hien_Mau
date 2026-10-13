@@ -1,0 +1,46 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Lịch sử biến động kho{% endblock %}
+{% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>Lịch sử biến động</span>{% endblock %}
+{% block ws_title %}Lịch sử biến động kho{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Sổ kho chỉ thêm, sắp xếp theo thời điểm phát sinh. Mỗi dòng có tồn trước/sau và người thực hiện.</p>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" class="filters" style="flex:1">
+      {% if f.stock %}<input type="hidden" name="stock" value="{{ f.stock }}">{% endif %}
+      <div class="field"><label for="lt">Loại</label><select id="lt" name="type" class="field-select"><option value="">Tất cả</option>{% for v, l in types %}<option value="{{ v }}" {% if f.type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="lb">Nhóm máu</label><select id="lb" name="blood_group" class="field-select"><option value="">Tất cả</option>{% for v, l in blood_groups %}<option value="{{ v }}" {% if f.blood_group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div class="field grow"><label for="ls">Quy cách</label><select id="ls" name="spec" class="field-select"><option value="">Tất cả</option>{% for s in specs %}<option value="{{ s.pk }}" {% if f.spec == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.product.name }} — {{ s.name }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="lf">Từ ngày</label><input id="lf" type="date" name="from" value="{{ f.from }}" class="field-input"></div>
+      <div class="field"><label for="lto">Đến ngày</label><input id="lto" type="date" name="to" value="{{ f.to }}" class="field-input"></div>
+      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+      {% if f.type or f.blood_group or f.spec or f.from or f.to or f.stock %}<a href="?" class="btn ghost">Xóa lọc</a>{% endif %}
+    </form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Thời điểm</th><th>Loại</th><th>Dòng tồn</th><th class="num">Thay đổi</th><th class="num">Trước → Sau</th><th>Liên kết / lý do</th><th>Người thực hiện</th></tr></thead>
+    <tbody>{% for t in page %}
+      <tr>
+        <td data-label="Thời điểm" class="nowrap">{{ t.occurred_at|vn_dt }}</td>
+        <td data-label="Loại">{% if t.quantity_change > 0 %}<span class="badge ok plain">{{ t.get_txn_type_display }}</span>{% else %}<span class="badge danger plain">{{ t.get_txn_type_display }}</span>{% endif %}</td>
+        <td data-label="Dòng tồn">{% blood t.stock.blood_group "sm" %} {{ t.stock.product_spec.product.name }}<span class="cell-sub">{{ t.stock.product_spec.name }}</span></td>
+        <td data-label="Thay đổi" class="num"><strong>{% if t.quantity_change > 0 %}+{% endif %}{{ t.quantity_change }}</strong></td>
+        <td data-label="Trước → Sau" class="num nowrap">{{ t.quantity_before }} → {{ t.quantity_after }}</td>
+        <td data-label="Liên kết">
+          {% if t.adjustment_reason %}{{ t.get_adjustment_reason_display }}{% endif %}
+          {% if t.offer %}<a class="link" href="{% url 'bloodbank:offer_open' t.offer_id %}">{{ t.offer.request.request_code }}</a>{% endif %}
+          {% if t.patient_request %}<a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' t.patient_request_id %}">{{ t.patient_request.request_code }}</a>{% endif %}
+          {% if t.reason_note %}<span class="cell-sub">{{ t.reason_note }}</span>{% endif %}
+          {% if not t.adjustment_reason and not t.offer and not t.patient_request and not t.reason_note %}<span class="muted">—</span>{% endif %}
+        </td>
+        <td data-label="Người thực hiện">{{ t.performed_by.full_name }}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "history" %}</div><h3>{% if f.type or f.blood_group or f.spec or f.from or f.to %}Không có biến động phù hợp bộ lọc{% else %}Chưa có biến động kho{% endif %}</h3><p>Mọi phiếu nhập, xuất, điều chuyển và điều chỉnh sẽ hiển thị tại đây.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Thống kê toàn hệ thống{% endblock %}
+{% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Thống kê</span>{% endblock %}
+{% block ws_title %}Thống kê toàn hệ thống{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Tính trực tiếp từ dữ liệu gốc của nền tảng (dự án học tập — dữ liệu hiển thị là dữ liệu mẫu).</p>{% endblock %}
+{% block content %}
+<div class="grid grid-4" style="margin-bottom:20px">
+  <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lượt hiến xác nhận</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">Toàn phần {{ summary.whole_ml|vnum }} ml · thành phần {{ summary.component_count }} lượt</div></div>
+  <div class="stat"><div class="stat-label">{% icon "users" %} Tài khoản</div><div class="stat-value">{{ counts.users }}</div><div class="stat-note">{{ counts.registrations }} đơn đăng ký hiến</div></div>
+  <div class="stat"><div class="stat-label">{% icon "hospital" %} Bệnh viện hoạt động</div><div class="stat-value">{{ counts.hospitals }}</div><div class="stat-note">{{ counts.open_campaigns }} đợt hiến đang mở</div></div>
+  <div class="stat {% if counts.patient_waiting %}alert{% endif %}"><div class="stat-label">{% icon "heart-pulse" %} Yêu cầu chờ xác minh</div><div class="stat-value">{{ counts.patient_waiting }}</div><div class="stat-note">{{ counts.open_requests }} yêu cầu liên viện mở · {{ counts.in_transit }} đang chuyển</div></div>
+</div>
+<div class="grid grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "droplets" %} Tồn kho theo nhóm máu (bệnh viện đang hoạt động)</h2></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Nhóm máu</th><th class="num">Hiện có</th><th class="num">Khả dụng</th><th style="width:45%">Hiện có (đơn vị)</th></tr></thead>
+      <tbody>{% for bg, v in stock_by_group.items %}
+        <tr><td>{% blood bg "sm" %}</td><td class="num">{{ v.on_hand }}</td><td class="num">{{ v.available }}</td>
+          <td><div class="progress" style="height:12px" title="{{ bg }}: {{ v.on_hand }} hiện có, {{ v.available }} khả dụng"><span style="background:var(--primary);width:{{ v.on_hand|pct:max_avail }}%"></span></div></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "building-2" %} Lượt hiến theo bệnh viện</h2></div>
+    <div class="table-wrap"><table class="table stack-mobile">
+      <thead><tr><th>Bệnh viện</th><th class="num">Lượt xác nhận</th><th class="num">Toàn phần (ml)</th><th>Trạng thái</th></tr></thead>
+      <tbody>{% for h in by_hospital %}
+        <tr><td data-label="Bệnh viện"><a class="link" href="{% url 'bloodbank:admin_hospital_edit' h.pk %}">{{ h.name }}</a><span class="cell-sub">{{ h.area }}</span></td><td data-label="Lượt" class="num">{{ h.donation_count }}</td><td data-label="ml" class="num">{{ h.ml|default:0|vnum }}</td><td data-label="Trạng thái">{% status_badge h %}</td></tr>
+      {% empty %}<tr><td colspan="4"><div class="empty"><h3>Chưa có bệnh viện</h3></div></td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+</div>
+{% endblock %}

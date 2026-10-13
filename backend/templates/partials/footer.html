@@ -1,0 +1,42 @@
+{% load static %}
+<footer class="footer-section" id="footer" aria-label="Chân trang Ngân Hàng Máu Sống">
+  <div class="footer-inner-container">
+    <div class="footer-columns-row">
+      <div class="footer-col-brand">
+        <div class="footer-logo-wrapper">
+          <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="Logo Ngân Hàng Máu Sống Trắng" class="footer-logo-img">
+        </div>
+        <h4 class="footer-brand-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</h4>
+        <p class="footer-brand-desc">Dự án cộng đồng kết nối người tình nguyện hiến máu vì một xã hội khỏe mạnh hơn.</p>
+      </div>
+
+      <div class="footer-col-links">
+        <h4 class="footer-col-title">Liên kết nhanh</h4>
+        <ul class="footer-links-list">
+          <li><button type="button" class="footer-link-item" data-open-dialog="info-about"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Về chúng tôi</span></button></li>
+          <li><button type="button" class="footer-link-item" data-open-dialog="info-process"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Quy trình tham gia</span></button></li>
+          <li><a href="{% url 'bloodbank:campaigns' %}" class="footer-link-item"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Đợt hiến máu</span></a></li>
+          <li><a href="{% url 'bloodbank:map' %}" class="footer-link-item"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Bản đồ điểm hiến</span></a></li>
+          <li><button type="button" class="footer-link-item" data-open-dialog="info-privacy"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Chính sách bảo mật</span></button></li>
+          <li><a href="{% url 'accounts:hospital_login' %}" class="footer-link-item"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Cổng bệnh viện</span></a></li>
+          <li><a href="{% url 'accounts:admin_login' %}" class="footer-link-item"><span class="footer-link-chevron" aria-hidden="true">&gt;</span><span>Cổng quản trị</span></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col-social">
+        <h4 class="footer-col-title">Kết nối</h4>
+        <div class="footer-social-row">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-circle-btn facebook" title="Theo dõi chúng tôi trên Facebook" aria-label="Facebook"><span>f</span></a>
+          <a href="https://zalo.me" target="_blank" rel="noopener noreferrer" class="social-circle-btn zalo" title="Liên hệ qua Zalo" aria-label="Zalo"><span>Zalo</span></a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="footer-divider-line">
+
+    <div class="footer-bottom-group">
+      <p class="footer-motto">Chung tay lan tỏa nguồn máu nhân ái, vì một cộng đồng khỏe mạnh hơn.</p>
+      <p class="footer-copyright">© 2026 Bản quyền thuộc về Ngân hàng Máu Sống Việt Nam. Dự án học tập — số liệu hiển thị là dữ liệu mẫu.</p>
+    </div>
+  </div>
+</footer>

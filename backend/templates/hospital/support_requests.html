@@ -1,0 +1,35 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Yêu cầu hỗ trợ đã gửi{% endblock %}
+{% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Yêu cầu đã gửi</span>{% endblock %}
+{% block ws_title %}Yêu cầu hỗ trợ đã gửi{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Theo dõi đến khi nhận đủ. Trạng thái yêu cầu suy ra từ các đề nghị.</p>{% endblock %}
+{% block ws_actions %}<a href="{% url 'bloodbank:source_search' %}" class="btn primary">{% icon "plus" %} Tạo yêu cầu</a>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" data-autosubmit class="row"><label for="ss" class="small muted">Trạng thái</label><select id="ss" name="status" class="field-select" style="min-width:200px"><option value="">Tất cả</option><option value="open" {% if status == 'open' %}selected{% endif %}>Đang mở (chưa đóng)</option>{% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Mã</th><th>Nhóm máu / chế phẩm</th><th>Ưu tiên</th><th style="min-width:200px">Tiến độ</th><th>Cần trước</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>{% for r in page %}
+      <tr>
+        <td data-label="Mã"><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="cell-title">{{ r.request_code }}</a><span class="cell-sub">{{ r.created_at|vn_dt }}</span></td>
+        <td data-label="Nhóm máu">{% blood r.blood_group "sm" %} {{ r.product_spec.product.name }}<span class="cell-sub">{{ r.product_spec.name }}</span></td>
+        <td data-label="Ưu tiên">{% status_badge r field="priority" %}</td>
+        <td data-label="Tiến độ">
+          <div class="progress" title="Đã nhận {{ r.numbers.received }} · Đang chuyển {{ r.numbers.transit }} · Cam kết {{ r.numbers.committed }}"><span class="p-received" style="width:{{ r.numbers.received|pct:r.numbers.needed }}%"></span><span class="p-transit" style="width:{{ r.numbers.transit|pct:r.numbers.needed }}%"></span><span class="p-committed" style="width:{{ r.numbers.committed|pct:r.numbers.needed }}%"></span></div>
+          <span class="cell-sub">Nhận {{ r.numbers.received }}/{{ r.numbers.needed }} · còn thiếu {{ r.numbers.remaining }}</span>
+        </td>
+        <td data-label="Cần trước" class="nowrap">{{ r.needed_by|vn_dt }}</td>
+        <td data-label="Trạng thái">{% status_badge r %}{% if r.closed_at and r.status == "partially_fulfilled" %}<span class="cell-sub">Đã đóng</span>{% endif %}</td>
+        <td><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="btn ghost sm">Chi tiết</a></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "send" %}</div><h3>{% if status %}Không có yêu cầu trong nhóm này{% else %}Chưa gửi yêu cầu hỗ trợ nào{% endif %}</h3><p>Khi thiếu chế phẩm, tìm nguồn liên viện và gửi đề nghị tới bệnh viện đang chia sẻ.</p><a href="{% url 'bloodbank:source_search' %}" class="btn primary">{% icon "search" %} Tìm nguồn</a></div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "member/base.html" %}
+{% block title %}Chi tiết lượt hiến {{ d.code }}{% endblock %}
+{% block band %}{% url 'bloodbank:my_history' as hist %}{% include "partials/band.html" with title="Lượt hiến "|add:d.code parent_url=hist parent_label="Lịch sử hiến máu" crumb=d.code %}{% endblock %}
+{% block member %}
+<section class="panel" style="max-width:820px">
+  <div class="panel-head"><h2 class="panel-title">{% icon "droplet" %} Thông tin lượt hiến</h2>{% status_badge d %}</div>
+  <div class="panel-body">
+    {% if d.status == "voided" %}<div class="notice danger">{% icon "ban" %}<div>Lượt hiến này đã bị bệnh viện hủy hiệu lực và không được tính vào lịch sử. Lý do: {{ d.void_reason }}</div></div>{% endif %}
+    <dl class="dl">
+      <dt>Mã lượt hiến</dt><dd>{{ d.code }}</dd>
+      <dt>Thời điểm hiến</dt><dd>{{ d.donated_at|vn_dt }}</dd>
+      <dt>Bệnh viện tiếp nhận</dt><dd>{{ d.hospital.name }}</dd>
+      <dt>Đợt hiến</dt><dd>{% if d.registration %}<a class="link" href="{% url 'bloodbank:campaign_detail' d.registration.campaign.pk %}">{{ d.registration.campaign.name }}</a>{% else %}Hiến ngoài đợt{% endif %}</dd>
+      <dt>Hình thức</dt><dd>{{ d.get_donation_type_display }}</dd>
+      {% if d.volume_ml %}<dt>Thể tích</dt><dd>{{ d.volume_ml|vnum }} ml</dd>{% endif %}
+      {% if d.component_product %}<dt>Thành phần</dt><dd>{{ d.component_product.name }} — {{ d.component_quantity|vnum }} {{ d.get_component_unit_display }}</dd>{% endif %}
+      <dt>Xác nhận lúc</dt><dd>{{ d.confirmed_at|vn_dt }}</dd>
+    </dl>
+  </div>
+  <div class="panel-foot"><a href="{% url 'bloodbank:my_history' %}" class="btn secondary">{% icon "arrow-left" %} Quay lại lịch sử</a></div>
+</section>
+{% endblock %}

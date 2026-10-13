@@ -1,0 +1,43 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Đợt hiến máu{% endblock %}
+{% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Đợt hiến máu</span>{% endblock %}
+{% block ws_title %}Đợt hiến máu{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Tạo, công bố và theo dõi các đợt hiến của bệnh viện. Số đăng ký, số lượt hiến là số liệu tính toán.</p>{% endblock %}
+{% block ws_actions %}{% if can_edit %}<a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">{% icon "calendar-plus" %} Tạo đợt hiến</a>{% endif %}{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" class="filters" style="flex:1">
+      <div class="field grow"><label for="q">Tìm kiếm</label><div class="search-input">{% icon "search" %}<input id="q" name="q" value="{{ q }}" class="field-input" placeholder="Tên đợt, địa điểm"></div></div>
+      <div class="field"><label for="st">Trạng thái</label><select id="st" name="status" class="field-select"><option value="">Tất cả</option>{% for v, l in statuses %}<option value="{{ v }}" {% if v == status %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+    </form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Đợt hiến</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Đã hiến</th><th>Trạng thái</th><th class="num">Thao tác</th></tr></thead>
+    <tbody>
+    {% for c in page %}
+      <tr>
+        <td data-label="Đợt hiến"><a href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}" class="cell-title">{{ c.name }}</a><span class="cell-sub">{{ c.location_name }}</span></td>
+        <td data-label="Thời gian" class="nowrap">{{ c.start_time|vn_dt }}<span class="cell-sub">đến {{ c.end_time|vn_dt }}</span></td>
+        <td data-label="Đăng ký" class="num">{{ c.reg_count }}</td>
+        <td data-label="Đã hiến" class="num">{{ c.donated }}</td>
+        <td data-label="Trạng thái">{% status_badge c %}</td>
+        <td data-label="Thao tác"><div class="table-actions">
+          {% if can_edit and c.status in "open,closed" %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn secondary sm">{% icon "scan-line" %} Điểm hiến</a>{% endif %}
+          <a href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}" class="btn ghost sm">Chi tiết</a>
+        </div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "calendar-heart" %}</div>
+    {% if status or q %}<h3>Không có đợt phù hợp bộ lọc</h3><p>Thử bỏ bớt điều kiện lọc.</p><a href="?" class="btn secondary">Xóa bộ lọc</a>
+    {% else %}<h3>Bệnh viện chưa có đợt hiến nào</h3><p>Tạo đợt hiến đầu tiên; đợt mới ở trạng thái Nháp cho tới khi bạn Công bố.</p>{% if can_edit %}<a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">Tạo đợt hiến</a>{% endif %}{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

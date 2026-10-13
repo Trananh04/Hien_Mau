@@ -1,0 +1,33 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Đề nghị đến bệnh viện{% endblock %}
+{% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Đề nghị đến bệnh viện tôi</span>{% endblock %}
+{% block ws_title %}Đề nghị đến bệnh viện tôi{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Phản hồi đề nghị hỗ trợ từ bệnh viện khác: chấp thuận (giữ chỗ trong kho) rồi xác nhận xuất khi giao hàng.</p>{% endblock %}
+{% block content %}
+<nav class="tabs">
+  <a href="?" class="tab {% if not status %}active{% endif %}">Tất cả</a>
+  {% for v, l in statuses %}<a href="?status={{ v }}" class="tab {% if status == v %}active{% endif %}">{{ l }}</a>{% endfor %}
+</nav>
+<section class="panel">
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Yêu cầu</th><th>Bệnh viện yêu cầu</th><th>Nhóm máu / chế phẩm</th><th class="num">Đề nghị</th><th class="num">Chấp thuận</th><th>Ưu tiên</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>{% for o in page %}
+      <tr>
+        <td data-label="Yêu cầu"><span class="cell-title">{{ o.request.request_code }}</span><span class="cell-sub">{{ o.created_at|vn_dt }}</span></td>
+        <td data-label="Bệnh viện yêu cầu">{{ o.request.requesting_hospital.name }}</td>
+        <td data-label="Nhóm máu">{% blood o.request.blood_group "sm" %} {{ o.request.product_spec.product.name }}<span class="cell-sub">{{ o.request.product_spec.name }}</span></td>
+        <td data-label="Đề nghị" class="num">{{ o.quantity_requested|default:"—" }}</td>
+        <td data-label="Chấp thuận" class="num">{{ o.quantity|default:"—" }}</td>
+        <td data-label="Ưu tiên">{% status_badge o.request field="priority" %}</td>
+        <td data-label="Trạng thái">{% status_badge o %}</td>
+        <td><a href="{% url 'bloodbank:offer_detail' o.pk %}" class="btn {% if o.status == 'pending' or o.status == 'accepted' %}primary{% else %}ghost{% endif %} sm">{% if o.status == "pending" %}Phản hồi{% elif o.status == "accepted" %}Xuất hàng{% else %}Chi tiết{% endif %}</a></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "inbox" %}</div><h3>{% if status %}Không có đề nghị trong nhóm này{% else %}Chưa có đề nghị nào gửi tới bệnh viện{% endif %}</h3><p>Bệnh viện khác chỉ thấy bạn trong tra cứu khi bạn khai báo số chia sẻ ở màn hình Tồn kho.</p><a href="{% url 'bloodbank:stock' %}" class="btn secondary">Khai báo chia sẻ</a></div>
+  {% endif %}
+</section>
+{% endblock %}

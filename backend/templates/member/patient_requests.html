@@ -1,0 +1,39 @@
+{% extends "member/base.html" %}
+{% block title %}Yêu cầu cần máu của tôi{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Yêu cầu cần máu của tôi" lead="Theo dõi trạng thái xác minh và xử lý của bệnh viện điều trị." %}{% endblock %}
+{% block member %}
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">{% icon "heart-pulse" %} Danh sách yêu cầu</h2>
+    <a href="{% url 'bloodbank:patient_request_new' %}" class="btn primary sm">{% icon "plus" %} Gửi yêu cầu mới</a>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap">
+    <table class="table stack-mobile">
+      <thead><tr><th>Mã yêu cầu</th><th>Bệnh viện điều trị</th><th>Nhóm máu</th><th class="num">Số đơn vị</th><th>Gửi lúc</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+      {% for p in page %}
+        <tr>
+          <td data-label="Mã"><span class="cell-title">{{ p.request_code }}</span></td>
+          <td data-label="Bệnh viện">{{ p.hospital.name }}</td>
+          <td data-label="Nhóm máu">{% blood p.blood_group "sm" %}</td>
+          <td data-label="Số đơn vị" class="num">{{ p.quantity_units }}</td>
+          <td data-label="Gửi lúc" class="nowrap">{{ p.created_at|vn_dt }}</td>
+          <td data-label="Trạng thái">{% status_badge p %}</td>
+          <td><a href="{% url 'bloodbank:my_patient_request_detail' p.pk %}" class="btn ghost sm">Chi tiết</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% icon "heart-handshake" %}</div>
+    <h3>Bạn chưa gửi yêu cầu cần máu nào</h3>
+    <p>Khi người thân cần máu, gửi yêu cầu để bệnh viện điều trị xác minh và điều phối.</p>
+    <a href="{% url 'bloodbank:patient_request_new' %}" class="btn primary">{% icon "plus" %} Gửi yêu cầu</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% load static %}
+<header class="navbar-header" id="navbar">
+  <div class="navbar-container">
+    <a href="{% url 'bloodbank:home' %}" class="brand-link" title="Ngân Hàng Máu Sống Việt Nam">
+      <img src="{% static 'assets/png/logo-mark-red.png' %}" alt="Logo Ngân Hàng Máu Sống Việt Nam" class="brand-logo-img">
+      <div class="brand-text-group">
+        <span class="brand-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</span>
+        <span class="brand-tagline">Trọn tình người Việt</span>
+      </div>
+    </a>
+
+    <nav class="nav-menu" aria-label="Menu chính">
+      <button type="button" class="nav-link-item" data-open-dialog="info-about">Về chúng tôi</button>
+      <button type="button" class="nav-link-item" data-open-dialog="info-process">Quy trình tham gia</button>
+      <a href="{% url 'bloodbank:campaigns' %}" class="nav-link-item {% active '/dot-hien/' %}">Đợt hiến máu</a>
+      <a href="{% url 'bloodbank:map' %}" class="nav-link-item {% active '/ban-do/' %}">Bản đồ</a>
+      <a href="{% url 'bloodbank:home' %}#tin-tuc" class="nav-link-item">Tin tức &amp; sự kiện</a>
+
+      <div class="nav-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'bloodbank:notifications' %}" class="nav-icon-btn" aria-label="Thông báo{% if unread_count %} ({{ unread_count }} chưa đọc){% endif %}" title="Thông báo">
+            {% icon "bell" %}
+            {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
+          </a>
+          <div class="user-menu" data-menu>
+            <button type="button" class="user-menu-trigger" data-menu-trigger aria-haspopup="true" aria-expanded="false">
+              <span class="avatar">{{ user.full_name|initials }}</span>
+              <span>{{ user.short_name }}</span>
+              {% icon "chevron-down" 16 %}
+            </button>
+            <div class="user-menu-panel" data-menu-panel hidden>
+              {% include "partials/user_menu_items.html" %}
+            </div>
+          </div>
+        {% else %}
+          <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="nav-login-link">Đăng nhập</a>
+          <a href="{% url 'accounts:register' %}" class="nav-cta-btn">Đăng ký ngay</a>
+        {% endif %}
+      </div>
+    </nav>
+
+    <button type="button" class="mobile-toggle-btn" data-toggle="mobile-nav" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
+      <span data-icon-open>{% icon "menu" 26 %}</span>
+      <span data-icon-close hidden>{% icon "x" 26 %}</span>
+    </button>
+  </div>
+
+  <div class="mobile-nav-drawer" id="mobile-nav-drawer" hidden>
+    <button type="button" class="nav-link-item" data-open-dialog="info-about">Về chúng tôi</button>
+    <button type="button" class="nav-link-item" data-open-dialog="info-process">Quy trình tham gia</button>
+    <a href="{% url 'bloodbank:campaigns' %}" class="nav-link-item">Đợt hiến máu</a>
+    <a href="{% url 'bloodbank:map' %}" class="nav-link-item">Bản đồ</a>
+    <a href="{% url 'bloodbank:home' %}#tin-tuc" class="nav-link-item">Tin tức &amp; sự kiện</a>
+    {% if user.is_authenticated %}
+      <div class="user-block">
+        <div class="person-card" style="padding:4px 0 8px">
+          <span class="avatar">{{ user.full_name|initials }}</span>
+          <div><strong>{{ user.full_name }}</strong><span class="muted small">{{ user.email }}</span></div>
+        </div>
+        <a href="{% url 'bloodbank:notifications' %}" class="menu-item">{% icon "bell" %} Thông báo{% if unread_count %} <span class="badge danger plain count">{{ unread_count }}</span>{% endif %}</a>
+        {% include "partials/user_menu_items.html" with mobile=True %}
+      </div>
+    {% else %}
+      <a href="{% url 'accounts:login' %}" class="btn secondary block">Đăng nhập</a>
+      <a href="{% url 'accounts:register' %}" class="nav-cta-btn" style="width:100%;justify-content:center">Đăng ký ngay</a>
+    {% endif %}
+  </div>
+</header>

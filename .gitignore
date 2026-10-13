@@ -1,0 +1,25 @@
+# Biến môi trường thật (dùng .env.example làm mẫu)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Django
+backend/staticfiles/
+backend/media/
+*.sqlite3
+
+# Frontend React
+frontend/node_modules/
+frontend/dist/
+
+# Công cụ / hệ điều hành
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

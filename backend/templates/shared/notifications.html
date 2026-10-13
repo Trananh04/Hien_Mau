@@ -1,0 +1,8 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Thông báo{% endblock %}
+{% block crumbs %}<span>Tài khoản</span>{% icon "chevron-right" 14 %}<span>Thông báo</span>{% endblock %}
+{% block ws_title %}Thông báo{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Cập nhật về công việc {% if workspace_mode == "admin" %}quản trị hệ thống{% else %}tại bệnh viện của bạn{% endif %}.</p>{% endblock %}
+{% block content %}
+{% include "partials/notification_list.html" %}
+{% endblock %}

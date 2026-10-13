@@ -1,0 +1,34 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Phân quyền màn hình{% endblock %}
+{% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Phân quyền</span>{% endblock %}
+{% block ws_title %}Phân quyền màn hình{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Mỗi vai trò đăng nhập ở một cổng riêng và chỉ mở được các màn hình được đánh dấu. Mọi request đều được kiểm tra theo bảng này; đường dẫn chưa khai báo bị chặn.</p>{% endblock %}
+{% block content %}
+<div class="grid grid-3" style="margin-bottom:20px">
+  {% for p in portals %}
+  <div class="stat">
+    <div class="stat-label">{% icon p.icon %} {{ p.label }}</div>
+    <div class="stat-value">{{ p.count }}<small>màn hình</small></div>
+    <div class="stat-note">{{ user_counts|get_item:p.code|default:0 }} tài khoản · <a class="link" href="{% url p.login %}">Trang đăng nhập</a></div>
+  </div>
+  {% endfor %}
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">{% icon "key-round" %} Ma trận vai trò × màn hình</h2><span class="muted small">{{ rows|length }} màn hình · {{ route_count }} đường dẫn</span></div>
+  <div class="table-wrap"><table class="table perm-table">
+    <thead><tr><th>Mã</th><th>Màn hình</th>{% for code, label, icon in columns %}<th class="center">{{ label }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for r in rows %}
+      {% ifchanged r.screen.area %}<tr class="perm-group"><td colspan="{{ columns|length|add:2 }}">{{ r.screen.area }}</td></tr>{% endifchanged %}
+      <tr>
+        <td class="nowrap small muted">{{ r.screen.code }}</td>
+        <td><strong style="font-size:14px">{{ r.screen.title }}</strong></td>
+        {% for allowed in r.cells %}
+        <td class="center">{% if allowed %}<span class="perm-yes" title="Được mở" aria-label="Được mở">{% icon "check" 16 %}</span>{% else %}<span class="perm-no" title="Bị chặn" aria-label="Bị chặn">{% icon "minus" 16 %}</span>{% endif %}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  <div class="panel-foot"><span class="small muted">{% icon "file-code" 14 %} Cấu hình tại <code>backend/bloodbank/access.py</code>. Sửa cột vai trò của một màn hình ở đó; bảng này và menu cập nhật theo.</span></div>
+</section>
+{% endblock %}

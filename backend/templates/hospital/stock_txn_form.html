@@ -1,0 +1,65 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{% if mode == "receive" %}Phiếu nhập kho{% elif mode == "issue" %}Phiếu xuất kho{% else %}Phiếu điều chỉnh{% endif %}{% endblock %}
+{% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>{% if mode == "receive" %}Nhập kho{% elif mode == "issue" %}Xuất kho{% else %}Điều chỉnh{% endif %}</span>{% endblock %}
+{% block ws_title %}{% if mode == "receive" %}Phiếu nhập kho{% elif mode == "issue" %}Phiếu xuất kho{% else %}Phiếu điều chỉnh tồn{% endif %}{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{% if mode == "receive" %}Nhập theo số đơn vị thực tế đã sản xuất/tiếp nhận — không tự quy đổi từ ml máu hiến.{% elif mode == "issue" %}Chỉ xuất trên phần khả dụng; có thể liên kết yêu cầu người cần máu đã xác minh.{% else %}Mọi điều chỉnh có lý do và được ghi vào sổ kho chỉ-thêm.{% endif %}</p>{% endblock %}
+{% block content %}
+<nav class="tabs">
+  <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="tab {% if mode == 'receive' %}active{% endif %}">{% icon "package-plus" %} Nhập</a>
+  <a href="{% url 'bloodbank:stock_txn' 'xuat' %}" class="tab {% if mode == 'issue' %}active{% endif %}">{% icon "package-minus" %} Xuất</a>
+  <a href="{% url 'bloodbank:stock_txn' 'dieu-chinh' %}" class="tab {% if mode == 'adjust' %}active{% endif %}">{% icon "sliders-vertical" %} Điều chỉnh</a>
+</nav>
+<form method="post" novalidate data-stock-preview="{% if mode == 'receive' %}+{% elif mode == 'issue' %}-{% else %}adjust{% endif %}" {% if mode == "receive" %}data-on-hand="0"{% endif %}
+      data-confirm="Ghi phiếu {% if mode == 'receive' %}nhập{% elif mode == 'issue' %}xuất{% else %}điều chỉnh{% endif %} kho?" data-confirm-detail="Sổ kho chỉ thêm — sai sót phải sửa bằng phiếu điều chỉnh mới." data-confirm-label="Ghi phiếu">
+  {% csrf_token %}
+  <input type="hidden" name="idempotency_key" value="{{ key }}">
+  <div class="grid grid-main-side">
+    <section class="panel">
+      <div class="panel-body"><div class="form-grid">
+      {% if mode == "receive" %}
+        <div class="field"><label for="rp">Chế phẩm <span class="field-req">*</span></label><select id="rp" class="field-select" data-product-select="rs">{% for p in products %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="rs">Quy cách <span class="field-req">*</span></label><select id="rs" name="product_spec_id" class="field-select" required><option value="">-- Chọn --</option>{% for s in specs %}<option value="{{ s.pk }}" data-product="{{ s.product_id }}" data-default="{% if s.is_default %}1{% endif %}" {% if data.product_spec_id == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+        <div class="field span-2"><span class="field-label">Nhóm máu <span class="field-req">*</span></span>
+          <div class="chip-select">{% for v, l in blood_groups %}<input type="radio" name="blood_group" id="b{{ forloop.counter }}" value="{{ v }}" required {% if data.blood_group == v %}checked{% endif %}><label for="b{{ forloop.counter }}">{{ l }}</label>{% endfor %}</div></div>
+        <div class="field"><label for="qty">Số đơn vị <span class="field-req">*</span></label><input id="qty" type="number" name="quantity" min="1" step="1" inputmode="numeric" required class="field-input" value="{{ data.quantity|default:'' }}"></div>
+        <div class="field"><label for="nt">Ghi chú nguồn</label><input id="nt" name="note" maxlength="500" class="field-input" value="{{ data.note|default:'' }}" placeholder="VD: Từ đợt hiến 12/10"></div>
+      {% else %}
+        <div class="field span-2"><label for="st">Dòng tồn <span class="field-req">*</span></label>
+          <select id="st" name="stock_id" class="field-select" required><option value="">-- Chọn dòng tồn --</option>
+            {% for s in stocks %}<option value="{{ s.pk }}" data-on-hand="{{ s.quantity_on_hand }}" data-available="{{ s.available }}" {% if initial_stock == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.blood_group }} · {{ s.product_spec.product.name }} — {{ s.product_spec.name }} (khả dụng {{ s.available }}/{{ s.quantity_on_hand }})</option>{% endfor %}
+          </select></div>
+        {% if mode == "adjust" %}
+        <div class="field span-2"><span class="field-label">Chiều điều chỉnh <span class="field-req">*</span></span>
+          <div class="radio-cards">
+            <div class="radio-card"><input type="radio" id="d1" name="direction" value="increase" {% if data.direction == "increase" %}checked{% endif %}><label for="d1"><strong>Tăng</strong><span>Cộng thêm số đơn vị</span></label></div>
+            <div class="radio-card"><input type="radio" id="d2" name="direction" value="decrease" {% if data.direction != "increase" and data.direction != "count" %}checked{% endif %}><label for="d2"><strong>Giảm</strong><span>Chỉ trên phần khả dụng</span></label></div>
+            <div class="radio-card"><input type="radio" id="d3" name="direction" value="count" {% if data.direction == "count" %}checked{% endif %}><label for="d3"><strong>Theo số đếm thực tế</strong><span>Kiểm kê</span></label></div>
+          </div></div>
+        <div class="field"><label for="qty">Số đơn vị</label><input id="qty" type="number" name="quantity" min="1" step="1" class="field-input" value="{{ data.quantity|default:'' }}"><p class="field-help" data-available-hint></p></div>
+        <div class="field"><label for="cnt">Số đếm thực tế</label><input id="cnt" type="number" name="counted" min="0" step="1" class="field-input" value="{{ data.counted|default:'' }}"><p class="field-help">Chỉ dùng khi chọn “Theo số đếm thực tế”.</p></div>
+        <div class="field"><label for="rsn">Lý do <span class="field-req">*</span></label><select id="rsn" name="reason" class="field-select" required><option value="">-- Chọn --</option>{% for v, l in reasons %}<option value="{{ v }}" {% if data.reason == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="nt">Ghi chú <span class="muted small">(bắt buộc khi lý do Khác)</span></label><input id="nt" name="note" maxlength="500" class="field-input" value="{{ data.note|default:'' }}"></div>
+        {% else %}
+        <div class="field"><label for="qty">Số đơn vị <span class="field-req">*</span></label><input id="qty" type="number" name="quantity" min="1" step="1" required class="field-input" value="{{ data.quantity|default:'' }}"><p class="field-help" data-available-hint></p></div>
+        <div class="field"><label for="pp">Mục đích</label><input id="pp" name="purpose" maxlength="500" class="field-input" value="{{ data.purpose|default:'' }}" placeholder="VD: Cấp cho khoa Hồi sức"></div>
+        <div class="field span-2"><label for="pr">Yêu cầu người cần máu (đã xác minh)</label><select id="pr" name="patient_request_id" class="field-select"><option value="">Không liên kết</option>{% for p in patient_requests %}<option value="{{ p.pk }}" {% if initial_prq == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.request_code }} · {{ p.blood_group }} · {{ p.quantity_units }} đơn vị</option>{% endfor %}</select><p class="field-help">Chỉ hiển thị yêu cầu đã xác minh/đang xử lý tại bệnh viện này.</p></div>
+        {% endif %}
+      {% endif %}
+      </div></div>
+      <div class="panel-foot"><a href="{% url 'bloodbank:stock' %}" class="btn secondary">Hủy</a><button type="submit" class="btn primary">{% icon "save" %} Ghi phiếu</button></div>
+    </section>
+    <aside class="panel">
+      <div class="panel-head"><h2 class="panel-title">{% icon "eye" %} Xem trước</h2></div>
+      <div class="panel-body">
+        <div class="preview-box" data-preview-box>
+          <div><small>Tồn trước</small><b data-before>0</b></div>
+          <div><small>Thay đổi</small><b data-change>0</b></div>
+          <div><small>Tồn sau</small><b data-after>0</b></div>
+        </div>
+        <p class="field-help" style="margin-top:12px">{% if mode == "receive" %}Tồn trước được tính lại theo dòng tồn khi ghi phiếu.{% else %}Giữ chỗ không bị ảnh hưởng; số giảm không được vượt khả dụng.{% endif %}</p>
+        <p class="field-help">Mã thao tác: <code>{{ key|slice:":12" }}…</code> — gửi lại cùng mã sẽ không ghi trùng.</p>
+      </div>
+    </aside>
+  </div>
+</form>
+{% endblock %}

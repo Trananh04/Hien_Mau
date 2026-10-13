@@ -1,0 +1,15 @@
+{# Hiển thị một trường form: nhãn, ô nhập, lỗi ngay dưới trường, gợi ý #}
+<div class="field{% if field.errors %} has-error{% endif %}{% if span %} span-2{% endif %}">
+  {% if field.field.widget.input_type == "checkbox" %}
+    <label class="check-row">{{ field }} <span>{{ field.label }}{% if field.field.required %} <span class="field-req">*</span>{% endif %}</span></label>
+  {% else %}
+    <label for="{{ field.id_for_label }}">{{ label|default:field.label }}{% if field.field.required %} <span class="field-req">*</span>{% endif %}</label>
+    {% if field.field.widget.input_type == "password" %}
+      <div class="pw-toggle">{{ field }}<button type="button" data-pw-toggle aria-label="Hiện mật khẩu">{% icon "eye" 18 %}</button></div>
+    {% else %}
+      {{ field }}
+    {% endif %}
+  {% endif %}
+  {% for error in field.errors %}<p class="field-error">{% icon "circle-alert" 14 %} {{ error }}</p>{% endfor %}
+  {% if field.help_text and not field.errors %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+</div>

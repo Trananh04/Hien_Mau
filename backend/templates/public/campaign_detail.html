@@ -1,0 +1,96 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+{% block title %}{{ c.name }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block band %}{% url 'bloodbank:campaigns' as list_url %}{% include "partials/band.html" with title=c.name crumb="Chi tiết đợt hiến" parent_url=list_url parent_label="Đợt hiến máu" lead=c.hospital.name %}{% endblock %}
+{% block content %}
+<div class="container page-body">
+  <div class="grid grid-main-side">
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">{% icon "calendar-heart" %} Thông tin đợt hiến</h2>
+          {% status_badge c %}
+        </div>
+        <div class="panel-body">
+          <dl class="dl">
+            <dt>Bệnh viện tổ chức</dt><dd>{{ c.hospital.name }}</dd>
+            <dt>Bắt đầu</dt><dd>{{ c.start_time|vn_time }}, {{ c.start_time|weekday_vi }} {{ c.start_time|vn_date }}</dd>
+            <dt>Kết thúc</dt><dd>{{ c.end_time|vn_time }}, {{ c.end_time|weekday_vi }} {{ c.end_time|vn_date }}</dd>
+            <dt>Địa điểm</dt><dd>{{ c.location_name }}</dd>
+            <dt>Địa chỉ</dt><dd>{{ c.address }}{% if c.province %}, {{ c.province }}{% endif %}</dd>
+            {% if c.hospital.phone %}<dt>Liên hệ</dt><dd><a class="link" href="tel:{{ c.hospital.phone }}">{{ c.hospital.phone|phone }}</a></dd>{% endif %}
+          </dl>
+          {% if c.description %}<div style="margin-top:18px;line-height:1.7;white-space:pre-line">{{ c.description }}</div>{% endif %}
+        </div>
+      </section>
+
+      {% if c.latitude or c.hospital.latitude %}
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">{% icon "map" %} Bản đồ</h2>
+          <a class="btn secondary sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination={% if c.latitude %}{{ c.latitude }},{{ c.longitude }}{% else %}{{ c.hospital.latitude }},{{ c.hospital.longitude }}{% endif %}">{% icon "navigation" %} Chỉ đường</a>
+        </div>
+        <div id="mini-map" style="height:300px;border-radius:0 0 14px 14px"
+             data-lat="{% if c.latitude %}{{ c.latitude }}{% else %}{{ c.hospital.latitude }}{% endif %}"
+             data-lng="{% if c.longitude %}{{ c.longitude }}{% else %}{{ c.hospital.longitude }}{% endif %}"
+             data-label="{{ c.location_name }}"></div>
+      </section>
+      {% endif %}
+    </div>
+
+    <aside class="panel" style="position:sticky;top:92px">
+      <div class="panel-head"><h2 class="panel-title">{% icon "hand-heart" %} Đăng ký tham gia</h2></div>
+      <div class="panel-body">
+        {% if state.label %}
+          <div class="notice info">{% icon "badge-check" %}<div>Trạng thái đơn của bạn: <strong>{{ state.label }}</strong>.</div></div>
+          <a href="{% url 'bloodbank:my_registrations' %}" class="btn secondary block">Xem đơn đăng ký của tôi</a>
+        {% elif state.can_register and user.is_authenticated and user.role != "member" %}
+          <div class="notice neutral">{% icon "user-round-x" %}<div>Bạn đang dùng tài khoản <strong>{{ role_label }}</strong>. Đăng ký hiến máu chỉ dành cho tài khoản Người dùng.</div></div>
+        {% elif state.can_register %}
+          {% if user.is_authenticated %}
+            {% if state.rereg %}<div class="notice warn">{% icon "rotate-ccw" %}<div>Bạn đã hủy đơn trước đó. Có thể đăng ký lại.</div></div>{% endif %}
+            <form method="post" novalidate>
+              {% csrf_token %}
+              <div class="field">
+                <span class="field-label">{{ form.donation_type.label }}</span>
+                <div class="radio-cards">
+                  {% for radio in form.donation_type %}
+                  <div class="radio-card">{{ radio.tag }}<label for="{{ radio.id_for_label }}"><strong>{{ radio.choice_label }}</strong></label></div>
+                  {% endfor %}
+                </div>
+                <p class="field-help">Hình thức thực tế do bệnh viện quyết định khi khám sàng lọc.</p>
+              </div>
+              <div style="margin-top:14px">{% include "partials/field.html" with field=form.note %}</div>
+              <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "calendar-plus" %} {% if state.rereg %}Đăng ký lại{% else %}Đăng ký tham gia{% endif %}</button>
+            </form>
+          {% else %}
+            <p style="margin-bottom:14px;line-height:1.6">Đăng nhập để gửi đơn đăng ký. Đơn sẽ được bệnh viện xác nhận trước ngày hiến.</p>
+            <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn primary block">{% icon "log-in" %} Đăng nhập để đăng ký</a>
+            <a href="{% url 'accounts:register' %}?next={{ request.path|urlencode }}" class="btn secondary block" style="margin-top:10px">Tạo tài khoản mới</a>
+          {% endif %}
+        {% else %}
+          <div class="notice neutral">{% icon "calendar-x" %}<div>Đợt hiến này hiện không nhận đăng ký.</div></div>
+          <a href="{% url 'bloodbank:campaigns' %}" class="btn secondary block">Xem đợt hiến khác</a>
+        {% endif %}
+        <hr style="border:0;border-top:1px solid var(--line);margin:20px 0 14px">
+        <button type="button" class="link small" data-open-dialog="info-process">{% icon "circle-help" 15 %} Quy trình hiến máu gồm những bước nào?</button>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script>
+(function () {
+  var el = document.getElementById('mini-map');
+  if (!el || !window.L) return;
+  var lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
+  L.Icon.Default.imagePath = '{% static "vendor/leaflet/images/" %}';
+  var map = L.map(el, { scrollWheelZoom: false }).setView([lat, lng], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  L.marker([lat, lng]).addTo(map).bindPopup(el.dataset.label);
+})();
+</script>
+{% endblock %}

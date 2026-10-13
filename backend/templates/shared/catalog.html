@@ -1,0 +1,80 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Danh mục chế phẩm{% endblock %}
+{% block crumbs %}<span>Danh mục</span>{% icon "chevron-right" 14 %}<span>Chế phẩm &amp; quy cách</span>{% endblock %}
+{% block ws_title %}Danh mục chế phẩm &amp; quy cách{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Nhóm máu là danh mục cố định 8 giá trị (A+, A−, B+, B−, AB+, AB−, O+, O−). Mỗi chế phẩm có đúng một quy cách mặc định; ngừng dùng thay vì xóa.</p>{% endblock %}
+{% block ws_actions %}{% if is_admin %}<button type="button" class="btn primary" data-open-dialog="add-product">{% icon "plus" %} Thêm chế phẩm</button>{% endif %}{% endblock %}
+{% block content %}
+{% if not is_admin %}<div class="notice info">{% icon "eye" %}<div>Bạn đang xem danh mục. Chỉ Quản trị hệ thống được thêm/sửa.</div></div>{% endif %}
+<div class="grid grid-2">
+  {% for p in products %}
+  <section class="panel" {% if not p.is_active %}style="opacity:.7"{% endif %}>
+    <div class="panel-head">
+      <div><h2 class="panel-title">{% icon "package" %} {{ p.name }}</h2><span class="muted small">Mã {{ p.code }} · {{ p.get_kind_display }}</span></div>
+      <div class="row">{% if p.is_active %}<span class="badge ok">Đang dùng</span>{% else %}<span class="badge neutral">Ngừng dùng</span>{% endif %}
+        {% if is_admin %}
+        <button type="button" class="btn ghost sm" data-open-dialog="edit-product-{{ p.pk }}">{% icon "pencil" %}</button>
+        <form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="toggle_product"><input type="hidden" name="id" value="{{ p.pk }}"><input type="hidden" name="active" value="{% if p.is_active %}0{% else %}1{% endif %}"><button class="btn secondary sm">{% if p.is_active %}Ngừng dùng{% else %}Dùng lại{% endif %}</button></form>
+        {% endif %}</div>
+    </div>
+    {% if p.description %}<div class="panel-body" style="padding-bottom:0"><p class="small muted">{{ p.description }}</p></div>{% endif %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Quy cách</th><th class="num">ml/đơn vị</th><th>Mặc định</th><th>Trạng thái</th>{% if is_admin %}<th></th>{% endif %}</tr></thead>
+      <tbody>{% for s in p.specs.all %}
+        <tr><td><span class="cell-title">{{ s.name }}</span><span class="cell-sub">{{ s.code }}</span></td><td class="num">{{ s.unit_volume_ml|default:"—" }}</td>
+          <td>{% if s.is_default %}<span class="badge info plain">Mặc định</span>{% endif %}</td>
+          <td>{% if s.is_active %}<span class="badge ok plain">Đang dùng</span>{% else %}<span class="badge neutral plain">Ngừng</span>{% endif %}</td>
+          {% if is_admin %}<td><div class="table-actions">
+            <button type="button" class="btn ghost sm" data-open-dialog="edit-spec-{{ s.pk }}">{% icon "pencil" %}</button>
+            <form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="toggle_spec"><input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="active" value="{% if s.is_active %}0{% else %}1{% endif %}"><button class="btn secondary sm">{% if s.is_active %}Ngừng{% else %}Dùng lại{% endif %}</button></form>
+          </div>
+          <dialog class="modal-dialog" id="edit-spec-{{ s.pk }}"><form method="post" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="edit_spec"><input type="hidden" name="product_id" value="{{ p.pk }}"><input type="hidden" name="spec_id" value="{{ s.pk }}">
+            <div class="modal-header"><h3 class="modal-title">Sửa quy cách {{ s.name }}</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+            <div class="modal-body"><div class="form-grid">
+              <div class="field"><label>Mã</label><input name="code" value="{{ s.code }}" required class="field-input"></div>
+              <div class="field"><label>Tên</label><input name="name" value="{{ s.name }}" required class="field-input"></div>
+              <div class="field"><label>ml/đơn vị</label><input type="number" min="1" name="unit_volume_ml" value="{{ s.unit_volume_ml|default:'' }}" class="field-input"></div>
+              <label class="check-row" style="align-self:end"><input type="checkbox" name="is_default" {% if s.is_default %}checked{% endif %}> Quy cách mặc định</label>
+            </div></div>
+            <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Lưu</button></div>
+          </form></dialog></td>{% endif %}
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% if is_admin %}
+    <div class="panel-foot" style="justify-content:flex-start"><button type="button" class="btn ghost sm" data-open-dialog="add-spec-{{ p.pk }}">{% icon "plus" %} Thêm quy cách</button></div>
+    <dialog class="modal-dialog" id="add-spec-{{ p.pk }}"><form method="post" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="add_spec"><input type="hidden" name="product_id" value="{{ p.pk }}">
+      <div class="modal-header"><h3 class="modal-title">Thêm quy cách cho {{ p.name }}</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+      <div class="modal-body"><div class="form-grid">
+        <div class="field"><label>Mã <span class="field-req">*</span></label><input name="code" required class="field-input" placeholder="VD: 450ML"></div>
+        <div class="field"><label>Tên <span class="field-req">*</span></label><input name="name" required class="field-input"></div>
+        <div class="field"><label>ml/đơn vị</label><input type="number" min="1" name="unit_volume_ml" class="field-input"></div>
+        <label class="check-row" style="align-self:end"><input type="checkbox" name="is_default"> Đặt làm mặc định</label>
+      </div></div>
+      <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Thêm</button></div>
+    </form></dialog>
+    <dialog class="modal-dialog" id="edit-product-{{ p.pk }}"><form method="post" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="edit_product"><input type="hidden" name="product_id" value="{{ p.pk }}">
+      <div class="modal-header"><h3 class="modal-title">Sửa chế phẩm</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+      <div class="modal-body"><div class="form-grid">
+        <div class="field"><label>Mã</label><input name="code" value="{{ p.code }}" required class="field-input"></div>
+        <div class="field"><label>Tên</label><input name="name" value="{{ p.name }}" required class="field-input"></div>
+        <div class="field"><label>Loại</label><select name="kind" class="field-select"><option value="whole_blood" {% if p.kind == "whole_blood" %}selected{% endif %}>Máu toàn phần</option><option value="component" {% if p.kind == "component" %}selected{% endif %}>Chế phẩm</option></select></div>
+        <div class="field"><label>Mô tả</label><input name="description" value="{{ p.description|default:'' }}" class="field-input"></div>
+      </div></div>
+      <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Lưu</button></div>
+    </form></dialog>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+
+{% if is_admin %}
+<dialog class="modal-dialog" id="add-product"><form method="post" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="add_product">
+  <div class="modal-header"><h3 class="modal-title">Thêm chế phẩm</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+  <div class="modal-body"><div class="form-grid">
+    {% for field in product_form %}{% include "partials/field.html" with field=field %}{% endfor %}
+  </div><p class="field-help" style="margin-top:12px">Sau khi tạo, thêm ít nhất một quy cách (quy cách đầu tiên tự là mặc định).</p></div>
+  <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Thêm</button></div>
+</form></dialog>
+{% endif %}
+{% endblock %}

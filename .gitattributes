@@ -1,0 +1,4 @@
+* text=auto
+# Script chạy trong container Linux phải giữ LF, nếu không sẽ lỗi "/bin/sh^M" khi clone trên Windows
+*.sh text eol=lf
+Dockerfile text eol=lf

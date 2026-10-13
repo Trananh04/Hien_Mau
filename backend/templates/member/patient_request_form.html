@@ -1,0 +1,51 @@
+{% extends "layouts/public.html" %}
+{% block title %}Gửi yêu cầu cần máu{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Phiếu yêu cầu máu" crumb="Gửi yêu cầu cần máu" lead="Dành cho người nhà bệnh nhân. Vui lòng cung cấp chính xác thông tin để bệnh viện điều trị xác minh và hỗ trợ nhanh nhất." narrow=True %}{% endblock %}
+{% block content %}
+<div class="container narrow page-body">
+  <div class="notice warn" role="note">{% icon "shield-alert" %}
+    <div><strong>Lưu ý quan trọng.</strong> Nền tảng chỉ kết nối thông tin; mọi quyết định truyền máu do bệnh viện điều trị đưa ra. Yêu cầu phải được bệnh viện xác minh trước khi điều phối. Trường hợp nguy kịch, hãy báo ngay cho bác sĩ đang điều trị.</div>
+  </div>
+  {% include "partials/form_errors.html" %}
+  <form method="post" novalidate class="custom-form-body">
+    {% csrf_token %}
+    <fieldset class="form-card-fieldset">
+      <legend class="form-card-legend">Nhu cầu máu</legend>
+      <div class="stack" style="gap:16px">
+        {% include "partials/field.html" with field=form.hospital_id %}
+        <div class="field{% if form.blood_group.errors %} has-error{% endif %}">
+          <span class="field-label">{{ form.blood_group.label }}</span>
+          <div class="chip-select" role="radiogroup" aria-label="Nhóm máu">
+            {% for value, label in form.blood_group.field.choices %}
+              <input type="radio" name="blood_group" id="bg-{{ forloop.counter }}" value="{{ value }}" {% if form.blood_group.value|default:"" == value %}checked{% endif %}>
+              <label for="bg-{{ forloop.counter }}">{% if value %}{{ label }}{% else %}Chưa rõ{% endif %}</label>
+            {% endfor %}
+          </div>
+          <p class="field-help">Không chắc chắn? Chọn “Chưa rõ” — bệnh viện sẽ xác minh.</p>
+        </div>
+        <div class="form-grid">
+          {% include "partials/field.html" with field=form.quantity_units %}
+          {% include "partials/field.html" with field=form.blood_product_id %}
+          {% include "partials/field.html" with field=form.needed_by span=True %}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-card-fieldset">
+      <legend class="form-card-legend">Thông tin người liên hệ</legend>
+      <div class="form-grid">
+        {% include "partials/field.html" with field=form.contact_name %}
+        {% include "partials/field.html" with field=form.contact_phone %}
+        {% include "partials/field.html" with field=form.patient_name span=True %}
+        {% include "partials/field.html" with field=form.note span=True %}
+      </div>
+    </fieldset>
+
+    {% include "partials/field.html" with field=form.consent %}
+    <div class="form-actions-row" style="margin-top:22px">
+      <a href="{% url 'bloodbank:home' %}" class="btn-form-cancel">Hủy bỏ</a>
+      <button type="submit" class="btn-form-submit-red">Gửi Yêu Cầu</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

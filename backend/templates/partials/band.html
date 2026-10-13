@@ -1,0 +1,15 @@
+{% load static %}
+<section class="page-band">
+  <img src="{% static 'assets/svg/dong-son-drum.svg' %}" alt="" aria-hidden="true" class="band-drum">
+  <img src="{% static 'assets/png/hero-waves.png' %}" alt="" aria-hidden="true" class="band-waves">
+  <div class="container{% if narrow %} narrow{% endif %}">
+    <nav class="band-crumbs" aria-label="Đường dẫn">
+      <a href="{% url 'bloodbank:home' %}">Trang chủ</a>
+      {% if parent_url %}{% icon "chevron-right" 14 %}<a href="{{ parent_url }}">{{ parent_label }}</a>{% endif %}
+      {% icon "chevron-right" 14 %}<span>{{ crumb|default:title }}</span>
+    </nav>
+    {% if greeting %}<div class="band-greeting">{{ greeting }}</div>{% endif %}
+    <h1 class="band-title">{{ title }}</h1>
+    {% if lead %}<p class="band-lead">{{ lead }}</p>{% endif %}
+  </div>
+</section>

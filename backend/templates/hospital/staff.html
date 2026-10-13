@@ -1,0 +1,8 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Nhân viên bệnh viện{% endblock %}
+{% block crumbs %}<span>Bệnh viện</span>{% icon "chevron-right" 14 %}<span>Nhân viên</span>{% endblock %}
+{% block ws_title %}Nhân viên bệnh viện{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Mọi nhân viên dùng chung một vai trò và có cùng quyền tại bệnh viện. Tài khoản nhân viên do Quản trị hệ thống tạo và thu hồi.</p>{% endblock %}
+{% block content %}
+{% include "partials/staff_table.html" %}
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+{% block title %}Trang chủ{% endblock %}
+{% block content %}
+<section class="hero-section" aria-label="Giới thiệu Ngân Hàng Máu Sống">
+  <img src="{% static 'assets/svg/dong-son-drum.svg' %}" alt="" aria-hidden="true" class="hero-drum-bg">
+  <img src="{% static 'assets/png/heart-blood-drop-vector.png' %}" alt="Trái tim và giọt máu nhân ái" class="hero-heart-vector">
+  <img src="{% static 'assets/png/hero-waves.png' %}" alt="" aria-hidden="true" class="hero-waves-ribbon">
+
+  <div class="hero-content-wrapper">
+    <h1 class="hero-main-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</h1>
+    <div class="hero-greeting">Xin chào{% if user.is_authenticated %}, {{ user.short_name }}{% endif %}</div>
+    <p class="hero-description">Hãy đăng ký tham gia cùng chúng tôi để tạo ra nguồn máu vô tận, sẵn sàng giúp đỡ cộng đồng và lan tỏa những giá trị nhân văn cao đẹp.</p>
+
+    <div class="hero-action-buttons">
+      {# Nút 1: Trái Tim Yêu Thương (Đăng ký Tình nguyện viên → Hiến máu cứu người) #}
+      <a href="{% if user.is_authenticated %}{% url 'bloodbank:campaigns' %}{% else %}{% url 'accounts:register' %}{% endif %}"
+         class="btn-heart-theme interactive-flip-btn" title="Đăng ký làm tình nguyện viên hiến máu" aria-label="Đăng ký Tình nguyện viên">
+        <div class="flip-text-container">
+          <span class="btn-heart-text flip-text-default">Đăng ký Tình nguyện viên</span>
+          <span class="btn-heart-text flip-text-hover" aria-hidden="true">Hiến máu cứu người</span>
+        </div>
+      </a>
+
+      {# Nút 2: Thập Đỏ Y Tế (Tôi cần xin máu → Chúng tôi sẽ giúp đỡ) #}
+      <a href="{% url 'bloodbank:patient_request_new' %}" class="btn-cross-theme interactive-flip-btn" title="Gửi yêu cầu cần máu khẩn cấp" aria-label="Tôi cần xin máu">
+        <svg viewBox="0 0 280 72" class="btn-crosses-svg" preserveAspectRatio="none" aria-hidden="true">
+          <defs><filter id="stamp-glow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="0.4" flood-color="#d90429" flood-opacity="0.4"/></filter></defs>
+          <g fill="#d90429" filter="url(#stamp-glow)">
+            <g class="cross-elem ce-1"><rect x="25" y="6" width="8" height="22" rx="1.5"/><rect x="18" y="13" width="22" height="8" rx="1.5"/></g>
+            <g class="cross-elem ce-2"><rect x="62" y="10" width="4.5" height="13" rx="1"/><rect x="58" y="14.2" width="13" height="4.5" rx="1"/></g>
+            <g class="cross-elem ce-3"><rect x="103" y="7" width="5.5" height="16" rx="1"/><rect x="98" y="12.2" width="16" height="5.5" rx="1"/></g>
+            <g class="cross-elem ce-4"><rect x="175" y="6" width="4" height="12" rx="0.8"/><rect x="171" y="10" width="12" height="4" rx="0.8"/></g>
+            <g class="cross-elem ce-5"><rect x="231" y="6" width="8" height="22" rx="1.5"/><rect x="224" y="13" width="22" height="8" rx="1.5"/></g>
+            <g class="cross-elem ce-6"><rect x="261" y="10" width="4.5" height="13.5" rx="1"/><rect x="256.5" y="14.5" width="13.5" height="4.5" rx="1"/></g>
+            <g class="cross-elem ce-7"><rect x="17" y="30" width="5" height="15" rx="1"/><rect x="12" y="35" width="15" height="5" rx="1"/></g>
+            <g class="cross-elem ce-8"><rect x="246" y="27" width="4" height="12" rx="0.8"/><rect x="242" y="31" width="12" height="4" rx="0.8"/></g>
+            <g class="cross-elem ce-9"><rect x="28" y="50" width="4.5" height="13" rx="1"/><rect x="24" y="54.2" width="13" height="4.5" rx="1"/></g>
+            <g class="cross-elem ce-10"><rect x="50" y="50" width="4.5" height="13" rx="1"/><rect x="46" y="54.2" width="13" height="4.5" rx="1"/></g>
+            <g class="cross-elem ce-11"><rect x="92" y="49" width="6.5" height="18" rx="1.2"/><rect x="86" y="54.8" width="18" height="6.5" rx="1.2"/></g>
+            <g class="cross-elem ce-12"><rect x="146" y="57" width="3" height="9" rx="0.6"/><rect x="143" y="60" width="9" height="3" rx="0.6"/></g>
+            <g class="cross-elem ce-13"><rect x="219" y="55" width="4" height="12" rx="0.8"/><rect x="215" y="59" width="12" height="4" rx="0.8"/></g>
+            <g class="cross-elem ce-14"><rect x="258" y="44" width="8" height="22" rx="1.5"/><rect x="251" y="51" width="22" height="8" rx="1.5"/></g>
+          </g>
+        </svg>
+        <div class="flip-text-container">
+          <span class="btn-cross-text flip-text-default">Tôi cần xin máu</span>
+          <span class="btn-cross-text flip-text-hover" aria-hidden="true">Chúng tôi sẽ giúp đỡ</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="home-campaigns" aria-labelledby="dot-hien-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="dot-hien-title">ĐỢT HIẾN MÁU SẮP DIỄN RA</h2>
+      <div class="news-title-underline" aria-hidden="true"></div>
+    </div>
+    {% if upcoming %}
+      <div class="campaign-list">
+        {% for c in upcoming %}{% include "public/_campaign_card.html" %}{% endfor %}
+      </div>
+      <div class="section-more"><a href="{% url 'bloodbank:campaigns' %}" class="btn secondary">Xem tất cả đợt hiến {% icon "arrow-right" %}</a></div>
+    {% else %}
+      <div class="panel"><div class="empty">
+        <div class="empty-icon">{% icon "calendar-heart" %}</div>
+        <h3>Hiện chưa có đợt hiến nào đang nhận đăng ký</h3>
+        <p>Các bệnh viện sẽ công bố đợt hiến mới tại đây. Bạn có thể tạo tài khoản trước để đăng ký nhanh khi có đợt phù hợp.</p>
+        <a href="{% url 'bloodbank:map' %}" class="btn secondary">{% icon "map-pin" %} Xem bệnh viện trên bản đồ</a>
+      </div></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="news-section" id="tin-tuc" aria-label="Tin tức hoạt động hiến máu">
+  <div class="news-section-header">
+    <h2 class="news-section-title">TIN TỨC HOẠT ĐỘNG HIẾN MÁU</h2>
+    <div class="news-title-underline" aria-hidden="true"></div>
+  </div>
+  <div class="news-marquee-container">
+    <div class="news-marquee-track">
+      {% for group in "1234" %}
+      <div class="news-marquee-group"{% if not forloop.first %} aria-hidden="true"{% endif %}>
+        {% for item in news %}
+        <article class="news-card" data-news-id="{{ item.id }}" role="button" tabindex="{% if forloop.parentloop.first %}0{% else %}-1{% endif %}">
+          <div class="news-card-img-wrapper"><img src="{{ item.image }}" alt="{{ item.title }}" class="news-card-img" loading="lazy"></div>
+          <div class="news-card-body">
+            <h3 class="news-card-title">{{ item.title }}</h3>
+            <p class="news-card-excerpt">{{ item.excerpt }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{{ news|json_script:"news-data" }}
+<dialog class="modal-dialog" id="news-dialog" style="max-width:680px" aria-label="Chi tiết tin tức">
+  <div style="display:flex;flex-direction:column;width:100%;max-height:90vh">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <span style="display:inline-flex;align-items:center;gap:6px;color:#2563eb;font-size:13px;font-weight:600">{% icon "calendar" 16 %} <span data-news-date></span></span>
+      </div>
+      <button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button>
+    </div>
+    <div class="modal-body">
+      <div style="width:100%;height:240px;border-radius:10px;overflow:hidden;margin-bottom:18px"><img data-news-img src="{{ news.0.image }}" alt="{{ news.0.title }}" style="width:100%;height:100%;object-fit:cover"></div>
+      <h2 data-news-title style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.35;margin-bottom:12px"></h2>
+      <p data-news-excerpt style="font-size:15px;font-weight:500;color:#1e3a8a;margin-bottom:16px;line-height:1.6;font-style:italic"></p>
+      <div style="font-size:14.5px;color:#334155;line-height:1.75"><p data-news-content></p></div>
+      <p class="muted small" style="margin-top:16px">Nội dung tin tức là dữ liệu mẫu của dự án học tập.</p>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button type="button" class="btn-secondary" data-news-share style="display:inline-flex;align-items:center;gap:8px">{% icon "share-2" 16 %} <span>Chia sẻ tin tức</span></button>
+      <button type="button" class="btn-primary" data-close-dialog>Đóng bài viết</button>
+    </div>
+  </div>
+</dialog>
+{% endblock %}

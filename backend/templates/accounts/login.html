@@ -1,0 +1,36 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}{{ portal.title }}{% endblock %}
+{% block art_greeting %}{{ portal.greeting }}{% endblock %}
+{% block art_title %}{{ portal.art_title }}{% endblock %}
+{% block art_text %}{{ portal.art_text }}{% endblock %}
+{% block card %}
+{% if role != "member" %}<span class="portal-chip">{% icon portal.icon 16 %} {% if role == "hospital" %}Cổng bệnh viện{% else %}Cổng quản trị{% endif %}</span>{% endif %}
+<h2>{{ portal.title }}</h2>
+<p class="lead">{{ portal.lead }}</p>
+{% if user.is_authenticated %}
+<div class="notice info">{% icon "info" %}<div>Bạn đang đăng nhập với tài khoản <strong>{{ user.email }}</strong> ({{ user.get_role_display }}). Đăng nhập tại đây sẽ thay phiên hiện tại.</div></div>
+{% endif %}
+{% if error %}<div class="notice danger" role="alert">{% icon "circle-alert" %}<div>{{ error }}{% if hint %} <a class="link" href="{{ hint.url }}">Đăng nhập tại cổng {{ hint.label }}</a>.{% endif %}</div></div>{% endif %}
+{% if role == "member" and next and "can-mau" in next %}
+<div class="notice info">{% icon "heart-pulse" %}<div>Đăng nhập để gửi yêu cầu cần máu. Chưa có tài khoản? <a class="link" href="{% url 'accounts:register' %}?next={{ next|urlencode }}">Tạo nhanh trong 1 phút</a>.</div></div>
+{% endif %}
+<form method="post" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% include "partials/field.html" with field=form.email %}
+  {% include "partials/field.html" with field=form.password %}
+  <div class="row between" style="margin-top:12px">
+    <span></span>
+    <a href="{% url 'accounts:forgot_password' %}" class="link small">Quên mật khẩu?</a>
+  </div>
+  <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "log-in" %} Đăng nhập</button>
+</form>
+{% if role == "member" %}
+<p class="auth-switch">Chưa có tài khoản? <a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link">Đăng ký ngay</a></p>
+{% else %}
+<p class="auth-switch">Chưa có tài khoản? Liên hệ Quản trị hệ thống để được cấp.</p>
+{% endif %}
+<nav class="portal-switch" aria-label="Cổng đăng nhập khác">
+  {% for p in portals %}{% if not p.current %}<a href="{{ p.url }}">{% icon p.icon 14 %} {{ p.label }}</a>{% endif %}{% endfor %}
+</nav>
+{% endblock %}

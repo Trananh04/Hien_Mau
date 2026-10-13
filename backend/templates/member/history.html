@@ -1,0 +1,53 @@
+{% extends "member/base.html" %}
+{% block title %}Lịch sử hiến máu{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Lịch sử hiến máu" lead="Chỉ tính các lượt hiến đã được bệnh viện xác nhận, trên mọi bệnh viện bạn từng hiến." %}{% endblock %}
+{% block member %}
+<div class="grid grid-4" style="margin-bottom:22px">
+  <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lần hiến thành công</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">Mọi hình thức, đã xác nhận</div></div>
+  <div class="stat"><div class="stat-label">{% icon "droplet" %} Máu toàn phần</div><div class="stat-value">{{ summary.whole_ml|vnum }}<small>ml</small></div><div class="stat-note">{{ summary.whole_count }} lần hiến toàn phần</div></div>
+  <div class="stat"><div class="stat-label">{% icon "flask-conical" %} Hiến thành phần</div><div class="stat-value">{{ summary.component_count }}<small>lần</small></div>
+    <div class="stat-note">{% for c in summary.components %}{{ c.component_product__name }}: {{ c.qty|vnum }} {{ c.component_unit }}{% if not forloop.last %} · {% endif %}{% empty %}Thống kê riêng, không cộng vào ml{% endfor %}</div></div>
+  <div class="stat"><div class="stat-label">{% icon "calendar-days" %} Lần gần nhất</div><div class="stat-value" style="font-size:22px">{{ summary.last|vn_date }}</div><div class="stat-note">{% if summary.last %}{{ summary.last|timesince }} trước{% else %}Chưa có lượt hiến{% endif %}</div></div>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" class="filters" style="flex:1">
+      <div class="field"><label for="f-year">Năm</label><select id="f-year" name="year" class="field-select"><option value="">Tất cả</option>{% for y in years %}<option value="{{ y }}" {% if f.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="f-hos">Bệnh viện</label><select id="f-hos" name="hospital" class="field-select"><option value="">Tất cả</option>{% for h in hospitals %}<option value="{{ h.pk }}" {% if f.hospital == h.pk|stringformat:"s" %}selected{% endif %}>{{ h.name }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="f-type">Hình thức</label><select id="f-type" name="type" class="field-select"><option value="">Tất cả</option><option value="whole_blood" {% if f.type == 'whole_blood' %}selected{% endif %}>Toàn phần</option><option value="component" {% if f.type == 'component' %}selected{% endif %}>Thành phần</option><option value="other" {% if f.type == 'other' %}selected{% endif %}>Khác</option></select></div>
+      <label class="check-row" style="align-self:center;padding-top:20px"><input type="checkbox" name="voided" value="1" {% if show_voided %}checked{% endif %}> Hiện lượt đã hủy hiệu lực</label>
+      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+    </form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap">
+    <table class="table stack-mobile">
+      <thead><tr><th>Ngày hiến</th><th>Bệnh viện / đợt</th><th>Hình thức</th><th class="num">Số lượng</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+      {% for d in page %}
+      <tr {% if d.status == "voided" %}class="row-danger"{% endif %}>
+        <td data-label="Ngày hiến" class="nowrap">{{ d.donated_at|vn_dt }}</td>
+        <td data-label="Bệnh viện"><span class="cell-title">{{ d.hospital.name }}</span><span class="cell-sub">{% if d.registration %}{{ d.registration.campaign.name }}{% else %}Hiến ngoài đợt{% endif %}</span></td>
+        <td data-label="Hình thức">{{ d.get_donation_type_display }}{% if d.component_product %}<span class="cell-sub">{{ d.component_product.name }}</span>{% endif %}</td>
+        <td data-label="Số lượng" class="num">{% if d.donation_type == "whole_blood" %}{{ d.volume_ml|vnum }} ml{% elif d.donation_type == "component" %}{{ d.component_quantity|vnum }} {{ d.get_component_unit_display }}{% else %}—{% endif %}</td>
+        <td data-label="Trạng thái">{% status_badge d %}</td>
+        <td><a href="{% url 'bloodbank:my_donation_detail' d.pk %}" class="btn ghost sm">Chi tiết</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% elif has_any and filtered %}
+  <div class="empty"><div class="empty-icon">{% icon "filter-x" %}</div><h3>Không có lượt hiến phù hợp bộ lọc</h3><p>Thử bỏ bớt điều kiện lọc.</p><a href="?" class="btn secondary">Xóa bộ lọc</a></div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">{% icon "droplet" %}</div>
+    <h3>Bạn chưa có lượt hiến được xác nhận</h3>
+    <p>Đơn đăng ký chỉ được tính sau khi bệnh viện xác nhận.</p>
+    <a href="{% url 'bloodbank:campaigns' %}" class="btn primary">{% icon "search" %} Tìm đợt hiến</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

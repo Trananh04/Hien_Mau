@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Hiến máu (Docker)",
+      "Group": "Servers",
+      "Host": "db",
+      "Port": 5432,
+      "MaintenanceDB": "hien_mau",
+      "Username": "hienmau",
+      "SSLMode": "prefer"
+    }
+  }
+}

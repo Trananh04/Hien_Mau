@@ -1,0 +1,92 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Tồn kho{% endblock %}
+{% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tồn kho</span>{% endblock %}
+{% block ws_title %}Tồn kho chế phẩm{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Khả dụng = Hiện có − Giữ chỗ. Bệnh viện khác chỉ thấy MIN(Chia sẻ, Khả dụng).</p>{% endblock %}
+{% block ws_actions %}
+  {% if can_edit %}
+  <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="btn primary">{% icon "package-plus" %} Nhập kho</a>
+  <a href="{% url 'bloodbank:stock_txn' 'xuat' %}" class="btn secondary">{% icon "package-minus" %} Xuất kho</a>
+  <a href="{% url 'bloodbank:stock_txn' 'dieu-chinh' %}" class="btn secondary">{% icon "sliders-vertical" %} Điều chỉnh</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div class="grid grid-4" style="margin-bottom:20px">
+  <div class="stat"><div class="stat-label">{% icon "boxes" %} Hiện có</div><div class="stat-value">{{ totals.on_hand }}<small>đơn vị</small></div></div>
+  <div class="stat"><div class="stat-label">{% icon "lock" %} Đang giữ chỗ</div><div class="stat-value">{{ totals.reserved }}<small>đơn vị</small></div><div class="stat-note">Cho đề nghị liên viện đã chấp thuận</div></div>
+  <div class="stat {% if totals.low %}alert{% endif %}"><div class="stat-label">{% icon "triangle-alert" %} Dưới tối thiểu</div><div class="stat-value">{{ totals.low }}</div><div class="stat-note">Dòng tồn</div></div>
+  <div class="stat {% if totals.short %}alert{% endif %}"><div class="stat-label">{% icon "trending-down" %} Đang thiếu</div><div class="stat-value">{{ totals.short }}</div><div class="stat-note">Khóa có nhu cầu vượt khả dụng</div></div>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">{% icon "grid-3x3" %} Ma trận khả dụng: nhóm máu × chế phẩm</h2>
+    <form method="get" data-autosubmit><label class="sr-only" for="sp">Lọc chế phẩm</label><select id="sp" name="product" class="field-select" style="min-width:220px"><option value="">Tất cả chế phẩm</option>{% for p in products %}<option value="{{ p.pk }}" {% if product_id == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></form>
+  </div>
+  <div class="table-wrap">
+    <table class="table stock-matrix">
+      <thead><tr><th>Nhóm máu</th>{% for s in specs %}<th>{{ s.product.name }}<span class="cell-sub" style="text-transform:none;letter-spacing:0">{{ s.name }}</span></th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for row in matrix %}
+        <tr><td>{% blood row.bg %}</td>
+        {% for cell in row.cells %}
+          <td>{% with st=cell.stock %}
+            <span class="stock-cell {% if cell.short %}short{% elif st and st.below_min %}low{% elif not st or st.available == 0 %}zero{% endif %}" title="{% if st %}Hiện có {{ st.quantity_on_hand }}, giữ {{ st.quantity_reserved }}, tối thiểu {{ st.min_stock_level }}{% else %}Chưa có dòng tồn{% endif %}">
+              <b>{% if st %}{{ st.available }}{% else %}0{% endif %}</b>
+              <span>{% if cell.short %}thiếu {{ cell.short }}{% elif st and st.quantity_reserved %}giữ {{ st.quantity_reserved }}{% elif st and st.min_stock_level %}min {{ st.min_stock_level }}{% else %}&nbsp;{% endif %}</span>
+            </span>
+          {% endwith %}</td>
+        {% endfor %}</tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="panel-foot" style="justify-content:flex-start"><div class="legend"><span><i style="background:var(--danger-bg);box-shadow:inset 0 0 0 1px var(--danger-line)"></i>Đang thiếu theo nhu cầu</span><span><i style="background:var(--warn-bg);box-shadow:inset 0 0 0 1px var(--warn-line)"></i>Dưới mức tối thiểu</span><span>Số lớn = khả dụng</span></div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">{% icon "list" %} Chi tiết dòng tồn</h2>
+    {% if can_edit %}<button type="button" class="btn secondary sm" data-open-dialog="threshold">{% icon "plus" %} Khai mức tồn cho khóa mới</button>{% endif %}</div>
+  {% if detail %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Nhóm máu</th><th>Chế phẩm / quy cách</th><th class="num">Hiện có</th><th class="num">Giữ</th><th class="num">Khả dụng</th><th class="num">Chia sẻ</th><th class="num">Tối thiểu</th><th>Cập nhật</th>{% if can_edit %}<th class="num">Sửa nhanh</th>{% endif %}</tr></thead>
+    <tbody>{% for s in detail %}
+      <tr class="{% if s.below_min %}row-warn{% endif %}">
+        <td data-label="Nhóm máu">{% blood s.blood_group "sm" %}</td>
+        <td data-label="Chế phẩm">{{ s.spec.product.name }}<span class="cell-sub">{{ s.spec.name }}</span></td>
+        <td data-label="Hiện có" class="num">{{ s.quantity_on_hand }}</td>
+        <td data-label="Giữ" class="num">{{ s.quantity_reserved }}</td>
+        <td data-label="Khả dụng" class="num"><strong>{{ s.available }}</strong></td>
+        <td data-label="Chia sẻ" class="num">{% if s.shareable_quantity is None %}<span class="muted">Không</span>{% else %}{{ s.shareable_quantity }}{% if s.shareable_quantity > s.available %}<span class="cell-sub">hiệu lực {{ s.effective_shareable }}</span>{% endif %}{% endif %}</td>
+        <td data-label="Tối thiểu" class="num">{{ s.min_stock_level }}</td>
+        <td data-label="Cập nhật" class="nowrap small">{{ s.updated_at|vn_dt }}</td>
+        {% if can_edit %}
+        <td data-label="Sửa nhanh"><form method="post" action="{% url 'bloodbank:stock_settings' s.pk %}" class="row" style="gap:6px;justify-content:flex-end;flex-wrap:nowrap">
+          {% csrf_token %}<input type="hidden" name="version" value="{{ s.version }}">
+          <input type="number" min="0" name="shareable_quantity" value="{{ s.shareable_quantity|default_if_none:'' }}" class="field-input" style="width:84px;min-height:34px" placeholder="Không" aria-label="Số chia sẻ">
+          <input type="number" min="0" name="min_stock_level" value="{{ s.min_stock_level }}" class="field-input" style="width:72px;min-height:34px" aria-label="Mức tối thiểu">
+          <button class="btn secondary sm" title="Lưu">{% icon "check" %}</button>
+          <a href="{% url 'bloodbank:stock_ledger' %}?stock={{ s.pk }}" class="btn ghost sm" title="Lịch sử">{% icon "history" %}</a>
+        </form></td>
+        {% endif %}
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "warehouse" %}</div><h3>Kho chưa có dữ liệu</h3><p>Dòng tồn được tạo khi nhập kho lần đầu hoặc khi khai mức tối thiểu.</p>{% if can_edit %}<a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="btn primary">Nhập kho</a>{% endif %}</div>
+  {% endif %}
+</section>
+
+{% if can_edit %}
+<dialog class="modal-dialog" id="threshold"><form method="post" action="{% url 'bloodbank:stock_threshold' %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}
+  <div class="modal-header"><h3 class="modal-title">Khai mức tồn cho khóa mới</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="field"><label>Nhóm máu</label><select name="blood_group" class="field-select" required>{% for v, l in blood_groups %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Quy cách</label><select name="product_spec_id" class="field-select" required>{% for s in all_specs %}<option value="{{ s.pk }}">{{ s.product.name }} — {{ s.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Mức tối thiểu</label><input type="number" min="0" name="min_stock_level" value="0" class="field-input"></div>
+    <div class="field"><label>Số chia sẻ (bỏ trống = không chia sẻ)</label><input type="number" min="0" name="shareable_quantity" class="field-input"></div>
+  </div></div>
+  <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Lưu</button></div>
+</form></dialog>
+{% endif %}
+{% endblock %}

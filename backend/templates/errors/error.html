@@ -1,0 +1,15 @@
+{% extends "layouts/public.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="error-page">
+  <div>
+    <div class="error-code">{{ code }}</div>
+    <h1>{{ title }}</h1>
+    <p>{{ text }}</p>
+    <div class="row" style="justify-content:center">
+      <a href="{% if home_url %}{{ home_url }}{% else %}{% url 'bloodbank:home' %}{% endif %}" class="btn primary">{% icon "house" %} {% if user.is_authenticated and user.role != "member" %}Về khu làm việc{% else %}Về trang chủ{% endif %}</a>
+      {% for p in portals %}<a href="{{ p.url }}" class="btn secondary">{% icon "log-in" %} Đăng nhập: {{ p.label }}</a>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

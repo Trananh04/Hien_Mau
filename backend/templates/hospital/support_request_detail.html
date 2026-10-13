@@ -1,0 +1,86 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Yêu cầu {{ r.request_code }}{% endblock %}
+{% block crumbs %}<a href="{% url 'bloodbank:support_requests' %}">Yêu cầu đã gửi</a>{% icon "chevron-right" 14 %}<span>{{ r.request_code }}</span>{% endblock %}
+{% block ws_title %}Yêu cầu hỗ trợ {{ r.request_code }}{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{% status_badge r %} {% status_badge r field="priority" %} &nbsp;{{ r.product_spec }} · tạo bởi {{ r.created_by.full_name }} lúc {{ r.created_at|vn_dt }}</p>{% endblock %}
+{% block ws_actions %}
+  {% if not r.is_final and not r.closed_at %}
+    {% if r.status == "partially_fulfilled" %}
+      <form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" data-confirm="Đóng yêu cầu khi mới nhận một phần?" data-confirm-detail="Các đề nghị chưa xuất sẽ bị hủy và giải phóng giữ chỗ." data-confirm-label="Đóng yêu cầu">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="btn secondary">{% icon "archive" %} Đóng yêu cầu</button></form>
+    {% else %}
+      <form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" data-confirm="Hủy yêu cầu {{ r.request_code }}?" data-confirm-detail="Mọi đề nghị đang chờ/đã chấp thuận sẽ bị hủy và giải phóng giữ chỗ ở bên cấp. Không hoàn tác được." data-confirm-label="Hủy yêu cầu">{% csrf_token %}<input type="hidden" name="action" value="cancel"><button class="btn danger">{% icon "ban" %} Hủy yêu cầu</button></form>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<section class="panel" style="margin-bottom:20px">
+  <div class="panel-body">
+    <div class="row between" style="margin-bottom:12px">
+      <div class="row">{% blood r.blood_group "lg" %}<div><strong style="font-size:17px;color:var(--ink)">{{ r.product_spec.product.name }} — {{ r.product_spec.name }}</strong><div class="muted small">Cần {{ n.needed }} đơn vị{% if r.needed_by %} trước {{ r.needed_by|vn_dt }}{% endif %}</div></div></div>
+      <div class="stat-value" style="margin:0">{{ n.received }}<small>/ {{ n.needed }} đã nhận</small></div>
+    </div>
+    <div class="progress" style="height:18px" role="img" aria-label="Đã nhận {{ n.received }}, đang chuyển {{ n.transit }}, đã cam kết {{ n.committed }}, còn thiếu {{ n.remaining }}">
+      <span class="p-received" style="width:{{ n.received|pct:n.needed }}%"></span><span class="p-transit" style="width:{{ n.transit|pct:n.needed }}%"></span><span class="p-committed" style="width:{{ n.committed|pct:n.needed }}%"></span>
+    </div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>Đã nhận {{ n.received }}</span><span><i style="background:var(--info)"></i>Đang chuyển {{ n.transit }}</span><span><i style="background:#f59e0b"></i>Đã cam kết {{ n.committed }}</span><span><i style="background:var(--ground-strong)"></i>Còn thiếu {{ n.remaining }}</span></div>
+    {% if r.note %}<p style="margin-top:12px;white-space:pre-line" class="small">{{ r.note }}</p>{% endif %}
+    {% for p in patient_requests %}<p class="small" style="margin-top:8px">{% icon "link" 14 %} Liên kết yêu cầu người cần máu <a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{{ p.request_code }}</a></p>{% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">{% icon "handshake" %} Đề nghị tới bệnh viện cấp</h2></div>
+  {% if offers %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Bệnh viện cấp</th><th class="num">Đề nghị</th><th class="num">Chấp thuận</th><th class="num">Thực nhận</th><th>Trạng thái</th><th>Cập nhật</th><th class="num">Thao tác</th></tr></thead>
+    <tbody>{% for o in offers %}
+      <tr>
+        <td data-label="Bệnh viện"><span class="cell-title">{{ o.supplier_hospital.name }}</span><span class="cell-sub">{{ o.supplier_hospital.phone|phone|default:"" }}</span></td>
+        <td data-label="Đề nghị" class="num">{{ o.quantity_requested|default:"—" }}</td>
+        <td data-label="Chấp thuận" class="num">{{ o.quantity|default:"—" }}</td>
+        <td data-label="Thực nhận" class="num">{{ o.quantity_received|default_if_none:"—" }}</td>
+        <td data-label="Trạng thái">{% status_badge o %}{% if o.reject_reason %}<span class="cell-sub">{{ o.reject_reason }}</span>{% endif %}{% if o.failure_reason %}<span class="cell-sub">{{ o.failure_reason }}</span>{% endif %}</td>
+        <td data-label="Cập nhật" class="small nowrap">{{ o.updated_at|vn_dt }}</td>
+        <td data-label="Thao tác"><div class="table-actions">
+          {% if "receive" in o.actions %}<button type="button" class="btn primary sm" data-open-dialog="receive-{{ o.pk }}">{% icon "package-check" %} Xác nhận đã nhận</button>{% endif %}
+          {% if "cancel" in o.actions %}<form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" class="inline-form" data-confirm="Hủy đề nghị tới {{ o.supplier_hospital.name }}?" data-confirm-detail="{% if o.status == 'accepted' %}Giữ chỗ {{ o.quantity }} đơn vị ở bên cấp sẽ được giải phóng.{% else %}Bên cấp sẽ được thông báo.{% endif %}" data-confirm-label="Hủy đề nghị">{% csrf_token %}<input type="hidden" name="action" value="cancel_offer"><input type="hidden" name="offer_id" value="{{ o.pk }}"><button class="btn danger sm">Hủy đề nghị</button></form>{% endif %}
+          {% if "reinvite" in o.actions and not r.is_final and not r.closed_at %}<form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="reinvite"><input type="hidden" name="offer_id" value="{{ o.pk }}"><button class="btn secondary sm">{% icon "rotate-ccw" %} Mời lại</button></form>{% endif %}
+        </div>
+        {% if "receive" in o.actions %}
+        <dialog class="modal-dialog" id="receive-{{ o.pk }}"><form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}
+          <input type="hidden" name="action" value="receive"><input type="hidden" name="offer_id" value="{{ o.pk }}"><input type="hidden" name="idempotency_key" value="{{ key }}-{{ o.pk }}">
+          <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "package-check" %}</div><h3 class="modal-title">Xác nhận nhận hàng từ {{ o.supplier_hospital.name }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+          <div class="modal-body stack" style="gap:14px">
+            <p>Bên cấp đã xuất <strong>{{ o.quantity }}</strong> đơn vị lúc {{ o.dispatched_at|vn_dt }}. Nhập đúng số thực nhận — kho của bạn được cộng đúng số này.</p>
+            <div class="field"><label>Số thực nhận <span class="field-req">*</span></label><input type="number" name="quantity_received" min="0" max="{{ o.quantity }}" value="{{ o.quantity }}" required class="field-input"><p class="field-help">Tối đa {{ o.quantity }} — số đã xuất.</p></div>
+            <label class="check-row"><input type="checkbox" name="returned" value="1"> Phần chênh lệch (nếu có) đã quay về bên cấp</label>
+            <div class="field"><label>Ghi chú</label><input name="note" class="field-input" maxlength="300"></div>
+            <div class="consequence">Không hoàn tác được: sau khi xác nhận, đề nghị chuyển sang “Đã nhận”.</div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Xác nhận đã nhận</button></div>
+        </form></dialog>
+        {% endif %}
+        </td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "handshake" %}</div><h3>Chưa mời bệnh viện nào</h3><p>Chọn bệnh viện đang chia sẻ ở bên dưới để gửi đề nghị.</p></div>
+  {% endif %}
+</section>
+
+{% if not r.is_final and not r.closed_at %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">{% icon "user-plus" %} Mời thêm bệnh viện</h2></div>
+  {% if invite_rows %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Bệnh viện</th><th>Khu vực</th><th class="num">Có thể hỗ trợ</th><th class="num">Mời</th></tr></thead>
+    <tbody>{% for row in invite_rows %}
+      <tr><td data-label="Bệnh viện">{{ row.hospital.name }}</td><td data-label="Khu vực">{{ row.hospital.area }}</td><td data-label="Có thể hỗ trợ" class="num">{{ row.can_support }}</td>
+        <td><form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" class="row" style="justify-content:flex-end;gap:6px;flex-wrap:nowrap">{% csrf_token %}<input type="hidden" name="action" value="invite"><input type="hidden" name="hospital_id" value="{{ row.hospital.pk }}"><input type="number" name="quantity" min="1" max="{{ row.can_support }}" placeholder="{{ n.remaining|default:row.can_support }}" class="field-input" style="width:80px;min-height:34px" aria-label="Số đề nghị"><button class="btn secondary sm">{% icon "send" %} Gửi</button></form></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty"><p>Không còn bệnh viện nào đang chia sẻ chế phẩm này.</p></div>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

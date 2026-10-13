@@ -1,0 +1,142 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{{ c.name }}{% endblock %}
+{% block crumbs %}<a href="{% url 'bloodbank:hospital_campaigns' %}">Đợt hiến máu</a>{% icon "chevron-right" 14 %}<span>{{ c.name }}</span>{% endblock %}
+{% block ws_title %}{{ c.name }}{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{% status_badge c %} &nbsp;{{ c.start_time|vn_dt }} – {{ c.end_time|vn_dt }} · {{ c.location_name }}</p>{% endblock %}
+{% block ws_actions %}
+  {% if can_edit and c.status in "open,closed,completed" %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn primary">{% icon "scan-line" %} Điểm hiến</a>{% endif %}
+  {% if "edit" in actions %}<a href="{% url 'bloodbank:hospital_campaign_edit' c.pk %}" class="btn secondary">{% icon "pencil" %} Sửa</a>{% endif %}
+  {% if c.status in "open,closed,completed" %}<a href="{% url 'bloodbank:campaign_detail' c.pk %}" class="btn ghost" target="_blank">{% icon "external-link" %} Trang công khai</a>{% endif %}
+{% endblock %}
+{% block content %}
+<nav class="tabs">
+  <a href="?tab=info" class="tab {% if tab == 'info' %}active{% endif %}">{% icon "info" %} Thông tin</a>
+  <a href="?tab=registrations" class="tab {% if tab == 'registrations' %}active{% endif %}">{% icon "users" %} Đơn đăng ký <span class="count">{{ summary.total }}</span></a>
+  <a href="?tab=summary" class="tab {% if tab == 'summary' %}active{% endif %}">{% icon "chart-column" %} Tổng hợp</a>
+</nav>
+
+{% if tab == "info" %}
+<div class="grid grid-main-side">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "calendar-heart" %} Thông tin đợt</h2></div>
+    <div class="panel-body">
+      <dl class="dl">
+        <dt>Bắt đầu</dt><dd>{{ c.start_time|vn_time }}, {{ c.start_time|weekday_vi }} {{ c.start_time|vn_date }}</dd>
+        <dt>Kết thúc</dt><dd>{{ c.end_time|vn_time }}, {{ c.end_time|weekday_vi }} {{ c.end_time|vn_date }}</dd>
+        <dt>Địa điểm</dt><dd>{{ c.location_name }}</dd>
+        <dt>Địa chỉ</dt><dd>{{ c.address }}{% if c.province %}, {{ c.province }}{% endif %}</dd>
+        <dt>Tọa độ</dt><dd>{% if c.latitude %}{{ c.latitude }}, {{ c.longitude }}{% else %}<span class="muted">Dùng vị trí bệnh viện</span>{% endif %}</dd>
+        {% if c.cancel_reason %}<dt>Lý do hủy</dt><dd>{{ c.cancel_reason }}</dd>{% endif %}
+        <dt>Tạo lúc</dt><dd>{{ c.created_at|vn_dt }}</dd>
+      </dl>
+      {% if c.description %}<div style="margin-top:16px;white-space:pre-line;line-height:1.7">{{ c.description }}</div>{% endif %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "toggle-right" %} Trạng thái</h2>{% status_badge c %}</div>
+    <div class="panel-body stack" style="gap:10px">
+      {% if not actions %}<p class="muted">{% if can_edit %}Không còn thao tác chuyển trạng thái cho đợt này.{% else %}Bạn chỉ có quyền xem đợt hiến.{% endif %}</p>{% endif %}
+      {% if "publish" in actions %}
+        <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}" data-confirm="Công bố đợt “{{ c.name }}”?" data-confirm-detail="Đợt sẽ hiển thị công khai và người dân có thể đăng ký." data-confirm-label="Công bố">{% csrf_token %}<input type="hidden" name="action" value="publish"><button class="btn primary block">{% icon "megaphone" %} Công bố</button></form>
+      {% endif %}
+      {% if "close" in actions %}
+        <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="btn secondary block">{% icon "lock" %} Ngừng nhận đăng ký</button></form>
+        <p class="field-help">Sau khi ngừng nhận đăng ký vẫn check-in và ghi nhận lượt hiến được.</p>
+      {% endif %}
+      {% if "reopen" in actions %}
+        <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reopen"><button class="btn secondary block">{% icon "lock-open" %} Mở lại đăng ký</button></form>
+      {% endif %}
+      {% if "complete" in actions %}
+        <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}" data-confirm="Hoàn tất đợt “{{ c.name }}”?" data-confirm-detail="Sau khi hoàn tất, đợt không thể mở lại. Các đơn đã duyệt mà không đến nên được đánh dấu Vắng trước." data-confirm-label="Hoàn tất">{% csrf_token %}<input type="hidden" name="action" value="complete"><button class="btn success block">{% icon "flag" %} Hoàn tất đợt</button></form>
+        {% if summary.by_status.approved %}<p class="field-help">Còn {{ summary.by_status.approved }} đơn đã duyệt chưa đến — cân nhắc đánh dấu Vắng.</p>{% endif %}
+      {% endif %}
+      {% if "cancel" in actions %}
+        <button type="button" class="btn danger block" data-open-dialog="cancel-campaign">{% icon "ban" %} Hủy đợt</button>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+{% if "cancel" in actions %}
+<dialog class="modal-dialog" id="cancel-campaign" aria-labelledby="cc-title">
+  <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}" style="display:flex;flex-direction:column;width:100%">
+    {% csrf_token %}<input type="hidden" name="action" value="cancel">
+    <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "ban" %}</div><h3 class="modal-title" id="cc-title">Hủy đợt hiến</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+    <div class="modal-body">
+      <p>Hủy đợt sẽ tự hủy <strong>{{ summary.unprocessed }}</strong> đơn chưa xử lý và gửi thông báo cho người đăng ký. Không hoàn tác được.</p>
+      <div class="field" style="margin-top:14px"><label for="cc-reason">Lý do hủy <span class="field-req">*</span></label><textarea id="cc-reason" name="reason" class="field-textarea" required maxlength="500"></textarea></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button type="submit" class="btn primary">Xác nhận hủy đợt</button></div>
+  </form>
+</dialog>
+{% endif %}
+
+{% elif tab == "registrations" %}
+<section class="panel">
+  <div class="panel-head">
+    <form method="get" class="filters" style="flex:1">
+      <input type="hidden" name="tab" value="registrations">
+      <div class="field grow"><label for="rq">Tìm người đăng ký</label><div class="search-input">{% icon "search" %}<input id="rq" name="q" value="{{ q }}" class="field-input" placeholder="Tên, email, số điện thoại"></div></div>
+      <div class="field"><label for="rs">Trạng thái</label><select id="rs" name="status" class="field-select"><option value="">Tất cả</option>{% for v, l in reg_statuses %}<option value="{{ v }}" {% if v == status %}selected{% endif %}>{{ l }}{% with n=summary.by_status|get_item:v %}{% if n %} ({{ n }}){% endif %}{% endwith %}</option>{% endfor %}</select></div>
+      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+    </form>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Người đăng ký</th><th>Liên hệ</th><th>Hình thức dự kiến</th><th>Nguồn</th><th>Trạng thái</th>{% if can_edit %}<th class="num">Thao tác</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for r in page %}
+    <tr>
+      <td data-label="Người đăng ký"><span class="cell-title">{{ r.donor.full_name }}</span><span class="cell-sub">{{ r.code }} · {{ r.registered_at|vn_dt }}</span></td>
+      <td data-label="Liên hệ">{{ r.donor.phone|phone|default:"—" }}<span class="cell-sub">{{ r.donor.email }}</span></td>
+      <td data-label="Hình thức">{{ r.get_donation_type_display|default:"Chưa rõ" }}</td>
+      <td data-label="Nguồn">{{ r.get_source_display }}</td>
+      <td data-label="Trạng thái">{% status_badge r %}</td>
+      {% if can_edit %}
+      <td data-label="Thao tác"><div class="table-actions">
+        {% if r.status == "pending" %}
+          <form method="post" action="{% url 'bloodbank:registration_action' r.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn success sm">{% icon "check" %} Duyệt</button></form>
+          <button type="button" class="btn danger sm" data-open-dialog="reject-{{ r.pk }}">Từ chối</button>
+          <dialog class="modal-dialog" id="reject-{{ r.pk }}"><form method="post" action="{% url 'bloodbank:registration_action' r.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <div class="modal-header"><h3 class="modal-title">Từ chối đơn của {{ r.donor.full_name }}</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+            <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea><p class="field-help">Người đăng ký sẽ nhận thông báo kèm lý do. Không ghi kết quả khám.</p></div></div>
+            <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Từ chối đơn</button></div>
+          </form></dialog>
+        {% endif %}
+        {% if r.status in "pending,approved" and c.status in "open,closed" %}
+          <a href="{% url 'bloodbank:checkin' c.pk %}?reg={{ r.pk }}&status=waiting" class="btn secondary sm">{% icon "scan-line" %} Check-in</a>
+        {% endif %}
+        {% if r.status == "attended" %}<a href="{% url 'bloodbank:checkin' c.pk %}?reg={{ r.pk }}&status=attended" class="btn primary sm">Ghi nhận kết quả</a>{% endif %}
+        {% if r.status == "donated" %}{% with d=r.donations.all|first %}{% if d %}<a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}" class="btn ghost sm">Lượt hiến</a>{% endif %}{% endwith %}{% endif %}
+      </div></td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+  <div class="empty"><div class="empty-icon">{% icon "users" %}</div>{% if status or q %}<h3>Không có đơn phù hợp bộ lọc</h3><a href="?tab=registrations" class="btn secondary">Xóa bộ lọc</a>{% else %}<h3>Chưa có đơn đăng ký</h3><p>Đơn sẽ xuất hiện khi người dân đăng ký trên trang công khai.</p>{% endif %}</div>
+  {% endif %}
+</section>
+
+{% else %}
+<div class="grid grid-4" style="margin-bottom:20px">
+  <div class="stat"><div class="stat-label">{% icon "clipboard-list" %} Tổng đơn</div><div class="stat-value">{{ summary.total }}</div><div class="stat-note">{{ summary.by_status.pending|default:0 }} chờ duyệt · {{ summary.by_status.approved|default:0 }} đã duyệt</div></div>
+  <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lượt hiến thành công</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">Chỉ tính lượt đã xác nhận</div></div>
+  <div class="stat"><div class="stat-label">{% icon "droplet" %} Máu toàn phần</div><div class="stat-value">{{ summary.whole_ml|default:0|vnum }}<small>ml</small></div><div class="stat-note">{{ summary.whole_count }} lượt toàn phần</div></div>
+  <div class="stat"><div class="stat-label">{% icon "flask-conical" %} Hiến thành phần</div><div class="stat-value">{{ summary.component_count }}<small>lượt</small></div><div class="stat-note">{% for x in summary.components %}{{ x.component_product__name }}: {{ x.qty|vnum }} {{ x.component_unit }}{% if not forloop.last %} · {% endif %}{% empty %}Không cộng vào ml{% endfor %}</div></div>
+</div>
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">{% icon "list-checks" %} Đơn theo trạng thái</h2></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Trạng thái</th><th class="num">Số đơn</th><th style="width:50%"></th></tr></thead>
+    <tbody>
+      {% for v, l in reg_statuses %}{% with n=summary.by_status|get_item:v %}
+      <tr><td>{% status_badge v label=l %}</td><td class="num">{{ n|default:0 }}</td><td><div class="progress" style="height:10px"><span class="p-received" style="width:{{ n|default:0|pct:summary.total }}%"></span></div></td></tr>
+      {% endwith %}{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+{% endblock %}
