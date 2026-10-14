@@ -182,6 +182,8 @@ ACTION_LABELS = {
     "email_verified": "Xác thực email", "reserve": "Giữ chỗ kho", "reserve_release": "Giải phóng giữ chỗ",
     "dispatched": "Xuất điều chuyển", "received": "Xác nhận nhận hàng", "reinvite": "Mời lại", "reactivate": "Kích hoạt lại",
     "role_change": "Đổi vai trò", "link_campaign": "Kết nối đợt hiến", "link_support_request": "Liên kết yêu cầu liên viện",
+    "lab_result": "Kết quả xét nghiệm", "auto_cancel": "Tự hủy (quá hạn)", "escalate": "Nhắc khẩn",
+    "donor_callout": "Kêu gọi người hiến", "login_wrong_portal": "Đăng nhập sai cổng",
 }
 
 ENTITY_LABELS = {
@@ -208,3 +210,33 @@ def absval(value):
         return abs(value)
     except TypeError:
         return value
+
+
+@register.filter
+def setting(key):
+    """Giá trị cấu hình hệ thống hiện hành: {{ "khoa"|setting }}."""
+    from bloodbank.models import SystemSetting
+
+    return SystemSetting.get(key)
+
+
+@register.filter
+def vn_since(value):
+    """Khoảng thời gian đã qua bằng tiếng Việt: "12 ngày", "3 tuần", "2 tháng", "1 năm 2 tháng"."""
+    if not value:
+        return ""
+    from django.utils import timezone
+
+    days = (timezone.localdate() - timezone.localdate(value)).days if hasattr(value, "tzinfo") else (
+        timezone.localdate() - value).days
+    if days <= 0:
+        return "hôm nay"
+    if days < 14:
+        return f"{days} ngày"
+    if days < 60:
+        return f"{days // 7} tuần"
+    months = days // 30
+    if months < 12:
+        return f"{months} tháng"
+    years, rest = divmod(months, 12)
+    return f"{years} năm" + (f" {rest} tháng" if rest else "")

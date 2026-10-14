@@ -138,3 +138,4 @@ class SpecForm(BaseForm):
     name = forms.CharField(label="Tên quy cách", max_length=150)
     unit_volume_ml = forms.IntegerField(label="Thể tích/đơn vị (ml)", required=False, min_value=1)
     is_default = forms.BooleanField(label="Quy cách mặc định", required=False)
+

@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from bloodbank.models import Demand, PatientRequest, ProductSpec, Stock, StockTxn
 
-from .common import BusinessError, audit, business_transaction, positive_int, require, snapshot
+from .common import BusinessError, as_id, audit, business_transaction, positive_int, require, snapshot
 
 T = StockTxn.Type
 
@@ -48,7 +48,7 @@ def _replay(key, stock_id, txn_type, change):
 
 
 def apply_txn(stock, txn_type, change, user, key, *, reason=None, note=None, offer=None, patient_request=None,
-              reserved_delta=0):
+              reserved_delta=0, donation=None):
     """Ghi một biến động trên dòng tồn ĐÃ KHÓA (gọi bên trong transaction)."""
     require(key, "ERR-VALIDATION", "Thiếu mã thao tác (idempotency_key).")
     replay = _replay(key, stock.pk, txn_type, change)
@@ -60,7 +60,7 @@ def apply_txn(stock, txn_type, change, user, key, *, reason=None, note=None, off
         raise BusinessError("ERR-INV-INSUFFICIENT", f"Chỉ còn {stock.available} đơn vị khả dụng.")
     txn = StockTxn.objects.create(
         stock=stock, txn_type=txn_type, quantity_change=change, quantity_before=before, quantity_after=after,
-        adjustment_reason=reason, reason_note=note, offer=offer, patient_request=patient_request,
+        adjustment_reason=reason, reason_note=note, offer=offer, patient_request=patient_request, donation=donation,
         idempotency_key=key, performed_by=user, occurred_at=timezone.now(),
     )
     stock.quantity_on_hand = after
@@ -75,7 +75,7 @@ def apply_txn(stock, txn_type, change, user, key, *, reason=None, note=None, off
 def receive(staff, spec_id, blood_group, quantity, key, note=None, request=None):
     """UC-INV-01: nhập kho theo số thực tế (BR-08)."""
     qty = positive_int(quantity)
-    spec = ProductSpec.objects.select_related("product").filter(pk=spec_id).first()
+    spec = ProductSpec.objects.select_related("product").filter(pk=as_id(spec_id)).first()
     require(spec is not None, "ERR-VALIDATION", "Chọn quy cách chế phẩm.")
     require(spec.is_active and spec.product.is_active, "ERR-CAT-INACTIVE")
     require(blood_group in dict(Stock._meta.get_field("blood_group").choices), "ERR-VALIDATION", "Chọn nhóm máu.")
@@ -88,7 +88,7 @@ def receive(staff, spec_id, blood_group, quantity, key, note=None, request=None)
 
 
 def _lock_own_stock(staff, stock_id):
-    stock = Stock.objects.select_for_update().filter(pk=stock_id, hospital=staff.hospital).first()
+    stock = Stock.objects.select_for_update().filter(pk=as_id(stock_id), hospital=staff.hospital).first()
     if stock is None:
         raise BusinessError("ERR-NOT-FOUND")
     return stock
@@ -100,7 +100,7 @@ def issue(staff, stock_id, quantity, key, purpose=None, patient_request_id=None,
     with business_transaction():
         prq = None
         if patient_request_id:
-            prq = PatientRequest.objects.select_for_update().filter(pk=patient_request_id).first()
+            prq = PatientRequest.objects.select_for_update().filter(pk=as_id(patient_request_id)).first()
             if prq is None:
                 raise BusinessError("ERR-NOT-FOUND")
             if prq.hospital_id != staff.hospital_id:
@@ -165,11 +165,13 @@ def update_stock_settings(staff, stock_id, shareable, min_level, version, reques
 
     shareable, min_level = parse(shareable, True), parse(min_level, False)
     with business_transaction():
-        stock = Stock.objects.filter(pk=stock_id, hospital=staff.hospital).first()
+        stock = Stock.objects.filter(pk=as_id(stock_id), hospital=staff.hospital).first()
         if stock is None:
             raise BusinessError("ERR-NOT-FOUND")
+        version = as_id(version)
+        require(version is not None, "ERR-VALIDATION", "Thiếu phiên bản dữ liệu — vui lòng tải lại trang.")
         old = {"shareable_quantity": stock.shareable_quantity, "min_stock_level": stock.min_stock_level}
-        updated = Stock.objects.filter(pk=stock_id, version=int(version)).update(
+        updated = Stock.objects.filter(pk=stock.pk, version=version).update(
             shareable_quantity=shareable, min_stock_level=min_level, version=F("version") + 1, updated_at=timezone.now()
         )
         if not updated:
@@ -180,7 +182,7 @@ def update_stock_settings(staff, stock_id, shareable, min_level, version, reques
 
 def ensure_stock_row(staff, spec_id, blood_group, min_level, shareable, request=None):
     """Khai mức tối thiểu cho khóa chưa có dòng tồn (BR-36)."""
-    spec = ProductSpec.objects.filter(pk=spec_id, is_active=True).first()
+    spec = ProductSpec.objects.filter(pk=as_id(spec_id), is_active=True).first()
     require(spec is not None, "ERR-VALIDATION", "Chọn quy cách.")
     with business_transaction():
         stock = get_or_create_stock_locked(staff.hospital, blood_group, spec)
@@ -191,7 +193,7 @@ def ensure_stock_row(staff, spec_id, blood_group, min_level, shareable, request=
 # ---------------------------------------------------------------- Nhu cầu & thiếu hụt
 def save_demand(staff, data, demand=None, request=None):
     qty = positive_int(data.get("required_quantity"))
-    spec = ProductSpec.objects.filter(pk=data.get("product_spec_id"), is_active=True, product__is_active=True).first()
+    spec = ProductSpec.objects.filter(pk=as_id(data.get("product_spec_id")), is_active=True, product__is_active=True).first()
     require(spec is not None, "ERR-CAT-INACTIVE")
     with business_transaction():
         if demand is None:

@@ -7,13 +7,13 @@ from bloodbank.models import (
     Campaign, Demand, Hospital, HospitalRequest, Product, ProductSpec, RequestOffer, Staff, Stock, SystemSetting,
 )
 
-from .common import BusinessError, audit, business_transaction, notify, require, snapshot
+from .common import BusinessError, as_id, audit, business_transaction, notify, require, snapshot
 
 # ---------------------------------------------------------------- Người dùng (Admin)
 def set_user_status(actor, user_id, status, request=None):
     require(status in ("active", "locked", "deleted"), "ERR-VALIDATION")
     with business_transaction():
-        user = User.objects.select_for_update().filter(pk=user_id).first()
+        user = User.objects.select_for_update().filter(pk=as_id(user_id)).first()
         if user is None:
             raise BusinessError("ERR-NOT-FOUND")
         require(user.pk != actor.pk, "ERR-AUTH-FORBIDDEN", "Không thể tự khóa/xóa tài khoản của chính mình.")
@@ -100,7 +100,7 @@ def assign_staff(actor, hospital, data, request=None):
 
 def update_staff(actor, hospital, staff_id, is_active, request=None):
     with business_transaction():
-        staff = Staff.objects.select_for_update().filter(pk=staff_id, hospital=hospital).first()
+        staff = Staff.objects.select_for_update().filter(pk=as_id(staff_id), hospital=hospital).first()
         if staff is None:
             raise BusinessError("ERR-NOT-FOUND")
         old = snapshot(staff, ["is_active"])

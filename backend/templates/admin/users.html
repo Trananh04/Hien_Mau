@@ -28,7 +28,7 @@
           {% else %}
           <form method="post" class="row" style="gap:6px;flex-wrap:nowrap" data-confirm="Đổi vai trò của {{ u.email }}?" data-confirm-detail="Mỗi vai trò đăng nhập ở một cổng riêng và chỉ thấy màn hình của vai trò đó. Người này sẽ bị đăng xuất." data-confirm-label="Đổi vai trò">{% csrf_token %}<input type="hidden" name="action" value="role"><input type="hidden" name="user_id" value="{{ u.pk }}">
             <select name="role" class="field-select" style="min-height:34px" aria-label="Vai trò"><option value="member" {% if u.role == "member" %}selected{% endif %}>Người dùng</option><option value="admin" {% if u.role == "admin" %}selected{% endif %}>Quản trị hệ thống</option></select>
-            <button class="btn secondary sm" title="Lưu">{% icon "check" %}</button>
+            <button class="btn secondary sm" title="Lưu" aria-label="Lưu thay đổi tài khoản">{% icon "check" %}</button>
           </form>
           {% endif %}
         </td>

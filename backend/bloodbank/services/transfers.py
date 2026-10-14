@@ -8,7 +8,7 @@ from django.utils import timezone
 from bloodbank.models import Hospital, HospitalRequest, PatientRequest, ProductSpec, RequestOffer, Stock, StockTxn
 
 from .common import (
-    BusinessError, audit, business_transaction, create_with_code, notify_hospital_staff, positive_int, require,
+    BusinessError, as_id, audit, business_transaction, create_with_code, notify_hospital_staff, positive_int, require,
     snapshot,
 )
 from .inventory import apply_txn, change_reserved, get_or_create_stock_locked
@@ -18,7 +18,19 @@ H = HospitalRequest.Status
 
 
 # ---------------------------------------------------------------- Tra cứu (BR-16, BR-42)
+def distance_km(a, b):
+    """Khoảng cách đường chim bay giữa 2 bệnh viện (km); None nếu thiếu tọa độ."""
+    import math
+
+    if None in (a.latitude, a.longitude, b.latitude, b.longitude):
+        return None
+    lat1, lng1, lat2, lng2 = map(lambda v: math.radians(float(v)), (a.latitude, a.longitude, b.latitude, b.longitude))
+    h = math.sin((lat2 - lat1) / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin((lng2 - lng1) / 2) ** 2
+    return round(6371 * 2 * math.asin(math.sqrt(h)), 1)
+
+
 def search_sources(hospital, blood_group, product_id, spec_id=None, min_qty=None, province=None):
+    """Nguồn có thể hỗ trợ, xếp hạng: gần trước (cùng chuyến đi nhanh hơn), cùng khoảng cách thì nhiều hơn trước."""
     qs = Stock.objects.filter(
         blood_group=blood_group, product_spec__product_id=product_id, hospital__status="active",
         shareable_quantity__gt=0,
@@ -33,9 +45,30 @@ def search_sources(hospital, blood_group, product_id, spec_id=None, min_qty=None
         if can <= 0 or (min_qty and can < int(min_qty)):
             continue
         rows.append({"stock_id": s.pk, "hospital": s.hospital, "spec": s.product_spec, "can_support": can,
-                     "updated_at": s.updated_at})
-    rows.sort(key=lambda r: (-r["can_support"], r["hospital"].name))
+                     "updated_at": s.updated_at, "distance_km": distance_km(hospital, s.hospital)})
+    rows.sort(key=lambda r: (r["distance_km"] is None, r["distance_km"] or 0, -r["can_support"], r["hospital"].name))
     return rows
+
+
+def suggest_allocation(rows, quantity, spec_id):
+    """Chia số cần cho các nguồn theo thứ hạng (tham lam): lấy hết phần chia sẻ của nguồn gần nhất rồi tới nguồn kế.
+
+    Chỉ tính nguồn đúng quy cách của yêu cầu (đề nghị phải cùng quy cách). Trả về {hospital_id: số đề nghị}.
+    """
+    try:
+        remaining = int(quantity or 0)
+    except (TypeError, ValueError):
+        return {}
+    plan = {}
+    for r in rows:
+        if remaining <= 0:
+            break
+        if str(r["spec"].pk) != str(spec_id) or r["hospital"].pk in plan:
+            continue
+        take = min(r["can_support"], remaining)
+        plan[r["hospital"].pk] = take
+        remaining -= take
+    return plan
 
 
 # ---------------------------------------------------------------- Số liệu yêu cầu (Ch.4 mục 4.0)
@@ -105,7 +138,8 @@ def _release_open_offers(req, actor):
 def _supplier_list(staff, suppliers):
     clean = []
     for hospital_id, qty in suppliers:
-        hospital_id = int(hospital_id)
+        hospital_id = as_id(hospital_id)
+        require(hospital_id is not None, "ERR-NOT-FOUND")
         if hospital_id == staff.hospital_id:
             raise BusinessError("ERR-HRQ-SELF-SUPPLY")
         hospital = Hospital.objects.filter(pk=hospital_id, status="active").first()
@@ -117,7 +151,7 @@ def _supplier_list(staff, suppliers):
 def create_request(staff, data, suppliers, patient_request_id=None, request=None):
     """UC-HRQ-01: tạo phiếu + mời bệnh viện cấp (offer pending)."""
     qty = positive_int(data.get("quantity_needed"))
-    spec = ProductSpec.objects.filter(pk=data.get("product_spec_id"), is_active=True, product__is_active=True).first()
+    spec = ProductSpec.objects.filter(pk=as_id(data.get("product_spec_id")), is_active=True, product__is_active=True).first()
     require(spec is not None, "ERR-CAT-INACTIVE")
     priority = data.get("priority") or "normal"
     require(priority in ("low", "normal", "high", "urgent"), "ERR-VALIDATION")
@@ -125,7 +159,7 @@ def create_request(staff, data, suppliers, patient_request_id=None, request=None
     with business_transaction():
         prq = None
         if patient_request_id:
-            prq = PatientRequest.objects.select_for_update().filter(pk=patient_request_id).first()
+            prq = PatientRequest.objects.select_for_update().filter(pk=as_id(patient_request_id)).first()
             if prq is None or prq.hospital_id != staff.hospital_id:
                 raise BusinessError("ERR-PRQ-WRONG-HOSPITAL")
             if prq.status not in (PatientRequest.Status.VERIFIED, PatientRequest.Status.PROCESSING):
@@ -180,11 +214,11 @@ def invite_more(staff, req_id, hospital_id, qty, request=None):
 
 
 def _lock_request_offer(offer_id, **offer_filter):
-    offer = RequestOffer.objects.filter(pk=offer_id, **offer_filter).first()
+    offer = RequestOffer.objects.filter(pk=as_id(offer_id), **offer_filter).first()
     if offer is None:
         raise BusinessError("ERR-NOT-FOUND")
     req = HospitalRequest.objects.select_for_update().get(pk=offer.request_id)
-    offer = RequestOffer.objects.select_for_update().select_related("supplier_hospital").get(pk=offer_id)
+    offer = RequestOffer.objects.select_for_update().select_related("supplier_hospital").get(pk=offer.pk)
     return req, offer
 
 

@@ -10,7 +10,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hienmau_dev_pw}
       TZ: UTC
     ports:
-      - "${DB_HOST_PORT:-5433}:5432"
+      # Chỉ mở cho chính máy này (máy khác trong mạng LAN không kết nối DB được)
+      - "127.0.0.1:${DB_HOST_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -28,7 +29,8 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
-      - "${PGADMIN_HOST_PORT:-5050}:80"
+      # pgAdmin chạy chế độ không đăng nhập → chỉ mở cho chính máy này
+      - "127.0.0.1:${PGADMIN_HOST_PORT:-5050}:80"
     volumes:
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
       - pgadmin:/var/lib/pgadmin
@@ -39,6 +41,10 @@ services:
   web:
     build: ./backend
     restart: unless-stopped
+    # Dev: mount mã nguồn từ máy + tự nạp lại khi sửa code. Image dùng khi triển khai chạy user `app`, không --reload;
+    # riêng dev chạy root vì thư mục mount (staticfiles/) thuộc quyền máy host.
+    user: root
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--reload", "--access-logfile", "-"]
     env_file:
       - .env
     environment:
@@ -51,6 +57,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Tác vụ định kỳ: hết hạn yêu cầu liên viện, tự hủy đề nghị quá hạn, nhắc yêu cầu cần máu chưa xác minh
+  scheduler:
+    build: ./backend
+    restart: unless-stopped
+    user: root  # dev: mount mã nguồn từ máy (xem service web)
+    command: ["python", "manage.py", "run_jobs", "--loop", "${JOBS_INTERVAL_SECONDS:-300}"]
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
 
 volumes:
   pgdata:

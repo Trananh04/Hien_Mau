@@ -30,9 +30,10 @@
         <td data-label="Liên kết">
           {% if t.adjustment_reason %}{{ t.get_adjustment_reason_display }}{% endif %}
           {% if t.offer %}<a class="link" href="{% url 'bloodbank:offer_open' t.offer_id %}">{{ t.offer.request.request_code }}</a>{% endif %}
+          {% if t.donation %}<a class="link" href="{% url 'bloodbank:hospital_donation_detail' t.donation_id %}">Lượt hiến {{ t.donation.code }}</a>{% endif %}
           {% if t.patient_request %}<a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' t.patient_request_id %}">{{ t.patient_request.request_code }}</a>{% endif %}
           {% if t.reason_note %}<span class="cell-sub">{{ t.reason_note }}</span>{% endif %}
-          {% if not t.adjustment_reason and not t.offer and not t.patient_request and not t.reason_note %}<span class="muted">—</span>{% endif %}
+          {% if not t.adjustment_reason and not t.offer and not t.patient_request and not t.donation and not t.reason_note %}<span class="muted">—</span>{% endif %}
         </td>
         <td data-label="Người thực hiện">{{ t.performed_by.full_name }}</td>
       </tr>

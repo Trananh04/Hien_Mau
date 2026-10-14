@@ -12,12 +12,13 @@ from accounts.forms import ChangePasswordForm, ProfileForm, WorkProfileForm
 from bloodbank.forms import PatientRequestForm
 from bloodbank.models import Donation, Hospital, Notification, PatientRequest, Registration
 from bloodbank.permissions import current_staff, member_required, signed_in_required
+from bloodbank.services import badges
 from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services import patients as prq_service
 from bloodbank.services.common import BusinessError
 
-from .helpers import attempt, paginate
+from .helpers import attempt, int_or_none, paginate
 
 
 @member_required
@@ -95,6 +96,7 @@ def my_history(request):
     return render(request, "member/history.html", {
         "summary": summary, "page": page, "show_voided": show_voided, "f": f, "years": years, "hospitals": hospitals,
         "has_any": base.exists(), "filtered": any(f.values()), "tab": "history",
+        "badges": badges.badges_for(summary["count"]), "eligible": badges.next_eligible(request.user),
     })
 
 
@@ -163,7 +165,19 @@ ENTITY_LINKS = {
     "campaigns": lambda n: reverse("bloodbank:campaign_detail", args=[n.entity_id]),
     "request_offers": lambda n: reverse("bloodbank:offer_open", args=[n.entity_id]),
     "hospital_requests": lambda n: reverse("bloodbank:support_request_detail", args=[n.entity_id]),
+    "hospitals": lambda n: reverse("bloodbank:campaigns"),
+    # Lời kêu gọi hiến máu: tới đợt hiến kèm theo (nếu có), nếu không thì danh sách đợt hiến
+    "donor_callouts": lambda n: _callout_link(n.entity_id),
 }
+
+
+def _callout_link(callout_id):
+    from bloodbank.models import DonorCallout
+
+    c = DonorCallout.objects.filter(pk=callout_id).first()
+    if c and c.campaign_id:
+        return reverse("bloodbank:campaign_detail", args=[c.campaign_id])
+    return reverse("bloodbank:campaigns")
 
 
 def notification_link(n):
@@ -182,7 +196,7 @@ def notification_link(n):
 
 @signed_in_required
 def notifications(request):
-    qs = Notification.objects.filter(user=request.user)
+    qs = Notification.objects.filter(user=request.user, channel="in_app")
     if request.GET.get("unread") == "1":
         qs = qs.filter(read_at__isnull=True)
     page = paginate(request, qs, 20)
@@ -197,9 +211,9 @@ def notifications(request):
 @signed_in_required
 @require_POST
 def notifications_read(request):
-    qs = Notification.objects.filter(user=request.user, read_at__isnull=True)
+    qs = Notification.objects.filter(user=request.user, channel="in_app", read_at__isnull=True)
     if request.POST.get("id"):
-        qs = qs.filter(pk=request.POST["id"])
+        qs = qs.filter(pk=int_or_none(request.POST["id"]))  # id sai kiểu → không đánh dấu gì (không phải "tất cả")
     qs.update(read_at=timezone.now())
     target = request.POST.get("next")
     if target and target.startswith("/") and not target.startswith("//"):

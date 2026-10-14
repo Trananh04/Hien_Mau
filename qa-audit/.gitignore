@@ -1,0 +1,5 @@
+config/qa.env
+.venv/
+__pycache__/
+# Ảnh chụp/log thô từng lần chạy (~85MB) — tạo lại bằng các script; báo cáo + ảnh so sánh nằm ở reports/
+evidence/runs/

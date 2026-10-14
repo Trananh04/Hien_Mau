@@ -5,8 +5,8 @@ from accounts.models import BLOOD_GROUP_VALUES, normalize_phone
 from bloodbank.models import Campaign, Hospital, PatientRequest, Product
 
 from .common import (
-    BusinessError, audit, business_transaction, create_with_code, notify, notify_hospital_staff, positive_int, require,
-    snapshot,
+    BusinessError, alert, as_id, audit, business_transaction, create_with_code, hospital_staff_users, notify,
+    notify_hospital_staff, positive_int, require, snapshot,
 )
 
 P = PatientRequest.Status
@@ -16,12 +16,12 @@ def submit(user, data, request=None):
     """UC-PRQ-01: người dùng gửi yêu cầu; trả về mã PR-… ngay khi đã commit."""
     require(user.role == "member", "ERR-AUTH-FORBIDDEN", "Chỉ tài khoản Người dùng mới gửi yêu cầu cần máu được.")
     require(data.get("consent"), "ERR-VALIDATION", "Bạn cần đồng ý chia sẻ thông tin với bệnh viện điều trị.")
-    hospital = Hospital.objects.filter(pk=data.get("hospital_id"), status="active").first()
+    hospital = Hospital.objects.filter(pk=as_id(data.get("hospital_id")), status="active").first()
     require(hospital is not None, "ERR-VALIDATION", "Chọn bệnh viện đang điều trị.")
     qty = positive_int(data.get("quantity_units"))
     bg = data.get("blood_group") or None
     require(bg is None or bg in BLOOD_GROUP_VALUES, "ERR-VALIDATION")
-    product = Product.objects.filter(pk=data.get("blood_product_id") or None, is_active=True).first()
+    product = Product.objects.filter(pk=as_id(data.get("blood_product_id")), is_active=True).first()
     phone = normalize_phone(data.get("contact_phone"))
     require(phone and len(phone) >= 11, "ERR-VALIDATION", "Số điện thoại liên hệ không hợp lệ.")
     with business_transaction():
@@ -33,8 +33,9 @@ def submit(user, data, request=None):
         )
         audit(user, prq, "create", new={"request_code": prq.request_code, "hospital_id": hospital.pk,
                                         "quantity_units": qty, "blood_group": bg}, hospital=hospital, request=request)
-        notify_hospital_staff(hospital, "patient_request_new", f"Yêu cầu cần máu mới {prq.request_code}",
-                              f"Cần {qty} đơn vị{(' nhóm ' + bg) if bg else ''}. Vui lòng xác minh.", entity=prq)
+        # Khẩn: báo trong ứng dụng + email cho mọi nhân viên của bệnh viện (không kèm dữ liệu nhạy cảm)
+        alert(hospital_staff_users(hospital), "patient_request_new", f"Yêu cầu cần máu mới {prq.request_code}",
+              f"Cần {qty} đơn vị{(' nhóm ' + bg) if bg else ''}. Vui lòng xác minh.", entity=prq)
         notify(user, "patient_request_submitted", f"Đã tiếp nhận yêu cầu {prq.request_code}",
                "Bệnh viện điều trị sẽ xác minh và liên hệ theo số điện thoại bạn cung cấp.", entity=prq)
     return prq
@@ -95,7 +96,7 @@ def hospital_action(staff, prq_id, action, data, request=None):
         elif action == "start_processing":
             prq.status = P.PROCESSING
         elif action == "link_campaign":
-            camp = Campaign.objects.filter(pk=data.get("campaign_id"), hospital=staff.hospital).first()
+            camp = Campaign.objects.filter(pk=as_id(data.get("campaign_id")), hospital=staff.hospital).first()
             require(camp is not None, "ERR-VALIDATION", "Chọn đợt hiến của bệnh viện.")
             prq.linked_campaign = camp
             if prq.status == P.VERIFIED:

@@ -47,6 +47,8 @@ urlpatterns = [
     path("benh-vien/nguoi-hien/", hc.donor_lookup, name="donor_lookup"),
     path("benh-vien/bao-cao-tiep-nhan/", hc.donation_report, name="donation_report"),
 
+    path("benh-vien/cho-xet-nghiem/", hi.lab_queue, name="lab_queue"),
+    path("benh-vien/luot-hien/<int:pk>/xet-nghiem/", hi.lab_result, name="lab_result"),
     path("benh-vien/kho/", hi.stock, name="stock"),
     path("benh-vien/kho/<int:pk>/cau-hinh/", hi.stock_settings, name="stock_settings"),
     path("benh-vien/kho/muc-ton/", hi.stock_threshold, name="stock_threshold"),
@@ -55,6 +57,7 @@ urlpatterns = [
     path("benh-vien/nhu-cau/", hi.demands, name="demands"),
     path("benh-vien/nhu-cau/<int:pk>/sua/", hi.demands, name="demand_edit"),
     path("benh-vien/nhu-cau/<int:pk>/dong/", hi.demand_close, name="demand_close"),
+    path("benh-vien/nhu-cau/keu-goi/", hi.donor_callout, name="donor_callout"),
 
     path("benh-vien/tim-nguon/", ht.source_search, name="source_search"),
     path("benh-vien/yeu-cau-ho-tro/", ht.support_requests, name="support_requests"),

@@ -11,8 +11,12 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
-RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh \
+    && useradd --create-home --uid 1000 app && chown -R app:app /app
 
+# Không chạy bằng root
+USER app
 EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--reload", "--access-logfile", "-"]
+# Cấu hình chạy thật: không --reload (docker-compose.yml bật --reload cho môi trường dev)
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]

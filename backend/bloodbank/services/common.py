@@ -148,10 +148,19 @@ def snapshot(instance, fields=None):
 
 
 def client_ip(request):
+    """IP ghi nhật ký. Mặc định là địa chỉ kết nối thật (REMOTE_ADDR); header X-Forwarded-For do client tự gửi
+    nên chỉ được tin khi chạy sau đúng `TRUSTED_PROXY_COUNT` reverse proxy (lấy địa chỉ do proxy ngoài cùng ghi)."""
+    from django.conf import settings
+
     if request is None:
         return None
+    ip = request.META.get("REMOTE_ADDR")
+    hops = getattr(settings, "TRUSTED_PROXY_COUNT", 0)
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    ip = forwarded.split(",")[0].strip() if forwarded else request.META.get("REMOTE_ADDR")
+    if hops and forwarded:
+        chain = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if len(chain) >= hops:
+            ip = chain[-hops]
     return ip[:45] if ip else None
 
 
@@ -185,6 +194,48 @@ def notify(user, type_, title, body=None, entity=None, entity_type=None, entity_
         delivery_status=Notification.Delivery.SENT,
         sent_at=timezone.now(),
     )
+
+
+def alert(users, type_, title, body=None, entity=None):
+    """Thông báo khẩn: trong ứng dụng + email (gửi SAU khi giao dịch commit; lỗi gửi không làm hỏng nghiệp vụ).
+
+    Mỗi email được lưu thành một dòng `notifications` (channel = email) kèm trạng thái gửi để tra soát.
+    """
+    from django.conf import settings
+    from django.core.mail import send_mail
+    from django.db import transaction
+
+    rows = []
+    for user in users:
+        if user is None or not user.is_active:
+            continue
+        notify(user, type_, title, body, entity=entity)
+        rows.append(Notification.objects.create(
+            user=user, type=type_, title=title[:200], body=(body or "")[:1000] or None,
+            entity_type=entity._meta.db_table if entity is not None else None,
+            entity_id=entity.pk if entity is not None else None,
+            channel=Notification.Channel.EMAIL, delivery_status=Notification.Delivery.PENDING,
+        ))
+
+    def send():
+        for row in rows:
+            try:
+                send_mail(f"[Khẩn] {row.title}", (row.body or row.title) + "\n\nĐăng nhập cổng bệnh viện để xử lý.",
+                          settings.DEFAULT_FROM_EMAIL, [row.user.email])
+                status = Notification.Delivery.SENT
+            except Exception:  # máy chủ mail lỗi: ghi nhận để gửi lại, không chặn luồng
+                status = Notification.Delivery.FAILED
+            Notification.objects.filter(pk=row.pk).update(delivery_status=status, attempts=1, sent_at=timezone.now())
+
+    transaction.on_commit(send)
+    return len(rows)
+
+
+def hospital_staff_users(hospital):
+    from bloodbank.models import Staff
+
+    return [s.user for s in Staff.objects.filter(hospital=hospital, is_active=True, user__status="active")
+            .select_related("user")]
 
 
 def notify_hospital_staff(hospital, type_, title, body=None, entity=None, exclude=None):
@@ -224,6 +275,15 @@ def create_with_code(model, field, prefix, **values):
 def require(condition, code, message=None):
     if not condition:
         raise BusinessError(code, message)
+
+
+def as_id(value):
+    """Id do client gửi (form/POST) → int, hoặc None nếu rỗng/sai kiểu. Dùng trước mọi filter(pk=...) từ dữ liệu
+    client để giá trị như "abc" cho kết quả "không tìm thấy" thay vì lỗi 500."""
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
 
 
 def positive_int(value, code="ERR-INV-QTY-POSITIVE"):

@@ -71,10 +71,12 @@ SCREENS = [
         "bloodbank:hospital_donation_detail", "bloodbank:donation_manage")),
     S("SCR-26", "Tra cứu người hiến", "Bệnh viện", (HOSPITAL,), ("bloodbank:donor_lookup",)),
     S("SCR-27", "Báo cáo tiếp nhận", "Bệnh viện", (HOSPITAL,), ("bloodbank:donation_report",)),
+    S("SCR-29", "Chờ xét nghiệm → nhập kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:lab_queue", "bloodbank:lab_result")),
     S("SCR-30", "Tồn kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock", "bloodbank:stock_settings", "bloodbank:stock_threshold")),
     S("SCR-31", "Phiếu nhập / xuất / điều chỉnh", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock_txn",)),
     S("SCR-32", "Lịch sử biến động kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock_ledger",)),
-    S("SCR-33", "Nhu cầu & thiếu hụt", "Bệnh viện", (HOSPITAL,), ("bloodbank:demands", "bloodbank:demand_edit", "bloodbank:demand_close")),
+    S("SCR-33", "Nhu cầu & thiếu hụt", "Bệnh viện", (HOSPITAL,), (
+        "bloodbank:demands", "bloodbank:demand_edit", "bloodbank:demand_close", "bloodbank:donor_callout")),
     S("SCR-34", "Tìm nguồn liên viện", "Bệnh viện", (HOSPITAL,), ("bloodbank:source_search",)),
     S("SCR-35", "Yêu cầu hỗ trợ đã gửi", "Bệnh viện", (HOSPITAL,), (
         "bloodbank:support_requests", "bloodbank:support_request_create", "bloodbank:support_request_detail",

@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.forms import PROVINCES
-from accounts.models import User, normalize_phone
+from accounts.models import BLOOD_GROUP_VALUES, User, normalize_phone
 from bloodbank.forms import CampaignForm
 from bloodbank.models import AuditLog, Campaign, Donation, Product, Registration
 from bloodbank.permissions import staff_required
@@ -19,7 +19,7 @@ from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services.common import BusinessError
 
-from .helpers import apply_field_errors, attempt, paginate, parse_local_dt, safe_next
+from .helpers import apply_field_errors, attempt, int_or_none, paginate, parse_local_dt, safe_next
 
 
 
@@ -53,6 +53,13 @@ def campaign_form(request, pk=None):
         messages.error(request, "Đợt đã kết thúc hoặc đã hủy, không thể sửa.")
         return redirect("bloodbank:hospital_campaign_detail", pk=campaign.pk)
     initial = {"province": request.hospital.province}
+    bg = request.GET.get("blood_group")
+    if not campaign and bg in BLOOD_GROUP_VALUES:
+        # Tạo nhanh từ dòng thiếu hụt
+        initial.update(name=f"Hiến máu khẩn — cần nhóm {bg}", location_name=request.hospital.name,
+                       address=request.hospital.address,
+                       description=f"{request.hospital.name} đang thiếu máu nhóm {bg}. Mời người hiến đã đủ thời gian "
+                                   "nghỉ đến đăng ký; mọi nhóm máu vẫn được tiếp nhận.")
     if campaign:
         initial = {k: getattr(campaign, k) for k in cmp.CAMPAIGN_FIELDS}
         for k in ("start_time", "end_time"):
@@ -149,8 +156,9 @@ def checkin(request, pk):
         regs = regs.filter(status__in=["donated", "not_donated", "no_show", "rejected"])
     regs = regs.order_by("donor__full_name")
     selected = None
-    if request.GET.get("reg"):
-        selected = campaign.registrations.select_related("donor").filter(pk=request.GET["reg"]).first()
+    reg_id = int_or_none(request.GET.get("reg"))
+    if reg_id:
+        selected = campaign.registrations.select_related("donor").filter(pk=reg_id).first()
     counts = dict(campaign.registrations.values_list("status").annotate(n=Count("id")))
     now = timezone.localtime()
     default_time = min(max(now, timezone.localtime(campaign.start_time)), timezone.localtime(campaign.end_time))
@@ -161,6 +169,8 @@ def checkin(request, pk):
         "started": timezone.now() >= campaign.start_time, "form_data": request.session.pop("donation_form", None),
         "needs_confirm": request.session.pop("donation_needs_confirm", None),
         "selected_donation": selected.donations.filter(status="confirmed").first() if selected else None,
+        "interval_warning": don.interval_warning(selected.donor) if selected and selected.status in (
+            "pending", "approved", "attended") else None,
     })
 
 
@@ -188,7 +198,7 @@ def record_donation(request, pk):
         if exc.field_errors.get("_needs_confirm"):
             request.session["donation_needs_confirm"] = exc.message
         return redirect(_checkin_url(reg.campaign_id, reg.pk, "attended"))
-    messages.success(request, f"Đã ghi nhận lượt hiến của {reg.donor.full_name}.")
+    messages.success(request, f"Đã ghi nhận lượt hiến của {reg.donor.full_name}. Lượt hiến đã vào hàng Chờ xét nghiệm.")
     return redirect(_checkin_url(reg.campaign_id, None, "attended"))
 
 
@@ -203,6 +213,10 @@ def checkin_action(request, pk):
                     {"checkin": f"Đã check-in {reg.donor.full_name}.", "not_donated": "Đã ghi nhận: có mặt, không hiến.",
                      "no_show": "Đã đánh dấu vắng mặt.", "undo_checkin": "Đã hoàn tác check-in.",
                      "approve": "Đã duyệt đơn."}.get(action))
+    if ok and action == "checkin":
+        warn = don.interval_warning(reg.donor)
+        if warn:
+            messages.warning(request, f"Lưu ý {reg.donor.full_name}: {warn['text']}")
     status = "attended" if action == "checkin" and ok else request.POST.get("status")
     return redirect(_checkin_url(reg.campaign_id, reg.pk if action == "checkin" and ok else None, status))
 
@@ -218,6 +232,10 @@ def walk_in(request, pk):
     ok, reg = attempt(request, lambda: cmp.walk_in(request.staff, campaign, donor, request.POST.get("donation_type"),
                                                    request.POST.get("reason"), request),
                       f"Đã tạo đơn tại chỗ và check-in cho {donor.full_name}.")
+    if ok:
+        warn = don.interval_warning(donor)
+        if warn:
+            messages.warning(request, f"Lưu ý {donor.full_name}: {warn['text']}")
     return redirect(_checkin_url(pk, reg.pk if ok else None, "attended" if ok else None))
 
 
@@ -266,7 +284,8 @@ def donor_lookup(request):
             cond |= Q(phone=phone)
         donors = User.objects.filter(cond).filter(scope).distinct().order_by("full_name")[:50]
     if request.GET.get("donor"):
-        selected = User.objects.filter(scope).filter(pk=request.GET["donor"]).distinct().first()
+        donor_id = int_or_none(request.GET["donor"])
+        selected = User.objects.filter(scope).filter(pk=donor_id).distinct().first() if donor_id else None
         if selected is None:
             raise Http404
         hd = Donation.objects.filter(donor=selected, hospital=request.hospital).select_related("registration__campaign")

@@ -15,9 +15,10 @@ from bloodbank.models import (
 from bloodbank.permissions import current_staff, select_hospital, staff_required
 from bloodbank.services import admin as admin_service
 from bloodbank.services import inventory as inv
+from bloodbank.services import lab
 from bloodbank.services import transfers as trf
 
-from .helpers import attempt, paginate
+from .helpers import attempt, int_or_none, paginate
 
 
 
@@ -43,7 +44,8 @@ def dashboard(request):
     ctx["prq_waiting"] = PatientRequest.objects.filter(hospital=h, status__in=["submitted", "verifying"]).count()
     ctx["prq_recent"] = PatientRequest.objects.filter(hospital=h).exclude(
         status__in=["fulfilled", "cancelled", "rejected"]).order_by("-created_at")[:5]
-    ctx["notifications"] = Notification.objects.filter(user=request.user).order_by("-created_at")[:6]
+    ctx["lab_pending"] = lab.lab_queue(h).count()
+    ctx["notifications"] = Notification.objects.filter(user=request.user, channel="in_app").order_by("-created_at")[:6]
     return render(request, "hospital/dashboard.html", ctx)
 
 
@@ -144,7 +146,7 @@ def catalog(request):
         _catalog_post(request)
         return redirect("bloodbank:catalog")
     products = Product.objects.prefetch_related("specs").order_by("-is_active", "name")
-    edit_product = Product.objects.filter(pk=request.GET.get("product")).first() if is_admin else None
+    edit_product = Product.objects.filter(pk=int_or_none(request.GET.get("product"))).first() if is_admin else None
     return render(request, "shared/catalog.html", {
         "products": products, "is_admin": is_admin, "product_form": ProductForm(), "spec_form": SpecForm(),
         "edit_product": edit_product,
@@ -158,20 +160,20 @@ def _catalog_post(request):
         if not form.is_valid():
             messages.error(request, "Thông tin chế phẩm chưa hợp lệ: " + "; ".join(e for errs in form.errors.values() for e in errs))
             return
-        product = Product.objects.filter(pk=request.POST.get("product_id")).first() if action == "edit_product" else None
+        product = Product.objects.filter(pk=int_or_none(request.POST.get("product_id"))).first() if action == "edit_product" else None
         attempt(request, lambda: admin_service.save_product(request.user, form.cleaned_data, product, request),
                 "Đã lưu chế phẩm.")
     elif action in ("add_spec", "edit_spec"):
         form = SpecForm(request.POST)
-        product = get_object_or_404(Product, pk=request.POST.get("product_id"))
+        product = get_object_or_404(Product, pk=int_or_none(request.POST.get("product_id")))
         if not form.is_valid():
             messages.error(request, "Thông tin quy cách chưa hợp lệ: " + "; ".join(e for errs in form.errors.values() for e in errs))
             return
-        spec = ProductSpec.objects.filter(pk=request.POST.get("spec_id"), product=product).first() if action == "edit_spec" else None
+        spec = ProductSpec.objects.filter(pk=int_or_none(request.POST.get("spec_id")), product=product).first() if action == "edit_spec" else None
         attempt(request, lambda: admin_service.save_spec(request.user, product, form.cleaned_data, spec, request),
                 "Đã lưu quy cách.")
     elif action in ("toggle_product", "toggle_spec"):
         model = Product if action == "toggle_product" else ProductSpec
-        obj = get_object_or_404(model, pk=request.POST.get("id"))
+        obj = get_object_or_404(model, pk=int_or_none(request.POST.get("id")))
         attempt(request, lambda: admin_service.toggle_catalog(request.user, obj, request.POST.get("active") == "1", request),
                 "Đã cập nhật trạng thái sử dụng.")

@@ -46,6 +46,7 @@
       {% status_badge selected %}
     </div>
     <div class="panel-body">
+      {% if interval_warning %}<div class="notice warn" role="note">{% icon "calendar-clock" %}<div><strong>Chưa đủ khoảng cách giữa 2 lần hiến.</strong> {{ interval_warning.text }} Lần trước: {{ interval_warning.last|vn_date }} tại {{ interval_warning.hospital }}.</div></div>{% endif %}
       <dl class="dl" style="grid-template-columns:150px 1fr;margin-bottom:16px">
         <dt>Điện thoại</dt><dd>{{ selected.donor.phone|phone|default:"—" }}</dd>
         <dt>Email</dt><dd>{{ selected.donor.email }}</dd>
@@ -121,24 +122,4 @@
 </dialog>
 {% endblock %}
 {% block extra_js %}
-<script>
-(function () {
-  var form = document.getElementById('record-form');
-  if (!form) return;
-  function sync() {
-    var t = (form.querySelector('[name="donation_type"]:checked') || {}).value || 'whole_blood';
-    form.querySelectorAll('[data-show-for]').forEach(function (el) {
-      var show = el.getAttribute('data-show-for').split(' ').indexOf(t) >= 0;
-      el.hidden = !show;
-      el.querySelectorAll('input,select').forEach(function (i) { i.disabled = !show; });
-    });
-    form.querySelectorAll('[data-req-for]').forEach(function (el) { el.hidden = el.getAttribute('data-req-for') !== t; });
-    var ml = form.querySelector('[name="volume_ml"]'); if (ml) ml.required = t === 'whole_blood';
-    ['component_product_id', 'component_quantity', 'component_unit'].forEach(function (n) {
-      var el = form.querySelector('[name="' + n + '"]'); if (el) el.required = t === 'component';
-    });
-  }
-  form.addEventListener('change', sync); sync();
-})();
-</script>
 {% endblock %}

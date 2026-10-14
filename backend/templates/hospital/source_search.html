@@ -2,7 +2,7 @@
 {% block title %}Tìm nguồn liên viện{% endblock %}
 {% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Tìm nguồn</span>{% endblock %}
 {% block ws_title %}Tìm nguồn liên viện{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Chỉ hiển thị số bệnh viện khác cho phép chia sẻ (đã trừ phần giữ chỗ). Nền tảng không tự điều chuyển — bạn gửi đề nghị và bên cấp phản hồi.</p>{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Chỉ hiển thị số bệnh viện khác cho phép chia sẻ (đã trừ phần giữ chỗ), xếp bệnh viện gần trước. Nhập "Số cần" để hệ thống gợi ý chia cho các nguồn. Nền tảng không tự điều chuyển — bạn gửi đề nghị và bên cấp phản hồi.</p>{% endblock %}
 {% block content %}
 {% if patient_request %}<div class="notice info">{% icon "link" %}<div>Đang tìm nguồn cho yêu cầu người cần máu <strong>{{ patient_request.request_code }}</strong>; yêu cầu hỗ trợ tạo ra sẽ được liên kết.</div></div>{% endif %}
 <section class="panel" style="margin-bottom:20px"><div class="panel-body">
@@ -13,11 +13,19 @@
     <div class="field"><label for="ssp">Quy cách</label><select id="ssp" name="spec" class="field-select"><option value="">Tất cả quy cách</option>{% for s in specs %}<option value="{{ s.pk }}" data-product="{{ s.product_id }}" {% if g.spec == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
     <div class="field"><label for="smq">Tối thiểu có thể hỗ trợ</label><input id="smq" type="number" min="1" name="min_qty" value="{{ g.min_qty }}" class="field-input"></div>
     <div class="field"><label for="spv">Khu vực</label><select id="spv" name="province" class="field-select"><option value="">Mọi khu vực</option>{% for p in provinces %}<option value="{{ p }}" {% if g.province == p %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
-    <input type="hidden" name="qty" value="{{ g.qty }}">
+    <div class="field"><label for="sqty">Số cần</label><input id="sqty" type="number" min="1" name="qty" value="{{ g.qty }}" class="field-input" placeholder="để gợi ý chia"></div>
     <button class="btn primary" type="submit">{% icon "search" %} Tìm</button>
   </form>
 </div></section>
 
+{% if searched and plan %}
+<div class="notice {% if plan_short %}warn{% else %}ok{% endif %}">{% icon "sparkles" %}<div>
+  <strong>Gợi ý:</strong> lấy {{ planned }} đơn vị từ {{ plan|length }} bệnh viện gần nhất có đúng quy cách{% if plan_short %} — vẫn thiếu {{ plan_short }} đơn vị, cân nhắc tạo đợt hiến hoặc kêu gọi người hiến{% endif %}.
+  Các bệnh viện được gợi ý đã được đánh dấu sẵn; bạn có thể sửa trước khi gửi.
+</div></div>
+{% elif searched and g.qty and rows %}
+<div class="notice info">{% icon "info" %}<div>Không có nguồn đúng quy cách đã chọn trong yêu cầu. Đổi quy cách ở khung "Tạo yêu cầu hỗ trợ" hoặc lọc theo quy cách.</div></div>
+{% endif %}
 {% if searched %}
 <form method="post" action="{% url 'bloodbank:support_request_create' %}" novalidate>
   {% csrf_token %}
@@ -27,16 +35,15 @@
       <div class="panel-head"><h2 class="panel-title">{% icon "hospital" %} Bệnh viện có thể hỗ trợ</h2><span class="muted small">{{ rows|length }} kết quả</span></div>
       {% if rows %}
       <div class="table-wrap"><table class="table stack-mobile">
-        <thead><tr><th></th><th>Bệnh viện</th><th>Khu vực</th><th>Quy cách</th><th class="num">Có thể hỗ trợ</th><th class="num">Đề nghị</th><th>Cập nhật</th></tr></thead>
+        <thead><tr><th></th><th>Bệnh viện</th><th>Khu vực</th><th>Quy cách</th><th class="num">Có thể hỗ trợ</th><th class="num">Đề nghị</th></tr></thead>
         <tbody>{% for r in rows %}
           <tr>
-            <td><input type="checkbox" name="supplier" value="{{ r.hospital.pk }}" aria-label="Chọn {{ r.hospital.name }}" style="accent-color:var(--primary);width:18px;height:18px"></td>
+            <td><input type="checkbox" name="supplier" value="{{ r.hospital.pk }}" {% if r.suggested %}checked{% endif %} aria-label="Chọn {{ r.hospital.name }}" style="accent-color:var(--primary);width:18px;height:18px"></td>
             <td data-label="Bệnh viện"><span class="cell-title">{{ r.hospital.name }}</span><span class="cell-sub">{{ r.hospital.phone|phone|default:"" }}</span></td>
-            <td data-label="Khu vực">{{ r.hospital.area }}</td>
+            <td data-label="Khu vực">{{ r.hospital.area }}<span class="cell-sub">{% if r.distance_km is not None %}cách {{ r.distance_km }} km{% else %}chưa có tọa độ{% endif %}</span></td>
             <td data-label="Quy cách">{{ r.spec.name }}</td>
-            <td data-label="Có thể hỗ trợ" class="num"><strong>{{ r.can_support }}</strong></td>
-            <td data-label="Đề nghị" class="num"><input type="number" min="1" max="{{ r.can_support }}" name="qty_{{ r.hospital.pk }}" class="field-input" style="width:84px;min-height:34px" placeholder="{{ r.can_support }}" aria-label="Số đề nghị"></td>
-            <td data-label="Cập nhật" class="small nowrap">{{ r.updated_at|vn_dt }}</td>
+            <td data-label="Có thể hỗ trợ" class="num"><strong>{{ r.can_support }}</strong><span class="cell-sub nowrap">cập nhật {{ r.updated_at|vn_dt }}</span></td>
+            <td data-label="Đề nghị" class="num"><input type="number" min="1" max="{{ r.can_support }}" name="qty_{{ r.hospital.pk }}" {% if r.suggested %}value="{{ r.suggested }}"{% endif %} class="field-input" style="width:84px;min-height:34px" placeholder="{{ r.can_support }}" aria-label="Số đề nghị"></td>
           </tr>
         {% endfor %}</tbody>
       </table></div>

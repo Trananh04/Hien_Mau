@@ -1,0 +1,27 @@
+{
+  "description": "Phạm vi & giới hạn an toàn của đợt kiểm thử. Mọi script đọc file này và từ chối chạy ngoài phạm vi.",
+  "environment": "local-qa (docker project hienmau-qa, DB riêng hien_mau_qa, dữ liệu giả từ seed_demo)",
+  "allowed_hosts": ["127.0.0.1", "localhost", "host.docker.internal"],
+  "target_urls": ["http://127.0.0.1:8091"],
+  "forbidden_targets": ["http://localhost:8080 (môi trường dev của người dùng)", "mọi domain/IP công khai", "production"],
+  "roles": ["anonymous", "member", "hospital", "admin"],
+  "limits": {
+    "max_concurrency": 20,
+    "request_timeout_s": 30,
+    "max_login_attempts_per_account": 25,
+    "zap_mode": "baseline (passive) + full scan (active) trên QA localhost",
+    "nuclei_rate_limit_rps": 20,
+    "nuclei_severity": "info,low,medium,high,critical — chỉ template không phá hủy (exclude-tags: dos,fuzz,intrusive,brute-force)"
+  },
+  "approvals": {
+    "static_analysis": "allowed",
+    "functional_api_tests_on_qa_db": "allowed",
+    "concurrency_tests_on_qa_db": "allowed",
+    "zap_baseline_passive": "allowed (localhost QA)",
+    "nuclei_safe_templates": "allowed (localhost QA)",
+    "zap_active_scan": "allowed (chủ dự án cho phép 14/10/2026; chỉ QA localhost, tối đa 30 phút)",
+    "strix_live_scan": "BLOCKED — cần LLM API key + phê duyệt (chi phí)",
+    "shannon_exploitation": "BLOCKED — cần LLM API key + phê duyệt (khai thác thật)",
+    "hercules_ai_functional": "BLOCKED — cần LLM API key + phê duyệt (chi phí)"
+  }
+}

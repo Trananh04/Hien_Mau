@@ -92,6 +92,15 @@ class SystemSetting(models.Model):
         "whole_blood_volume_warn_min_ml": (250, "Ngưỡng cảnh báo thể tích toàn phần thấp (ml) — OI-25"),
         "whole_blood_volume_warn_max_ml": (450, "Ngưỡng cảnh báo thể tích toàn phần cao (ml) — OI-25"),
         "donation_record_grace_hours": (48, "Ân hạn ghi nhận sau khi đợt hoàn tất (giờ) — OI-23"),
+        "donation_interval_whole_blood_days": (84, "Khoảng cách tối thiểu giữa 2 lần hiến máu toàn phần (ngày) — chỉ cảnh báo khi check-in"),
+        "donation_interval_component_days": (14, "Khoảng cách tối thiểu sau lần hiến thành phần (ngày) — chỉ cảnh báo khi check-in"),
+        "offer_response_ttl_hours": (12, "Đề nghị liên viện không được phản hồi sau số giờ này sẽ tự hủy"),
+        "prq_escalate_staff_minutes": (15, "Yêu cầu cần máu chưa được xác minh sau số phút này: nhắc lại toàn bộ nhân viên (kèm email)"),
+        "prq_escalate_admin_minutes": (30, "Yêu cầu cần máu chưa được xác minh sau số phút này: báo lên Quản trị hệ thống"),
+        "auth_email_max_per_window": (3, "Số email đặt lại mật khẩu / xác thực tối đa cho một tài khoản trong khung thời gian"),
+        "auth_email_window_minutes": (15, "Khung thời gian giới hạn gửi email đặt lại mật khẩu / xác thực (phút)"),
+        "lab_max_units_per_donation":(3, "Số đơn vị tối đa được nhập kho từ một lượt hiến khi xét nghiệm đạt"),
+        "donor_callout_cooldown_hours":(24, "Khoảng cách tối thiểu giữa 2 lần kêu gọi người hiến cùng nhóm máu của một bệnh viện (giờ)"),
     }
 
     @classmethod

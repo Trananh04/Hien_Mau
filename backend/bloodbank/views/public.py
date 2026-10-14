@@ -111,3 +111,4 @@ def chatbot(request):
     """BOT-01: trả lời từ nội dung đã duyệt, không kết luận lâm sàng (BR-20)."""
     q = (request.POST.get("q") or "")[:300]
     return JsonResponse(content.answer(q))
+

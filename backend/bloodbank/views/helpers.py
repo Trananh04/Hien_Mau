@@ -11,6 +11,24 @@ def paginate(request, qs, per_page=20):
     return page
 
 
+def int_or_none(value):
+    """Tham số id/số từ client → int, hoặc None nếu rỗng/sai kiểu (tránh lỗi 500 khi lọc theo chuỗi bất kỳ)."""
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def date_or_none(value):
+    """Chuỗi YYYY-MM-DD → date, hoặc None nếu rỗng/không hợp lệ."""
+    from datetime import date
+
+    try:
+        return date.fromisoformat(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def new_key():
     """idempotency_key sinh khi hiển thị form — gửi lại cùng khóa sẽ không ghi trùng (BR-40)."""
     return uuid.uuid4().hex

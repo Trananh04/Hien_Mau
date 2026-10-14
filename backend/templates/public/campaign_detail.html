@@ -82,15 +82,5 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script>
-(function () {
-  var el = document.getElementById('mini-map');
-  if (!el || !window.L) return;
-  var lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
-  L.Icon.Default.imagePath = '{% static "vendor/leaflet/images/" %}';
-  var map = L.map(el, { scrollWheelZoom: false }).setView([lat, lng], 15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-  L.marker([lat, lng]).addTo(map).bindPopup(el.dataset.label);
-})();
-</script>
+<script src="{% static 'js/maps.js' %}"></script>
 {% endblock %}

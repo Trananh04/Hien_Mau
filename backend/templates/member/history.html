@@ -2,12 +2,13 @@
 {% block title %}Lịch sử hiến máu{% endblock %}
 {% block band %}{% include "partials/band.html" with title="Lịch sử hiến máu" lead="Chỉ tính các lượt hiến đã được bệnh viện xác nhận, trên mọi bệnh viện bạn từng hiến." %}{% endblock %}
 {% block member %}
+{% include "member/_recognition.html" %}
 <div class="grid grid-4" style="margin-bottom:22px">
   <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lần hiến thành công</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">Mọi hình thức, đã xác nhận</div></div>
   <div class="stat"><div class="stat-label">{% icon "droplet" %} Máu toàn phần</div><div class="stat-value">{{ summary.whole_ml|vnum }}<small>ml</small></div><div class="stat-note">{{ summary.whole_count }} lần hiến toàn phần</div></div>
   <div class="stat"><div class="stat-label">{% icon "flask-conical" %} Hiến thành phần</div><div class="stat-value">{{ summary.component_count }}<small>lần</small></div>
     <div class="stat-note">{% for c in summary.components %}{{ c.component_product__name }}: {{ c.qty|vnum }} {{ c.component_unit }}{% if not forloop.last %} · {% endif %}{% empty %}Thống kê riêng, không cộng vào ml{% endfor %}</div></div>
-  <div class="stat"><div class="stat-label">{% icon "calendar-days" %} Lần gần nhất</div><div class="stat-value" style="font-size:22px">{{ summary.last|vn_date }}</div><div class="stat-note">{% if summary.last %}{{ summary.last|timesince }} trước{% else %}Chưa có lượt hiến{% endif %}</div></div>
+  <div class="stat"><div class="stat-label">{% icon "calendar-days" %} Lần gần nhất</div><div class="stat-value" style="font-size:22px">{{ summary.last|vn_date }}</div><div class="stat-note">{% if summary.last %}{{ summary.last|vn_since }} trước{% else %}Chưa có lượt hiến{% endif %}</div></div>
 </div>
 
 <section class="panel">

@@ -65,8 +65,8 @@
           {% csrf_token %}<input type="hidden" name="version" value="{{ s.version }}">
           <input type="number" min="0" name="shareable_quantity" value="{{ s.shareable_quantity|default_if_none:'' }}" class="field-input" style="width:84px;min-height:34px" placeholder="Không" aria-label="Số chia sẻ">
           <input type="number" min="0" name="min_stock_level" value="{{ s.min_stock_level }}" class="field-input" style="width:72px;min-height:34px" aria-label="Mức tối thiểu">
-          <button class="btn secondary sm" title="Lưu">{% icon "check" %}</button>
-          <a href="{% url 'bloodbank:stock_ledger' %}?stock={{ s.pk }}" class="btn ghost sm" title="Lịch sử">{% icon "history" %}</a>
+          <button class="btn secondary sm" title="Lưu" aria-label="Lưu số chia sẻ và mức tối thiểu">{% icon "check" %}</button>
+          <a href="{% url 'bloodbank:stock_ledger' %}?stock={{ s.pk }}" class="btn ghost sm" title="Lịch sử" aria-label="Lịch sử biến động của dòng tồn này">{% icon "history" %}</a>
         </form></td>
         {% endif %}
       </tr>

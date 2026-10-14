@@ -2,7 +2,7 @@
 {% block title %}Nhu cầu & thiếu hụt{% endblock %}
 {% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>Nhu cầu &amp; thiếu hụt</span>{% endblock %}
 {% block ws_title %}Nhu cầu &amp; thiếu hụt{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Thiếu = MAX(0, tổng nhu cầu đang cần cùng khóa − khả dụng). Cờ “dưới mức tối thiểu” tính riêng.</p>{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Thiếu = MAX(0, tổng nhu cầu đang cần cùng khóa − khả dụng). Cờ “dưới mức tối thiểu” tính riêng. Với mỗi dòng thiếu: xin hỗ trợ liên viện, tạo đợt hiến hoặc kêu gọi người hiến cùng nhóm máu ở gần.</p>{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="panel-head"><h2 class="panel-title">{% icon "trending-down" %} Bảng thiếu hụt</h2></div>
@@ -17,7 +17,7 @@
         <td data-label="Khả dụng" class="num">{{ s.available }}</td>
         <td data-label="Thiếu" class="num"><strong>{{ s.shortage }}</strong></td>
         <td data-label="Trạng thái">{% if s.shortage %}<span class="badge danger">Đang thiếu</span>{% else %}<span class="badge ok">Đủ đáp ứng</span>{% endif %}{% if s.below_min %} <span class="badge warn plain">Dưới tối thiểu</span>{% endif %}</td>
-        <td><div class="table-actions">{% if s.shortage %}<a class="btn primary sm" href="{% url 'bloodbank:source_search' %}?blood_group={{ s.blood_group|urlencode }}&product={{ s.spec.product_id }}&spec={{ s.spec.pk }}&qty={{ s.shortage }}">{% icon "search" %} Tìm nguồn</a>{% endif %}</div></td>
+        <td>{% if s.shortage %}{% include "partials/shortage_actions.html" %}{% endif %}</td>
       </tr>
     {% endfor %}</tbody>
   </table></div>

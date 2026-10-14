@@ -5,7 +5,7 @@ Menu chỉ hiện mục mà vai trò hiện tại mở được theo bảng `blo
 from django.urls import reverse
 
 from bloodbank import access
-from bloodbank.models import Notification, PatientRequest, RequestOffer
+from bloodbank.models import Donation, Notification, PatientRequest, RequestOffer
 from bloodbank.permissions import assignments, current_staff
 
 # (nhóm, nhãn, url name, icon)
@@ -14,6 +14,7 @@ HOSPITAL_NAV = [
     ("Hiến máu", "Đợt hiến máu", "bloodbank:hospital_campaigns", "calendar-heart"),
     ("Hiến máu", "Tra cứu người hiến", "bloodbank:donor_lookup", "user-search"),
     ("Hiến máu", "Báo cáo tiếp nhận", "bloodbank:donation_report", "chart-column"),
+    ("Kho máu", "Chờ xét nghiệm", "bloodbank:lab_queue", "flask-conical"),
     ("Kho máu", "Tồn kho", "bloodbank:stock", "warehouse"),
     ("Kho máu", "Lịch sử biến động", "bloodbank:stock_ledger", "history"),
     ("Kho máu", "Nhu cầu & thiếu hụt", "bloodbank:demands", "clipboard-list"),
@@ -57,7 +58,7 @@ def workspace(request):
 
     staff = current_staff(request)
     ctx = {
-        "unread_count": Notification.objects.filter(user=user, read_at__isnull=True).count(),
+        "unread_count": Notification.objects.filter(user=user, channel="in_app", read_at__isnull=True).count(),
         "current_staff": staff,
         "current_hospital": staff.hospital if staff else None,
         "staff_assignments": list(assignments(user)) if staff else [],
@@ -68,6 +69,8 @@ def workspace(request):
     if staff:
         counts = {
             "bloodbank:incoming_offers": RequestOffer.objects.filter(supplier_hospital=staff.hospital, status="pending").count(),
+            "bloodbank:lab_queue": Donation.objects.filter(hospital=staff.hospital, status="confirmed",
+                                                           lab_status="pending").count(),
             "bloodbank:hospital_patient_requests": PatientRequest.objects.filter(
                 hospital=staff.hospital, status__in=["submitted", "verifying"]).count(),
         }

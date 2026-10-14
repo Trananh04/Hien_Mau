@@ -1,0 +1,1228 @@
+[
+ {
+  "path": "/dang-nhap/",
+  "name": "accounts:login",
+  "view": "accounts.views.login_view",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/dang-nhap/",
+  "name": "accounts:hospital_login",
+  "view": "accounts.views.hospital_login_view",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/dang-nhap/",
+  "name": "accounts:admin_login",
+  "view": "accounts.views.admin_login_view",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/dang-ky/",
+  "name": "accounts:register",
+  "view": "accounts.views.register_view",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/dang-xuat/",
+  "name": "accounts:logout",
+  "view": "accounts.views.logout_view",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-16",
+  "screen_title": "Đăng xuất",
+  "roles": [
+   "member",
+   "hospital",
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quen-mat-khau/",
+  "name": "accounts:forgot_password",
+  "view": "accounts.views.forgot_password_view",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/dat-lai-mat-khau/<str:token>/",
+  "name": "accounts:reset_password",
+  "view": "accounts.views.reset_password_view",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/xac-thuc-email/<str:token>/",
+  "name": "accounts:verify_email",
+  "view": "accounts.views.verify_email_view",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-06",
+  "screen_title": "Đăng nhập, đăng ký, khôi phục mật khẩu",
+  "roles": [
+   "public"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/xac-thuc-email-gui-lai/",
+  "name": "accounts:resend_verification",
+  "view": "accounts.views.resend_verification_view",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-07",
+  "screen_title": "Hồ sơ cá nhân",
+  "roles": [
+   "member"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/",
+  "name": "bloodbank:home",
+  "view": "bloodbank.views.public.home",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-01",
+  "screen_title": "Trang chủ & chatbot",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/dot-hien/",
+  "name": "bloodbank:campaigns",
+  "view": "bloodbank.views.public.campaign_list",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-02",
+  "screen_title": "Danh sách đợt hiến",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/dot-hien/<int:pk>/",
+  "name": "bloodbank:campaign_detail",
+  "view": "bloodbank.views.public.campaign_detail",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-03",
+  "screen_title": "Chi tiết đợt hiến (đăng ký hiến: chỉ Người dùng)",
+  "roles": [
+   "public"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/ban-do/",
+  "name": "bloodbank:map",
+  "view": "bloodbank.views.public.map_view",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-04",
+  "screen_title": "Bản đồ điểm hiến",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/ban-do/du-lieu/",
+  "name": "bloodbank:map_data",
+  "view": "bloodbank.views.public.map_data",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-04",
+  "screen_title": "Bản đồ điểm hiến",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/api/chatbot/",
+  "name": "bloodbank:chatbot",
+  "view": "bloodbank.views.public.chatbot",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-01",
+  "screen_title": "Trang chủ & chatbot",
+  "roles": [
+   "public"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan/",
+  "name": "bloodbank:profile",
+  "view": "bloodbank.views.member.profile",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-07",
+  "screen_title": "Hồ sơ cá nhân",
+  "roles": [
+   "member"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan/don-dang-ky/",
+  "name": "bloodbank:my_registrations",
+  "view": "bloodbank.views.member.my_registrations",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-08",
+  "screen_title": "Đơn đăng ký hiến của tôi",
+  "roles": [
+   "member"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan/don-dang-ky/<int:pk>/huy/",
+  "name": "bloodbank:cancel_registration",
+  "view": "bloodbank.views.member.cancel_registration",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-08",
+  "screen_title": "Đơn đăng ký hiến của tôi",
+  "roles": [
+   "member"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/tai-khoan/don-dang-ky/<int:pk>/dang-ky-lai/",
+  "name": "bloodbank:reregister",
+  "view": "bloodbank.views.member.reregister",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-08",
+  "screen_title": "Đơn đăng ký hiến của tôi",
+  "roles": [
+   "member"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/tai-khoan/lich-su-hien/",
+  "name": "bloodbank:my_history",
+  "view": "bloodbank.views.member.my_history",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-09",
+  "screen_title": "Lịch sử hiến máu",
+  "roles": [
+   "member"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan/lich-su-hien/<int:pk>/",
+  "name": "bloodbank:my_donation_detail",
+  "view": "bloodbank.views.member.my_donation_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-09",
+  "screen_title": "Lịch sử hiến máu",
+  "roles": [
+   "member"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/can-mau/gui-yeu-cau/",
+  "name": "bloodbank:patient_request_new",
+  "view": "bloodbank.views.member.patient_request_new",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-11",
+  "screen_title": "Gửi yêu cầu cần máu",
+  "roles": [
+   "member"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan/yeu-cau-can-mau/",
+  "name": "bloodbank:my_patient_requests",
+  "view": "bloodbank.views.member.my_patient_requests",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-12",
+  "screen_title": "Yêu cầu cần máu của tôi",
+  "roles": [
+   "member"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan/yeu-cau-can-mau/<int:pk>/",
+  "name": "bloodbank:my_patient_request_detail",
+  "view": "bloodbank.views.member.my_patient_request_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-12",
+  "screen_title": "Yêu cầu cần máu của tôi",
+  "roles": [
+   "member"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/tai-khoan/yeu-cau-can-mau/<int:pk>/huy/",
+  "name": "bloodbank:cancel_patient_request",
+  "view": "bloodbank.views.member.cancel_patient_request",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "member_required",
+  "screen": "SCR-12",
+  "screen_title": "Yêu cầu cần máu của tôi",
+  "roles": [
+   "member"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/thong-bao/",
+  "name": "bloodbank:notifications",
+  "view": "bloodbank.views.member.notifications",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "signed_in_required",
+  "screen": "SCR-14",
+  "screen_title": "Thông báo",
+  "roles": [
+   "member",
+   "hospital",
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/thong-bao/da-doc/",
+  "name": "bloodbank:notifications_read",
+  "view": "bloodbank.views.member.notifications_read",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "signed_in_required",
+  "screen": "SCR-14",
+  "screen_title": "Thông báo",
+  "roles": [
+   "member",
+   "hospital",
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/tai-khoan-cong-tac/",
+  "name": "bloodbank:work_account",
+  "view": "bloodbank.views.member.work_account",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "signed_in_required",
+  "screen": "SCR-15",
+  "screen_title": "Tài khoản công tác (hồ sơ, đổi mật khẩu)",
+  "roles": [
+   "hospital",
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/",
+  "name": "bloodbank:hospital_dashboard",
+  "view": "bloodbank.views.hospital.dashboard",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-20",
+  "screen_title": "Tổng quan bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/chon/",
+  "name": "bloodbank:select_hospital",
+  "view": "bloodbank.views.hospital.choose_hospital",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-20",
+  "screen_title": "Tổng quan bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/dot-hien/",
+  "name": "bloodbank:hospital_campaigns",
+  "view": "bloodbank.views.hospital_campaigns.campaigns",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-21",
+  "screen_title": "Quản lý đợt hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/dot-hien/tao/",
+  "name": "bloodbank:hospital_campaign_create",
+  "view": "bloodbank.views.hospital_campaigns.campaign_form",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-21",
+  "screen_title": "Quản lý đợt hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/dot-hien/<int:pk>/",
+  "name": "bloodbank:hospital_campaign_detail",
+  "view": "bloodbank.views.hospital_campaigns.campaign_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-21",
+  "screen_title": "Quản lý đợt hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/dot-hien/<int:pk>/sua/",
+  "name": "bloodbank:hospital_campaign_edit",
+  "view": "bloodbank.views.hospital_campaigns.campaign_form",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-21",
+  "screen_title": "Quản lý đợt hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/dot-hien/<int:pk>/trang-thai/",
+  "name": "bloodbank:hospital_campaign_action",
+  "view": "bloodbank.views.hospital_campaigns.campaign_action",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-21",
+  "screen_title": "Quản lý đợt hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/dot-hien/<int:pk>/diem-hien/",
+  "name": "bloodbank:checkin",
+  "view": "bloodbank.views.hospital_campaigns.checkin",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-24",
+  "screen_title": "Điểm hiến (check-in, ghi nhận)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/dot-hien/<int:pk>/tai-cho/",
+  "name": "bloodbank:walk_in",
+  "view": "bloodbank.views.hospital_campaigns.walk_in",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-24",
+  "screen_title": "Điểm hiến (check-in, ghi nhận)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/don/<int:pk>/xu-ly/",
+  "name": "bloodbank:registration_action",
+  "view": "bloodbank.views.hospital_campaigns.registration_action",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-21",
+  "screen_title": "Quản lý đợt hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/don/<int:pk>/diem-hien/",
+  "name": "bloodbank:checkin_action",
+  "view": "bloodbank.views.hospital_campaigns.checkin_action",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-24",
+  "screen_title": "Điểm hiến (check-in, ghi nhận)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/don/<int:pk>/ghi-nhan/",
+  "name": "bloodbank:record_donation",
+  "view": "bloodbank.views.hospital_campaigns.record_donation",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-24",
+  "screen_title": "Điểm hiến (check-in, ghi nhận)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/luot-hien/<int:pk>/",
+  "name": "bloodbank:hospital_donation_detail",
+  "view": "bloodbank.views.hospital_campaigns.donation_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-25",
+  "screen_title": "Lượt hiến (xem, hủy hiệu lực, sửa)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/luot-hien/<int:pk>/quan-ly/",
+  "name": "bloodbank:donation_manage",
+  "view": "bloodbank.views.hospital_campaigns.donation_manage",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-25",
+  "screen_title": "Lượt hiến (xem, hủy hiệu lực, sửa)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/nguoi-hien/",
+  "name": "bloodbank:donor_lookup",
+  "view": "bloodbank.views.hospital_campaigns.donor_lookup",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-26",
+  "screen_title": "Tra cứu người hiến",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/bao-cao-tiep-nhan/",
+  "name": "bloodbank:donation_report",
+  "view": "bloodbank.views.hospital_campaigns.donation_report",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-27",
+  "screen_title": "Báo cáo tiếp nhận",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/cho-xet-nghiem/",
+  "name": "bloodbank:lab_queue",
+  "view": "bloodbank.views.hospital_inventory.lab_queue",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-29",
+  "screen_title": "Chờ xét nghiệm → nhập kho",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/luot-hien/<int:pk>/xet-nghiem/",
+  "name": "bloodbank:lab_result",
+  "view": "bloodbank.views.hospital_inventory.lab_result",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-29",
+  "screen_title": "Chờ xét nghiệm → nhập kho",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/kho/",
+  "name": "bloodbank:stock",
+  "view": "bloodbank.views.hospital_inventory.stock",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-30",
+  "screen_title": "Tồn kho",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/kho/<int:pk>/cau-hinh/",
+  "name": "bloodbank:stock_settings",
+  "view": "bloodbank.views.hospital_inventory.stock_settings",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-30",
+  "screen_title": "Tồn kho",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/kho/muc-ton/",
+  "name": "bloodbank:stock_threshold",
+  "view": "bloodbank.views.hospital_inventory.stock_threshold",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-30",
+  "screen_title": "Tồn kho",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/kho/phieu/<slug:kind>/",
+  "name": "bloodbank:stock_txn",
+  "view": "bloodbank.views.hospital_inventory.stock_txn_form",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-31",
+  "screen_title": "Phiếu nhập / xuất / điều chỉnh",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/kho/lich-su/",
+  "name": "bloodbank:stock_ledger",
+  "view": "bloodbank.views.hospital_inventory.stock_ledger",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-32",
+  "screen_title": "Lịch sử biến động kho",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/nhu-cau/",
+  "name": "bloodbank:demands",
+  "view": "bloodbank.views.hospital_inventory.demands",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-33",
+  "screen_title": "Nhu cầu & thiếu hụt",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/nhu-cau/<int:pk>/sua/",
+  "name": "bloodbank:demand_edit",
+  "view": "bloodbank.views.hospital_inventory.demands",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-33",
+  "screen_title": "Nhu cầu & thiếu hụt",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/nhu-cau/<int:pk>/dong/",
+  "name": "bloodbank:demand_close",
+  "view": "bloodbank.views.hospital_inventory.demand_close",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-33",
+  "screen_title": "Nhu cầu & thiếu hụt",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/nhu-cau/keu-goi/",
+  "name": "bloodbank:donor_callout",
+  "view": "bloodbank.views.hospital_inventory.donor_callout",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-33",
+  "screen_title": "Nhu cầu & thiếu hụt",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/tim-nguon/",
+  "name": "bloodbank:source_search",
+  "view": "bloodbank.views.hospital_transfers.source_search",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-34",
+  "screen_title": "Tìm nguồn liên viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/yeu-cau-ho-tro/",
+  "name": "bloodbank:support_requests",
+  "view": "bloodbank.views.hospital_transfers.support_requests",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-35",
+  "screen_title": "Yêu cầu hỗ trợ đã gửi",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/yeu-cau-ho-tro/tao/",
+  "name": "bloodbank:support_request_create",
+  "view": "bloodbank.views.hospital_transfers.support_request_create",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-35",
+  "screen_title": "Yêu cầu hỗ trợ đã gửi",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/yeu-cau-ho-tro/<int:pk>/",
+  "name": "bloodbank:support_request_detail",
+  "view": "bloodbank.views.hospital_transfers.support_request_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-35",
+  "screen_title": "Yêu cầu hỗ trợ đã gửi",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/yeu-cau-ho-tro/<int:pk>/xu-ly/",
+  "name": "bloodbank:support_request_action",
+  "view": "bloodbank.views.hospital_transfers.support_request_action",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-35",
+  "screen_title": "Yêu cầu hỗ trợ đã gửi",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/de-nghi/<int:pk>/yeu-cau/",
+  "name": "bloodbank:support_request_for_offer",
+  "view": "bloodbank.views.hospital_transfers.support_request_for_offer",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-35",
+  "screen_title": "Yêu cầu hỗ trợ đã gửi",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/de-nghi/<int:pk>/mo/",
+  "name": "bloodbank:offer_open",
+  "view": "bloodbank.views.hospital.offer_open",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "",
+  "screen": "SCR-35",
+  "screen_title": "Yêu cầu hỗ trợ đã gửi",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/de-nghi-den/",
+  "name": "bloodbank:incoming_offers",
+  "view": "bloodbank.views.hospital_transfers.incoming_offers",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-36",
+  "screen_title": "Đề nghị đến bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/de-nghi-den/<int:pk>/",
+  "name": "bloodbank:offer_detail",
+  "view": "bloodbank.views.hospital_transfers.offer_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-36",
+  "screen_title": "Đề nghị đến bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/de-nghi-den/<int:pk>/xu-ly/",
+  "name": "bloodbank:offer_action",
+  "view": "bloodbank.views.hospital_transfers.offer_action",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-36",
+  "screen_title": "Đề nghị đến bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/yeu-cau-can-mau/",
+  "name": "bloodbank:hospital_patient_requests",
+  "view": "bloodbank.views.hospital_transfers.patient_requests",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-37",
+  "screen_title": "Xử lý yêu cầu cần máu",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/yeu-cau-can-mau/<int:pk>/",
+  "name": "bloodbank:hospital_patient_request_detail",
+  "view": "bloodbank.views.hospital_transfers.patient_request_detail",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-37",
+  "screen_title": "Xử lý yêu cầu cần máu",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/yeu-cau-can-mau/<int:pk>/xu-ly/",
+  "name": "bloodbank:hospital_patient_request_action",
+  "view": "bloodbank.views.hospital_transfers.patient_request_action",
+  "methods": [
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-37",
+  "screen_title": "Xử lý yêu cầu cần máu",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/benh-vien/thong-tin/",
+  "name": "bloodbank:hospital_info",
+  "view": "bloodbank.views.hospital.hospital_info",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-39",
+  "screen_title": "Thông tin bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/nhan-vien/",
+  "name": "bloodbank:hospital_staff",
+  "view": "bloodbank.views.hospital.hospital_staff",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-38",
+  "screen_title": "Nhân viên bệnh viện (xem)",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/benh-vien/nhat-ky/",
+  "name": "bloodbank:hospital_audit",
+  "view": "bloodbank.views.hospital.hospital_audit",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "staff_required",
+  "screen": "SCR-40",
+  "screen_title": "Nhật ký bệnh viện",
+  "roles": [
+   "hospital"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/danh-muc/",
+  "name": "bloodbank:catalog",
+  "view": "bloodbank.views.hospital.catalog",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "",
+  "screen": "SCR-52",
+  "screen_title": "Danh mục chế phẩm (bệnh viện xem, quản trị sửa)",
+  "roles": [
+   "hospital",
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/thong-ke/",
+  "name": "bloodbank:admin_stats",
+  "view": "bloodbank.views.admin.stats",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-54",
+  "screen_title": "Thống kê toàn hệ thống",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/nguoi-dung/",
+  "name": "bloodbank:admin_users",
+  "view": "bloodbank.views.admin.users",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-50",
+  "screen_title": "Người dùng",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/benh-vien/",
+  "name": "bloodbank:admin_hospitals",
+  "view": "bloodbank.views.admin.hospitals",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-51",
+  "screen_title": "Bệnh viện & tài khoản nhân viên",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/benh-vien/tao/",
+  "name": "bloodbank:admin_hospital_create",
+  "view": "bloodbank.views.admin.hospital_form",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-51",
+  "screen_title": "Bệnh viện & tài khoản nhân viên",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/benh-vien/<int:pk>/",
+  "name": "bloodbank:admin_hospital_edit",
+  "view": "bloodbank.views.admin.hospital_form",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-51",
+  "screen_title": "Bệnh viện & tài khoản nhân viên",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": true
+ },
+ {
+  "path": "/quan-tri/nhat-ky/",
+  "name": "bloodbank:admin_audit",
+  "view": "bloodbank.views.admin.audit",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-53",
+  "screen_title": "Nhật ký hệ thống",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/cau-hinh/",
+  "name": "bloodbank:admin_settings",
+  "view": "bloodbank.views.admin.settings_view",
+  "methods": [
+   "GET",
+   "POST"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-55",
+  "screen_title": "Cấu hình hệ thống",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ },
+ {
+  "path": "/quan-tri/phan-quyen/",
+  "name": "bloodbank:admin_permissions",
+  "view": "bloodbank.views.admin.permissions_view",
+  "methods": [
+   "GET"
+  ],
+  "decorator": "admin_required",
+  "screen": "SCR-56",
+  "screen_title": "Phân quyền màn hình",
+  "roles": [
+   "admin"
+  ],
+  "has_pk": false
+ }
+]

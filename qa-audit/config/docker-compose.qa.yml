@@ -1,0 +1,43 @@
+# Môi trường QA cô lập: project riêng, DB riêng (volume riêng), không mount mã nguồn, cổng 8091.
+# Chạy: docker compose -p hienmau-qa -f qa-audit/config/docker-compose.qa.yml --env-file qa-audit/config/qa.env up -d --build
+name: hienmau-qa
+
+services:
+  qa-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hien_mau_qa
+      POSTGRES_USER: qa
+      POSTGRES_PASSWORD: ${QA_DB_PASSWORD:?đặt QA_DB_PASSWORD trong qa.env}
+      TZ: UTC
+    volumes:
+      - qa_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qa -d hien_mau_qa"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  qa-web:
+    build: ../../backend
+    # Giống production: không --reload, DEBUG tắt, 4 worker để thử đồng thời
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--access-logfile", "-"]
+    environment:
+      DJANGO_DEBUG: ${QA_DJANGO_DEBUG:-0}
+      DJANGO_SECRET_KEY: ${QA_SECRET_KEY:?đặt QA_SECRET_KEY trong qa.env}
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,host.docker.internal,qa-web
+      DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:8091,http://127.0.0.1:8091,http://host.docker.internal:8091,http://qa-web:8000
+      POSTGRES_DB: hien_mau_qa
+      POSTGRES_USER: qa
+      POSTGRES_PASSWORD: ${QA_DB_PASSWORD}
+      POSTGRES_HOST: qa-db
+      POSTGRES_PORT: 5432
+      SEED_DEMO: "1"
+    ports:
+      - "127.0.0.1:${QA_WEB_PORT:-8091}:8000"
+    depends_on:
+      qa-db:
+        condition: service_healthy
+
+volumes:
+  qa_pgdata:

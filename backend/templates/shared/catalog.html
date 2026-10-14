@@ -13,7 +13,7 @@
       <div><h2 class="panel-title">{% icon "package" %} {{ p.name }}</h2><span class="muted small">Mã {{ p.code }} · {{ p.get_kind_display }}</span></div>
       <div class="row">{% if p.is_active %}<span class="badge ok">Đang dùng</span>{% else %}<span class="badge neutral">Ngừng dùng</span>{% endif %}
         {% if is_admin %}
-        <button type="button" class="btn ghost sm" data-open-dialog="edit-product-{{ p.pk }}">{% icon "pencil" %}</button>
+        <button type="button" class="btn ghost sm" data-open-dialog="edit-product-{{ p.pk }}" title="Sửa chế phẩm" aria-label="Sửa chế phẩm {{ p.name }}">{% icon "pencil" %}</button>
         <form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="toggle_product"><input type="hidden" name="id" value="{{ p.pk }}"><input type="hidden" name="active" value="{% if p.is_active %}0{% else %}1{% endif %}"><button class="btn secondary sm">{% if p.is_active %}Ngừng dùng{% else %}Dùng lại{% endif %}</button></form>
         {% endif %}</div>
     </div>
@@ -25,7 +25,7 @@
           <td>{% if s.is_default %}<span class="badge info plain">Mặc định</span>{% endif %}</td>
           <td>{% if s.is_active %}<span class="badge ok plain">Đang dùng</span>{% else %}<span class="badge neutral plain">Ngừng</span>{% endif %}</td>
           {% if is_admin %}<td><div class="table-actions">
-            <button type="button" class="btn ghost sm" data-open-dialog="edit-spec-{{ s.pk }}">{% icon "pencil" %}</button>
+            <button type="button" class="btn ghost sm" data-open-dialog="edit-spec-{{ s.pk }}" title="Sửa quy cách" aria-label="Sửa quy cách {{ s.name }}">{% icon "pencil" %}</button>
             <form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="toggle_spec"><input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="active" value="{% if s.is_active %}0{% else %}1{% endif %}"><button class="btn secondary sm">{% if s.is_active %}Ngừng{% else %}Dùng lại{% endif %}</button></form>
           </div>
           <dialog class="modal-dialog" id="edit-spec-{{ s.pk }}"><form method="post" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="edit_spec"><input type="hidden" name="product_id" value="{{ p.pk }}"><input type="hidden" name="spec_id" value="{{ s.pk }}">

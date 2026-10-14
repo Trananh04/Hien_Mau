@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from bloodbank.models import Campaign, Donation, Product, Registration, SystemSetting
 
-from .common import BusinessError, audit, business_transaction, notify, require, snapshot
+from .common import BusinessError, as_id, audit, business_transaction, notify, require, snapshot
 
 R = Registration.Status
 EDITABLE = ["donation_type", "volume_ml", "component_product_id", "component_quantity", "component_unit",
@@ -38,7 +38,7 @@ def _clean_result(data):
             qty = Decimal(str(data.get("component_quantity")).replace(",", "."))
         except (InvalidOperation, TypeError):
             qty = None
-        product = Product.objects.filter(pk=data.get("component_product_id") or None, is_active=True).first()
+        product = Product.objects.filter(pk=as_id(data.get("component_product_id")), is_active=True).first()
         unit = data.get("component_unit")
         if product is None or qty is None or qty <= 0 or unit not in ("ml", "unit", "dose"):
             raise BusinessError("ERR-DON-COMPONENT-REQUIRED")
@@ -57,6 +57,28 @@ def volume_warning(volume_ml):
     if volume_ml < lo or volume_ml > hi:
         return f"Thể tích {volume_ml} ml nằm ngoài khoảng thường gặp ({lo}–{hi} ml). Hãy kiểm tra lại trước khi ghi nhận."
     return None
+
+
+def interval_warning(donor, now=None):
+    """Cảnh báo (KHÔNG chặn) nếu lần hiến được xác nhận gần nhất chưa đủ khoảng cách tối thiểu.
+
+    Khoảng cách tính theo hình thức của lần hiến trước (toàn phần / thành phần). Quyết định hiến hay không
+    thuộc bác sĩ khám sàng lọc, nên hệ thống chỉ hiển thị thông tin.
+    """
+    now = now or timezone.now()
+    last = (Donation.objects.filter(donor=donor, status=Donation.Status.CONFIRMED, donated_at__lte=now)
+            .select_related("hospital").order_by("-donated_at").first())
+    if last is None:
+        return None
+    key = "donation_interval_component_days" if last.donation_type == "component" else "donation_interval_whole_blood_days"
+    min_days = SystemSetting.get(key)
+    days = (timezone.localdate(now) - timezone.localdate(last.donated_at)).days
+    if days >= min_days:
+        return None
+    return {"last": last.donated_at, "days": days, "min_days": min_days, "remaining": min_days - days,
+            "type": last.get_donation_type_display().lower(), "hospital": last.hospital.name,
+            "text": f"Lần hiến {last.get_donation_type_display().lower()} gần nhất cách đây {days} ngày "
+                    f"(khuyến nghị tối thiểu {min_days} ngày, còn {min_days - days} ngày). Bác sĩ khám sàng lọc quyết định."}
 
 
 def _check_time(campaign, donated_at, now, check_grace=True):
@@ -101,6 +123,30 @@ def record_donation(staff, reg_id, data, request=None, confirm_volume=False):
     return donation
 
 
+def _reverse_stock_in(staff, donation, reason, request=None):
+    """Hủy lượt hiến đã nhập kho → ghi phiếu điều chỉnh trừ đúng số đã nhập (cùng giao dịch).
+
+    Chỉ trừ trên phần khả dụng: nếu đơn vị đã bị xuất / giữ chỗ thì chặn hủy để nhân viên xử lý kho trước.
+    """
+    from bloodbank.models import Stock, StockTxn
+
+    from .inventory import apply_txn
+
+    total = 0
+    receipts = StockTxn.objects.filter(donation=donation, txn_type=StockTxn.Type.RECEIVE).order_by("id")
+    for txn in receipts:
+        stock = Stock.objects.select_for_update().get(pk=txn.stock_id)
+        if txn.quantity_change > stock.available:
+            raise BusinessError("ERR-INV-INSUFFICIENT",
+                                f"Lượt hiến đã nhập kho {txn.quantity_change} đơn vị nhưng kho chỉ còn {stock.available} "
+                                "khả dụng (đã xuất hoặc đang giữ chỗ). Hãy điều chỉnh kho trước khi hủy hiệu lực.")
+        apply_txn(stock, StockTxn.Type.ADJUSTMENT, -txn.quantity_change, staff.user, f"void-donation:{txn.pk}",
+                  reason=StockTxn.Reason.DATA_ENTRY, note=f"Hủy hiệu lực lượt hiến {donation.code}: {reason}"[:500])
+        # (phiếu nhập gốc giữ liên kết donation; phiếu trừ truy vết qua idempotency_key "void-donation:<id phiếu nhập>")
+        total += txn.quantity_change
+    return total
+
+
 def void_donation(staff, donation_id, reason, target_status, request=None):
     """UC-DON-02: HA hủy hiệu lực; đơn → not_donated / no_show."""
     reason = (reason or "").strip()
@@ -112,6 +158,7 @@ def void_donation(staff, donation_id, reason, target_status, request=None):
             raise BusinessError("ERR-NOT-FOUND")
         require(d.status == Donation.Status.CONFIRMED, "ERR-DON-VOIDED-IMMUTABLE")
         old = snapshot(d)
+        reversed_units = _reverse_stock_in(staff, d, reason, request)
         d.status, d.void_reason, d.voided_at, d.voided_by = Donation.Status.VOIDED, reason[:500], timezone.now(), staff.user
         d.save()
         if d.registration_id:
@@ -119,8 +166,8 @@ def void_donation(staff, donation_id, reason, target_status, request=None):
             if reg.status == R.DONATED:
                 reg.status = target_status
                 reg.save(update_fields=["status", "updated_at"])
-        audit(staff.user, d, "void", old=old, new={**snapshot(d), "reason": reason}, hospital=staff.hospital,
-              request=request)
+        audit(staff.user, d, "void", old=old, new={**snapshot(d), "reason": reason, "stock_reversed": reversed_units},
+              hospital=staff.hospital, request=request)
         notify(d.donor, "donation_voided", "Một lượt hiến của bạn đã bị hủy hiệu lực",
                "Bệnh viện đã hủy ghi nhận do sai sót. Lịch sử hiến được tính lại.", entity=d)
     return d
@@ -133,12 +180,18 @@ def edit_donation(staff, donation_id, data, reason, request=None):
     clean = _clean_result(data)
     now = timezone.now()
     with business_transaction():
-        d = Donation.objects.select_for_update().select_related("registration__campaign").filter(
+        # registration là FK cho phép NULL (LEFT JOIN) → chỉ khóa dòng donations, PostgreSQL không khóa được phía NULL
+        d = Donation.objects.select_for_update(of=("self",)).select_related("registration__campaign").filter(
             pk=donation_id, hospital=staff.hospital
         ).first()
         if d is None:
             raise BusinessError("ERR-NOT-FOUND")
         require(d.status == Donation.Status.CONFIRMED, "ERR-DON-VOIDED-IMMUTABLE")
+        if d.lab_status == Donation.LabStatus.PASSED:
+            # Đã nhập kho theo loại/chế phẩm hiện tại → không đổi loại nữa (kho sẽ lệch)
+            require(clean["donation_type"] == d.donation_type
+                    and clean["component_product_id"] == d.component_product_id, "ERR-STATE-INVALID",
+                    "Lượt hiến đã nhập kho sau xét nghiệm — không đổi được hình thức hiến / chế phẩm.")
         if d.registration_id:
             _check_time(d.registration.campaign, clean["donated_at"], now, check_grace=False)
         old = snapshot(d, EDITABLE)

@@ -61,7 +61,7 @@
       {% if "link_campaign" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" class="row" style="flex-wrap:nowrap">{% csrf_token %}<input type="hidden" name="action" value="link_campaign">
           <select name="campaign_id" class="field-select" aria-label="Đợt hiến" required><option value="">Kết nối đợt hiến…</option>{% for c in campaigns %}<option value="{{ c.pk }}" {% if prq.linked_campaign_id == c.pk %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
-          <button class="btn secondary">{% icon "link" %}</button>
+          <button class="btn secondary" title="Kết nối đợt hiến" aria-label="Kết nối với đợt hiến đã chọn">{% icon "link" %}</button>
         </form>
       {% endif %}
       {% if "fulfill" in actions %}<button type="button" class="btn success block" data-open-dialog="prq-fulfill">{% icon "flag" %} Hoàn tất</button>{% endif %}

@@ -12,7 +12,7 @@ from bloodbank.services import patients as prq_service
 from bloodbank.services import transfers as trf
 from bloodbank.services.common import BusinessError
 
-from .helpers import attempt, new_key, paginate
+from .helpers import attempt, int_or_none, new_key, paginate
 
 
 @staff_required
@@ -20,23 +20,31 @@ def source_search(request):
     """SCR-34: bộ lọc bắt buộc nhóm máu + chế phẩm; chỉ hiện số chia sẻ hiệu lực."""
     g = request.GET
     rows, searched = [], False
-    if g.get("blood_group") and g.get("product"):
+    product_id, spec_id, min_qty = int_or_none(g.get("product")), int_or_none(g.get("spec")), int_or_none(g.get("min_qty"))
+    if g.get("blood_group") and product_id:
         searched = True
-        rows = trf.search_sources(request.hospital, g["blood_group"], g["product"], g.get("spec") or None,
-                                  g.get("min_qty") or None, g.get("province") or None)
+        rows = trf.search_sources(request.hospital, g["blood_group"], product_id, spec_id, min_qty,
+                                  g.get("province") or None)
     prefill = {
-        "blood_group": g.get("blood_group"), "product_spec_id": g.get("spec") or "",
+        "blood_group": g.get("blood_group"), "product_spec_id": spec_id or "",
         "quantity_needed": g.get("qty") or g.get("min_qty") or "", "priority": "normal",
     }
-    if not prefill["product_spec_id"] and g.get("product"):
-        d = ProductSpec.objects.filter(product_id=g["product"], is_default=True).first()
+    if not prefill["product_spec_id"] and product_id:
+        d = ProductSpec.objects.filter(product_id=product_id, is_default=True).first()
         prefill["product_spec_id"] = d.pk if d else ""
     form = SupportRequestForm(initial=prefill)
+    # Gợi ý: chia số cần cho các nguồn gần nhất, đúng quy cách — nhân viên vẫn sửa được trước khi gửi
+    plan = trf.suggest_allocation(rows, prefill["quantity_needed"], prefill["product_spec_id"])
+    for r in rows:
+        r["suggested"] = plan.get(r["hospital"].pk) if str(r["spec"].pk) == str(prefill["product_spec_id"]) else None
+    planned = sum(plan.values())
     return render(request, "hospital/source_search.html", {
+        "plan": plan, "planned": planned, "plan_short": max(0, int(prefill["quantity_needed"] or 0) - planned)
+        if str(prefill["quantity_needed"] or "").isdigit() else 0,
         "rows": rows, "searched": searched, "g": g, "blood_groups": BLOOD_GROUPS, "provinces": PROVINCES,
         "products": Product.objects.filter(is_active=True),
         "specs": ProductSpec.objects.select_related("product").filter(is_active=True), "form": form,
-        "patient_request": PatientRequest.objects.filter(pk=g.get("patient_request") or None, hospital=request.hospital).first(),
+        "patient_request": PatientRequest.objects.filter(pk=int_or_none(g.get("patient_request")), hospital=request.hospital).first(),
     })
 
 
@@ -109,7 +117,7 @@ def support_request_action(request, pk):
         attempt(request, lambda: trf.cancel_offer_by_requester(request.staff, request.POST.get("offer_id"), request),
                 "Đã hủy đề nghị.")
     elif action == "reinvite":
-        offer = get_object_or_404(RequestOffer, pk=request.POST.get("offer_id"), request=req)
+        offer = get_object_or_404(RequestOffer, pk=int_or_none(request.POST.get("offer_id")), request=req)
         attempt(request, lambda: trf.invite_more(request.staff, req.pk, offer.supplier_hospital_id,
                                                  request.POST.get("quantity") or offer.quantity_requested, request),
                 "Đã mời lại.")

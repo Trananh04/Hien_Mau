@@ -165,6 +165,9 @@ def resend_verification_view(request):
     if not request.user.is_authenticated:
         return redirect("accounts:login")
     link = services.send_email_verification(request.user, request)
+    if link is None:
+        messages.warning(request, "Bạn vừa yêu cầu gửi lại nhiều lần. Vui lòng kiểm tra hộp thư hoặc thử lại sau ít phút.")
+        return redirect("bloodbank:profile")
     messages.success(request, "Đã gửi lại email xác thực.")
     _dev_link(request, "Liên kết xác thực email", link)
     return redirect("bloodbank:profile")

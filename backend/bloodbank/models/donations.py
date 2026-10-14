@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
 
+from accounts.models import BLOOD_GROUP_VALUES, BLOOD_GROUPS
+
 from .campaigns import DONATION_TYPES, Registration
 from .catalog import Product
 from .hospitals import Hospital
@@ -18,6 +20,12 @@ class Donation(models.Model):
         ML = "ml", "ml"
         UNIT = "unit", "đơn vị"
         DOSE = "dose", "liều"
+
+    class LabStatus(models.TextChoices):
+        # Máu chưa xét nghiệm chưa được dùng: chỉ khi "Đạt" mới nhập vào kho
+        PENDING = "pending", "Chờ xét nghiệm"
+        PASSED = "passed", "Đạt — đã nhập kho"
+        FAILED = "failed", "Không đạt"
 
     donor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, related_name="donations")
     registration = models.ForeignKey(
@@ -43,6 +51,15 @@ class Donation(models.Model):
     )
     voided_at = models.DateTimeField(null=True, blank=True)
     note = models.TextField(null=True, blank=True)
+    # Kết quả xét nghiệm sàng lọc (luồng: ghi nhận → chờ xét nghiệm → đạt thì nhập kho)
+    lab_status = models.CharField(max_length=10, choices=LabStatus.choices, default=LabStatus.PENDING)
+    lab_blood_group = models.CharField(max_length=3, choices=BLOOD_GROUPS, null=True, blank=True)
+    lab_note = models.CharField(max_length=500, null=True, blank=True)
+    lab_checked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, db_column="lab_checked_by", null=True, blank=True,
+        related_name="+",
+    )
+    lab_checked_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -54,6 +71,7 @@ class Donation(models.Model):
             models.Index(fields=["donor", "status", "donated_at"], name="idx_donations_donor_date"),
             models.Index(fields=["hospital", "donated_at"], name="idx_donations_hospital_date"),
             models.Index(fields=["status", "donated_at"], name="idx_donations_status_date"),
+            models.Index(fields=["hospital", "lab_status"], name="idx_donations_lab_queue"),
         ]
         constraints = [
             # Tương đương cột sinh active_registration_id + UNIQUE: mỗi đơn tối đa 1 lượt confirmed
@@ -89,6 +107,14 @@ class Donation(models.Model):
                 condition=Q(donation_type__in=["whole_blood", "component", "other"]), name="chk_donations_type"
             ),
             models.CheckConstraint(condition=Q(status__in=["confirmed", "voided"]), name="chk_donations_status"),
+            models.CheckConstraint(condition=Q(lab_status__in=["pending", "passed", "failed"]), name="chk_donations_lab_status"),
+            models.CheckConstraint(
+                condition=Q(lab_status="pending", lab_checked_at__isnull=True)
+                | Q(lab_status="passed", lab_blood_group__in=BLOOD_GROUP_VALUES, lab_checked_at__isnull=False,
+                    lab_checked_by__isnull=False)
+                | Q(lab_status="failed", lab_note__isnull=False, lab_checked_at__isnull=False, lab_checked_by__isnull=False),
+                name="chk_donations_lab_fields",
+            ),
             models.CheckConstraint(
                 condition=Q(component_unit__isnull=True) | Q(component_unit__in=["ml", "unit", "dose"]),
                 name="chk_donations_component_unit",

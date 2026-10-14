@@ -9,7 +9,7 @@
     <thead><tr><th>Khóa</th><th>Mô tả</th><th>Giá trị</th><th>Cập nhật</th></tr></thead>
     <tbody>{% for it in items %}
       <tr><td data-label="Khóa"><code class="small">{{ it.key }}</code></td><td data-label="Mô tả">{{ it.description }}<span class="cell-sub">Mặc định: {{ it.default }}</span></td>
-        <td data-label="Giá trị"><form method="post" class="row" style="gap:6px;flex-wrap:nowrap">{% csrf_token %}<input type="hidden" name="key" value="{{ it.key }}"><input name="value" value="{% if it.row %}{{ it.row.setting_value }}{% else %}{{ it.default }}{% endif %}" class="field-input" style="width:110px;min-height:34px" aria-label="Giá trị {{ it.key }}"><button class="btn secondary sm">{% icon "check" %}</button></form></td>
+        <td data-label="Giá trị"><form method="post" class="row" style="gap:6px;flex-wrap:nowrap">{% csrf_token %}<input type="hidden" name="key" value="{{ it.key }}"><input name="value" value="{% if it.row %}{{ it.row.setting_value }}{% else %}{{ it.default }}{% endif %}" class="field-input" style="width:110px;min-height:34px" aria-label="Giá trị {{ it.key }}"><button class="btn secondary sm" aria-label="Lưu {{ it.key }}" title="Lưu">{% icon "check" %}</button></form></td>
         <td data-label="Cập nhật" class="small">{% if it.row %}{{ it.row.updated_at|vn_dt }}{% if it.row.updated_by %}<span class="cell-sub">{{ it.row.updated_by.full_name }}</span>{% endif %}{% else %}—{% endif %}</td></tr>
     {% endfor %}</tbody>
   </table></div>

@@ -33,7 +33,7 @@
       <div class="panel-head"><h2 class="panel-title">{% icon "map-pin" %} Vị trí trên bản đồ</h2></div>
       <div class="panel-body">
         <p class="field-help" style="margin-bottom:10px">Bấm lên bản đồ để chọn vị trí (không bắt buộc). Bỏ trống sẽ dùng vị trí bệnh viện.</p>
-        <div id="picker" style="height:280px;border-radius:12px;border:1px solid var(--line)"></div>
+        <div id="picker" data-map-picker data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ default_lat|stringformat:"f" }}" data-default-lng="{{ default_lng|stringformat:"f" }}" style="height:280px;border-radius:12px;border:1px solid var(--line)"></div>
         <div class="form-grid" style="margin-top:12px">
           {% include "partials/field.html" with field=form.latitude %}
           {% include "partials/field.html" with field=form.longitude %}
@@ -46,22 +46,5 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script>
-(function () {
-  var lat = document.getElementById('{{ form.latitude.id_for_label }}');
-  var lng = document.getElementById('{{ form.longitude.id_for_label }}');
-  L.Icon.Default.imagePath = '{% static "vendor/leaflet/images/" %}';
-  var start = [parseFloat(lat.value) || {{ default_lat|stringformat:"f" }}, parseFloat(lng.value) || {{ default_lng|stringformat:"f" }}];
-  var map = L.map('picker').setView(start, 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-  var marker = lat.value ? L.marker(start).addTo(map) : null;
-  map.on('click', function (e) {
-    lat.value = e.latlng.lat.toFixed(6); lng.value = e.latlng.lng.toFixed(6);
-    if (marker) marker.setLatLng(e.latlng); else marker = L.marker(e.latlng).addTo(map);
-  });
-  document.querySelector('[data-clear-pin]').addEventListener('click', function () {
-    lat.value = ''; lng.value = ''; if (marker) { map.removeLayer(marker); marker = null; }
-  });
-})();
-</script>
+<script src="{% static 'js/maps.js' %}"></script>
 {% endblock %}

@@ -16,7 +16,7 @@
       <div class="panel-body">
         {% include "partials/form_errors.html" %}
         <div class="form-grid">
-          <div class="field"><label>Email đăng nhập</label><input class="field-input" value="{{ user.email }}" disabled></div>
+          <div class="field"><label for="login-email">Email đăng nhập</label><input id="login-email" class="field-input" value="{{ user.email }}" disabled></div>
           {% include "partials/field.html" with field=form.full_name %}
           {% include "partials/field.html" with field=form.phone %}
           {% include "partials/field.html" with field=form.date_of_birth %}

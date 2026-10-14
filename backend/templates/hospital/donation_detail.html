@@ -27,6 +27,16 @@
       </dl></div>
     </section>
     <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">{% icon "flask-conical" %} Xét nghiệm &amp; nhập kho</h2>{% if d.status == "confirmed" and d.lab_status == "pending" %}<a href="{% url 'bloodbank:lab_queue' %}" class="btn primary sm">Nhập kết quả</a>{% endif %}</div>
+      <div class="panel-body"><dl class="dl">
+        <dt>Trạng thái</dt><dd>{{ d.get_lab_status_display }}</dd>
+        {% if d.lab_blood_group %}<dt>Nhóm máu xét nghiệm</dt><dd>{% blood d.lab_blood_group "sm" %}</dd>{% endif %}
+        {% if d.lab_checked_at %}<dt>Người nhập kết quả</dt><dd>{{ d.lab_checked_by.full_name }} · {{ d.lab_checked_at|vn_dt }}</dd>{% endif %}
+        {% if d.lab_note %}<dt>Ghi chú</dt><dd>{{ d.lab_note }}</dd>{% endif %}
+        {% for t in d.stock_txns.all %}<dt>Phiếu nhập kho</dt><dd>+{{ t.quantity_change }} · {{ t.stock.product_spec.product.name }} — {{ t.stock.product_spec.name }} · <a class="link" href="{% url 'bloodbank:stock_ledger' %}?stock={{ t.stock_id }}">xem sổ kho</a></dd>{% endfor %}
+      </dl></div>
+    </section>
+    <section class="panel">
       <div class="panel-head"><h2 class="panel-title">{% icon "history" %} Lịch sử thay đổi</h2></div>
       {% if logs %}
       <ol class="timeline" style="padding:18px 20px 4px 42px">

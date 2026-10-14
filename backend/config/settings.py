@@ -10,7 +10,13 @@ def env_list(name, default=""):
 
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-insecure-key")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or ("dev-only-insecure-key" if DEBUG else "")
+if not SECRET_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured("Thiếu DJANGO_SECRET_KEY (bắt buộc khi DJANGO_DEBUG=0).")
+# Số reverse proxy tin cậy đứng trước ứng dụng (0 = không tin header X-Forwarded-For, dùng REMOTE_ADDR)
+TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", "0") or 0)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:8080")
 
@@ -27,6 +33,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "bloodbank.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -56,6 +63,14 @@ TEMPLATES = [
         },
     }
 ]
+
+if DEBUG:
+    # gunicorn --reload chỉ nạp lại khi file .py đổi: tắt lưu đệm template để sửa template là thấy ngay
+    TEMPLATES[0]["APP_DIRS"] = False
+    TEMPLATES[0]["OPTIONS"]["loaders"] = [
+        "django.template.loaders.filesystem.Loader",
+        "django.template.loaders.app_directories.Loader",
+    ]
 
 WSGI_APPLICATION = "config.wsgi.application"
 
@@ -102,6 +117,15 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Triển khai sau HTTPS: đặt DJANGO_HTTPS=1 → chuyển hướng HTTPS, HSTS, cookie chỉ gửi qua HTTPS
+if os.environ.get("DJANGO_HTTPS", "0") == "1":
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_HSTS_SECONDS", "31536000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 SESSION_COOKIE_AGE = 60 * 60 * 12
 SESSION_COOKIE_HTTPONLY = True

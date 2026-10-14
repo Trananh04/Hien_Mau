@@ -12,6 +12,7 @@
   {% if pending_regs is not None %}
   <a class="stat" href="{% url 'bloodbank:hospital_campaigns' %}?status=open"><div class="stat-label">{% icon "clipboard-list" %} Đơn chờ duyệt</div><div class="stat-value">{{ pending_regs }}</div><div class="stat-note">Trong các đợt đang mở</div></a>
   {% endif %}
+  <a class="stat {% if lab_pending %}alert{% endif %}" href="{% url 'bloodbank:lab_queue' %}"><div class="stat-label">{% icon "flask-conical" %} Chờ xét nghiệm</div><div class="stat-value">{{ lab_pending }}</div><div class="stat-note">Lượt hiến chưa nhập kho</div></a>
   <a class="stat" href="{% url 'bloodbank:stock' %}"><div class="stat-label">{% icon "warehouse" %} Tồn khả dụng</div><div class="stat-value">{{ stock_available }}<small>đơn vị</small></div><div class="stat-note">Hiện có {{ stock_total }}, phần còn lại đang giữ chỗ</div></a>
   <a class="stat {% if low_stocks %}alert{% endif %}" href="{% url 'bloodbank:stock' %}"><div class="stat-label">{% icon "triangle-alert" %} Dưới mức tối thiểu</div><div class="stat-value">{{ low_stocks|length }}</div><div class="stat-note">Dòng tồn cần bổ sung</div></a>
   {% if prq_waiting is not None %}
@@ -59,7 +60,7 @@
         {% for s in low_stocks %}<tr class="row-warn"><td>{% blood s.blood_group "sm" %}</td><td>{{ s.product_spec }}</td><td class="num">{{ s.available }}</td><td class="num">Tối thiểu {{ s.min_stock_level }}</td></tr>{% endfor %}
       </tbody>
     </table></div>
-    {% if shortages %}<div class="panel-foot"><a href="{% url 'bloodbank:demands' %}" class="btn secondary sm">Nhu cầu &amp; thiếu hụt</a><a href="{% url 'bloodbank:source_search' %}" class="btn primary sm">{% icon "search" %} Tìm nguồn liên viện</a></div>{% endif %}
+    {% if shortages %}<div class="panel-foot"><span class="small muted" style="margin-right:auto">Xin hỗ trợ liên viện, tạo đợt hiến hoặc kêu gọi người hiến.</span><a href="{% url 'bloodbank:demands' %}" class="btn primary sm">{% icon "trending-down" %} Xử lý thiếu hụt</a></div>{% endif %}
     {% else %}
     <div class="empty"><div class="empty-icon">{% icon "shield-check" %}</div><h3>Không có cảnh báo</h3><p>Không dòng tồn nào dưới mức tối thiểu và không có nhu cầu đang thiếu.</p></div>
     {% endif %}

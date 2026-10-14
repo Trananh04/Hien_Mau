@@ -1,5 +1,5 @@
 """UC-CMP-01..04, UC-REG-01..06: đợt hiến và đơn đăng ký (máy trạng thái Ch.4 mục 4.3, 4.4)."""
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Max, Min, Q, Sum
 from django.utils import timezone
 
 from accounts.models import User, normalize_phone
@@ -35,6 +35,14 @@ def update_campaign(staff, campaign, data, request=None):
         campaign = Campaign.objects.select_for_update().get(pk=campaign.pk, hospital=staff.hospital)
         require(campaign.status not in (C.COMPLETED, C.CANCELLED), "ERR-STATE-INVALID")
         old = snapshot(campaign, CAMPAIGN_FIELDS)
+        span = Donation.objects.filter(registration__campaign=campaign, status="confirmed").aggregate(
+            first=Min("donated_at"), last=Max("donated_at"))
+        if span["first"] and (data["start_time"] > span["first"] or data["end_time"] < span["last"]):
+            fmt = lambda v: f"{timezone.localtime(v):%H:%M %d/%m}"  # noqa: E731
+            raise BusinessError("ERR-CMP-TIME-RANGE", f"Đợt đã có lượt hiến từ {fmt(span['first'])} đến {fmt(span['last'])}. "
+                                "Thời gian đợt phải bao trọn các lượt hiến đã ghi nhận.",
+                                field_errors={"start_time": "Phải trước hoặc bằng lượt hiến đầu tiên.",
+                                              "end_time": "Phải sau hoặc bằng lượt hiến cuối cùng."})
         time_or_place_changed = any(
             str(getattr(campaign, k)) != str(data.get(k)) for k in ("start_time", "end_time", "location_name", "address")
         )
@@ -101,7 +109,8 @@ def transition_campaign(staff, campaign, action, reason=None, request=None):
         audit(staff.user, campaign, "status_change", old={"status": old_status},
               new={"status": campaign.status, "reason": reason}, hospital=staff.hospital, request=request)
         if action == "cancel":
-            regs = campaign.registrations.filter(status__in=[R.PENDING, R.APPROVED]).select_related("donor")
+            # Gồm cả đơn đã check-in (chưa hiến): đợt hủy thì không ghi nhận được nữa, không để đơn treo
+            regs = campaign.registrations.filter(status__in=[R.PENDING, R.APPROVED, R.ATTENDED]).select_related("donor")
             for reg in regs:
                 reg.status = R.CANCELLED
                 reg.save(update_fields=["status", "updated_at"])

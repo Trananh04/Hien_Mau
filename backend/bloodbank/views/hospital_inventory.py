@@ -8,9 +8,10 @@ from bloodbank.forms import DemandForm
 from bloodbank.models import Demand, PatientRequest, Product, ProductSpec, Stock, StockTxn
 from bloodbank.permissions import staff_required
 from bloodbank.services import inventory as inv
+from bloodbank.services import callout, lab
 from bloodbank.services.common import BusinessError
 
-from .helpers import attempt, new_key, paginate, safe_next
+from .helpers import attempt, date_or_none, int_or_none, new_key, paginate, safe_next
 
 
 
@@ -111,20 +112,21 @@ def stock_txn_form(request, kind):
 @staff_required
 def stock_ledger(request):
     qs = StockTxn.objects.filter(stock__hospital=request.hospital).select_related(
-        "stock__product_spec__product", "performed_by", "offer__request", "patient_request")
+        "stock__product_spec__product", "performed_by", "offer__request", "patient_request", "donation")
     f = {k: request.GET.get(k) or "" for k in ("type", "blood_group", "spec", "from", "to", "stock")}
     if f["type"]:
         qs = qs.filter(txn_type=f["type"])
     if f["blood_group"]:
         qs = qs.filter(stock__blood_group=f["blood_group"])
-    if f["spec"]:
-        qs = qs.filter(stock__product_spec_id=f["spec"])
-    if f["stock"]:
-        qs = qs.filter(stock_id=f["stock"])
-    if f["from"]:
-        qs = qs.filter(occurred_at__date__gte=f["from"])
-    if f["to"]:
-        qs = qs.filter(occurred_at__date__lte=f["to"])
+    # Giá trị lọc sai kiểu (id không phải số, ngày không hợp lệ) → bỏ qua bộ lọc đó thay vì lỗi 500
+    if int_or_none(f["spec"]):
+        qs = qs.filter(stock__product_spec_id=int_or_none(f["spec"]))
+    if int_or_none(f["stock"]):
+        qs = qs.filter(stock_id=int_or_none(f["stock"]))
+    if date_or_none(f["from"]):
+        qs = qs.filter(occurred_at__date__gte=date_or_none(f["from"]))
+    if date_or_none(f["to"]):
+        qs = qs.filter(occurred_at__date__lte=date_or_none(f["to"]))
     return render(request, "hospital/stock_ledger.html", {
         "page": paginate(request, qs.order_by("-occurred_at", "-id"), 30), "f": f, "types": StockTxn.Type.choices,
         "blood_groups": BLOOD_GROUPS, "specs": ProductSpec.objects.select_related("product"),
@@ -151,8 +153,29 @@ def demands(request, pk=None):
         qs = qs.filter(status=status)
     return render(request, "hospital/demands.html", {
         "form": form, "demand": demand, "page": paginate(request, qs, 20), "status": status,
-        "shortages": inv.shortages(h),
+        "shortages": shortage_actions(h, inv.shortages(h)),
     })
+
+
+def shortage_actions(hospital, rows):
+    """Gắn số người đủ điều kiện và lần kêu gọi gần nhất cho mỗi dòng thiếu."""
+    cache = {}
+    for r in rows:
+        if r["shortage"] and r["blood_group"] not in cache:
+            last = callout.last_callout(hospital, r["blood_group"])
+            cache[r["blood_group"]] = (callout.candidates(hospital, r["blood_group"]).count(), last)
+        r["callout_count"], r["last_callout"] = cache.get(r["blood_group"], (0, None))
+    return rows
+
+
+@staff_required
+@require_POST
+def donor_callout(request):
+    bg = request.POST.get("blood_group")
+    attempt(request, lambda: callout.donor_callout(request.staff, bg, request),
+            lambda res: f"Đã gửi lời kêu gọi nhóm {bg} tới {res[0]} người hiến phù hợp"
+                        + (f", kèm đợt hiến \"{res[1].name}\"." if res[1] else ". Chưa có đợt hiến đang mở — cân nhắc tạo đợt."))
+    return safe_next(request, "bloodbank:demands")
 
 
 @staff_required
@@ -161,3 +184,31 @@ def demand_close(request, pk):
     attempt(request, lambda: inv.close_demand(request.staff, pk, request.POST.get("status"), request),
             "Đã cập nhật nhu cầu.")
     return redirect("bloodbank:demands")
+
+
+# ---------------------------------------------------------------- SCR-29 Chờ xét nghiệm → nhập kho
+@staff_required
+def lab_queue(request):
+    """Lượt hiến đã ghi nhận, chờ kết quả xét nghiệm. Đạt → nhập kho một lần bấm; phiếu nhập gắn với lượt hiến."""
+    page = paginate(request, lab.lab_queue(request.hospital), 30)
+    for d in page:
+        d.suggested_spec = lab.default_spec(d)
+        d.form_key = new_key()
+    recent = (StockTxn.objects.filter(stock__hospital=request.hospital, donation__isnull=False)
+              .select_related("donation__donor", "stock__product_spec__product").order_by("-occurred_at")[:8])
+    return render(request, "hospital/lab_queue.html", {
+        "page": page, "blood_groups": BLOOD_GROUPS, "recent": recent,
+        "specs": ProductSpec.objects.select_related("product").filter(is_active=True, product__is_active=True)
+        .order_by("product__name", "-is_default", "name"),
+    })
+
+
+@staff_required
+@require_POST
+def lab_result(request, pk):
+    result = request.POST.get("result")
+    attempt(request, lambda: lab.record_lab_result(request.staff, pk, result, request.POST,
+                                                   request.POST.get("idempotency_key"), request),
+            lambda d: (f"Đã nhập kho từ lượt hiến {d.code} — nhóm {d.get_lab_blood_group_display()}."
+                       if d.lab_status == "passed" else f"Đã ghi nhận lượt hiến {d.code} không đạt xét nghiệm."))
+    return safe_next(request, "bloodbank:lab_queue")

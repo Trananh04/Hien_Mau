@@ -324,3 +324,46 @@
     });
   }
 })();
+
+/* Form kết quả xét nghiệm: chỉ hiện nhóm máu / quy cách khi chọn "Đạt" */
+(function () {
+  document.addEventListener('change', function (e) {
+    var form = e.target.closest && e.target.closest('[data-lab-form]');
+    if (!form || e.target.name !== 'result') return;
+    form.querySelectorAll('[data-when]').forEach(function (el) {
+      el.hidden = el.getAttribute('data-when') !== e.target.value;
+    });
+  });
+})();
+
+/* Điểm hiến: form ghi nhận lượt hiến — hiện/ẩn và bắt buộc trường theo hình thức hiến */
+(function () {
+  var form = document.getElementById('record-form');
+  if (!form) return;
+  function sync() {
+    var t = (form.querySelector('[name="donation_type"]:checked') || {}).value || 'whole_blood';
+    form.querySelectorAll('[data-show-for]').forEach(function (el) {
+      var show = el.getAttribute('data-show-for').split(' ').indexOf(t) >= 0;
+      el.hidden = !show;
+      el.querySelectorAll('input,select').forEach(function (i) { i.disabled = !show; });
+    });
+    form.querySelectorAll('[data-req-for]').forEach(function (el) { el.hidden = el.getAttribute('data-req-for') !== t; });
+    var ml = form.querySelector('[name="volume_ml"]'); if (ml) ml.required = t === 'whole_blood';
+    ['component_product_id', 'component_quantity', 'component_unit'].forEach(function (n) {
+      var el = form.querySelector('[name="' + n + '"]'); if (el) el.required = t === 'component';
+    });
+  }
+  form.addEventListener('change', sync); sync();
+})();
+
+/* Bảng cuộn ngang: cho phép dùng bàn phím để cuộn (WCAG — scrollable-region-focusable) */
+(function () {
+  document.querySelectorAll('.table-wrap').forEach(function (el) {
+    if (el.scrollWidth > el.clientWidth && !el.hasAttribute('tabindex')) {
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'region');
+      var title = el.closest('section') && el.closest('section').querySelector('.panel-title');
+      el.setAttribute('aria-label', title ? title.textContent.trim() : 'Bảng dữ liệu');
+    }
+  });
+})();

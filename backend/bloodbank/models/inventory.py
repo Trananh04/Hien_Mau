@@ -104,6 +104,10 @@ class StockTxn(models.Model):
     patient_request = models.ForeignKey(
         "bloodbank.PatientRequest", on_delete=models.RESTRICT, null=True, blank=True, related_name="txns"
     )
+    # Truy xuất nguồn gốc: phiếu nhập tạo từ lượt hiến đã xét nghiệm đạt
+    donation = models.ForeignKey(
+        "bloodbank.Donation", on_delete=models.RESTRICT, null=True, blank=True, related_name="stock_txns"
+    )
     idempotency_key = models.CharField(max_length=100, unique=True)
     performed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, db_column="performed_by", related_name="stock_txns")
@@ -119,6 +123,9 @@ class StockTxn(models.Model):
         ]
         constraints = [
             models.UniqueConstraint(fields=["offer", "txn_type"], name="uq_txn_offer_type"),
+            # Mỗi lượt hiến nhập kho tối đa một lần
+            models.UniqueConstraint(fields=["donation"], condition=Q(donation__isnull=False), name="uq_txn_donation"),
+            models.CheckConstraint(condition=Q(donation__isnull=True) | Q(txn_type="receive"), name="chk_txn_donation_receive"),
             models.CheckConstraint(
                 condition=Q(txn_type="adjustment", adjustment_reason__isnull=False)
                 | (~Q(txn_type="adjustment") & Q(adjustment_reason__isnull=True)),
