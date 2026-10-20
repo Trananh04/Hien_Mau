@@ -11,7 +11,7 @@
     {% csrf_token %}
     <fieldset class="form-card-fieldset">
       <legend class="form-card-legend">Nhu cầu máu</legend>
-      <div class="stack" style="gap:16px">
+      <div class="stack u-gap-16">
         {% include "partials/field.html" with field=form.hospital_id %}
         <div class="field{% if form.blood_group.errors %} has-error{% endif %}">
           <span class="field-label">{{ form.blood_group.label }}</span>
@@ -42,7 +42,7 @@
     </fieldset>
 
     {% include "partials/field.html" with field=form.consent %}
-    <div class="form-actions-row" style="margin-top:22px">
+    <div class="form-actions-row u-mt-22">
       <a href="{% url 'bloodbank:home' %}" class="btn-form-cancel">Hủy bỏ</a>
       <button type="submit" class="btn-form-submit-red">Gửi Yêu Cầu</button>
     </div>

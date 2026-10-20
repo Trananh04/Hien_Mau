@@ -2,28 +2,30 @@
 <button type="button" class="bot-fab" data-bot-toggle aria-label="Mở trợ lý hỏi đáp" aria-expanded="false" aria-controls="bot-panel">
   {% icon "message-circle-heart" %}
 </button>
-<section class="bot-panel" id="bot-panel" hidden aria-label="Trợ lý hỏi đáp hiến máu" data-bot-url="{% url 'bloodbank:chatbot' %}">
+<section class="bot-panel" id="bot-panel" hidden aria-label="Trợ lý hỏi đáp hiến máu" data-bot-url="{% url 'bloodbank:chatbot' %}"{% if user.is_authenticated %} data-bot-conv-url="{% url 'bloodbank:api_conversations' %}"{% endif %}>
   <div class="bot-head">
     <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="">
     <div>
       <strong>Trợ lý hiến máu</strong>
-      <span>Trả lời từ nội dung đã kiểm duyệt</span>
+      <span>Đợt hiến gần bạn · ngày hiến lại · hỏi đáp</span>
     </div>
+    <button type="button" data-bot-reset aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới">{% icon "rotate-ccw" 17 %}</button>
     <button type="button" data-bot-toggle aria-label="Đóng trợ lý">{% icon "x" 18 %}</button>
   </div>
   <div class="bot-log" data-bot-log aria-live="polite">
-    <div class="bot-msg bot">Xin chào! Tôi có thể giải đáp về quy trình hiến máu, cách đăng ký, cách gửi yêu cầu cần máu và cách dùng nền tảng.
-Tôi không đưa ra kết luận y khoa — việc bạn có đủ điều kiện hiến hay không do nhân viên y tế quyết định khi khám sàng lọc.</div>
+    <div class="bot-msg bot">Xin chào! Mình có thể gợi ý đợt hiến máu gần bạn, cho biết khi nào bạn được hiến lại, trạng thái đơn đăng ký hay yêu cầu cần máu của bạn, và giải đáp về quy trình hiến máu.
+Mình không đưa ra kết luận y khoa — việc bạn có hiến được hay không do bác sĩ quyết định khi khám sàng lọc.</div>
   </div>
   <div class="bot-suggest" data-bot-suggest>
-    <button type="button">Quy trình hiến máu gồm mấy bước?</button>
+    <button type="button" data-bot-geo>{% icon "locate-fixed" 15 %} Đợt hiến gần tôi</button>
+    <button type="button">Khi nào tôi được hiến lại?</button>
+    <button type="button">Đơn đăng ký của tôi được duyệt chưa?</button>
     <button type="button">Cần chuẩn bị gì trước khi hiến?</button>
-    <button type="button">Làm sao gửi yêu cầu cần máu?</button>
   </div>
   <form class="bot-form" data-bot-form>
     {% csrf_token %}
     <label class="sr-only" for="bot-input">Câu hỏi</label>
-    <input id="bot-input" name="q" autocomplete="off" maxlength="300" placeholder="Nhập câu hỏi của bạn…" required>
+    <input id="bot-input" name="q" autocomplete="off" maxlength="300" placeholder="Hỏi về đợt hiến, ngày hiến lại, quy trình…" required>
     <button type="submit" class="btn primary" aria-label="Gửi câu hỏi">{% icon "send-horizontal" %}</button>
   </form>
 </section>

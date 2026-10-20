@@ -8,13 +8,13 @@
 {% if not started %}<div class="notice warn">{% icon "clock" %}<div>Đợt chưa tới thời gian bắt đầu ({{ c.start_time|vn_dt }}). Check-in và ghi nhận chỉ thực hiện được từ thời điểm bắt đầu.</div></div>{% endif %}
 <div class="checkin-layout">
   <section class="panel">
-    <div class="panel-head" style="flex-direction:column;align-items:stretch;flex-wrap:nowrap">
+    <div class="panel-head u-fd-column u-ai-stretch u-fw-nowrap">
       <form method="get" class="filters">
         <input type="hidden" name="status" value="{{ status }}">
         <div class="field grow"><label for="ck-q">Tìm theo tên, SĐT, email hoặc mã đơn (DK-…)</label><div class="search-input">{% icon "search" %}<input id="ck-q" name="q" value="{{ q }}" class="field-input" autofocus placeholder="VD: 0905123456 hoặc DK-000012"></div></div>
         <button class="btn primary" type="submit">Tìm</button>
       </form>
-      <div class="tabs" style="margin:6px 0 -17px;border:0">
+      <div class="tabs u-m-6-0-17 u-bd-0">
         <a href="?status=waiting{% if q %}&q={{ q|urlencode }}{% endif %}" class="tab {% if status == 'waiting' %}active{% endif %}">Chờ check-in</a>
         <a href="?status=attended{% if q %}&q={{ q|urlencode }}{% endif %}" class="tab {% if status == 'attended' %}active{% endif %}">Đã check-in <span class="count">{{ counts.attended|default:0 }}</span></a>
         <a href="?status=done{% if q %}&q={{ q|urlencode }}{% endif %}" class="tab {% if status == 'done' %}active{% endif %}">Đã xử lý</a>
@@ -36,7 +36,7 @@
     {% endif %}
   </section>
 
-  <section class="panel" style="position:sticky;top:76px">
+  <section class="panel u-pos-sticky u-top-76">
     {% if selected %}
     <div class="panel-head">
       <div class="person-card">
@@ -47,11 +47,11 @@
     </div>
     <div class="panel-body">
       {% if interval_warning %}<div class="notice warn" role="note">{% icon "calendar-clock" %}<div><strong>Chưa đủ khoảng cách giữa 2 lần hiến.</strong> {{ interval_warning.text }} Lần trước: {{ interval_warning.last|vn_date }} tại {{ interval_warning.hospital }}.</div></div>{% endif %}
-      <dl class="dl" style="grid-template-columns:150px 1fr;margin-bottom:16px">
+      <dl class="dl u-cols-150-1fr u-mb-16">
         <dt>Điện thoại</dt><dd>{{ selected.donor.phone|phone|default:"—" }}</dd>
         <dt>Email</dt><dd>{{ selected.donor.email }}</dd>
         <dt>Hình thức dự kiến</dt><dd>{{ selected.get_donation_type_display|default:"Chưa rõ" }}</dd>
-        {% if selected.note %}<dt>Ghi chú</dt><dd style="white-space:pre-line;font-weight:500">{{ selected.note }}</dd>{% endif %}
+        {% if selected.note %}<dt>Ghi chú</dt><dd class="u-ws-pre-line u-fwt-500">{{ selected.note }}</dd>{% endif %}
       </dl>
 
       {% if selected.status == "pending" or selected.status == "approved" %}
@@ -71,7 +71,7 @@
               <div class="radio-card"><input type="radio" id="dt-ot" name="donation_type" value="other" data-summary-label="Hình thức" data-summary-text="Khác" {% if form_data.donation_type == "other" %}checked{% endif %}><label for="dt-ot"><strong>Khác</strong><span>Không bắt buộc ml</span></label></div>
             </div>
           </div>
-          <div class="form-grid" style="margin-top:14px">
+          <div class="form-grid u-mt-14">
             <div class="field"><label for="rd-time">Thời điểm hiến <span class="field-req">*</span></label><input id="rd-time" type="datetime-local" name="donated_at" class="field-input" required value="{% if form_data.donated_at %}{{ form_data.donated_at }}{% else %}{{ default_time|dt_input }}{% endif %}" min="{{ c.start_time|dt_input }}" max="{{ c.end_time|dt_input }}" data-summary-label="Thời điểm"><p class="field-help">Trong khung giờ của đợt, không ở tương lai.</p></div>
             <div class="field" data-show-for="whole_blood other"><label for="rd-ml">Thể tích (ml) <span class="field-req" data-req-for="whole_blood">*</span></label><input id="rd-ml" type="number" name="volume_ml" min="1" step="1" inputmode="numeric" class="field-input" value="{{ form_data.volume_ml|default:'' }}" placeholder="VD: 350" data-summary-label="Thể tích (ml)"><p class="field-help">Nhập đúng số thực tế, không dùng giá trị mặc định.</p></div>
             <div class="field" data-show-for="component"><label for="rd-cp">Loại thành phần <span class="field-req">*</span></label><select id="rd-cp" name="component_product_id" class="field-select" data-summary-label="Thành phần"><option value="">-- Chọn --</option>{% for p in products %}<option value="{{ p.pk }}" {% if form_data.component_product_id == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
@@ -80,16 +80,16 @@
             <div class="field span-2"><label for="rd-note">Ghi chú</label><textarea id="rd-note" name="note" class="field-textarea" rows="2">{{ form_data.note|default:'' }}</textarea><p class="field-help">Không nhập kết quả khám/xét nghiệm hoặc bệnh án.</p></div>
             {% if needs_confirm %}<label class="check-row span-2"><input type="checkbox" name="confirm_volume" value="1" required> Tôi đã kiểm tra thể tích và xác nhận số liệu đúng.</label>{% endif %}
           </div>
-          <div class="form-actions" style="justify-content:space-between">
+          <div class="form-actions u-jc-space-between">
             <span></span>
             <button type="submit" class="btn primary lg">{% icon "badge-check" %} Ghi nhận &amp; xác nhận</button>
           </div>
         </form>
-        <div class="row" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)">
+        <div class="row u-mt-14 u-pt-14 u-bdt-1-dashed-line">
           <form method="post" action="{% url 'bloodbank:checkin_action' selected.pk %}" class="inline-form" data-confirm="Ghi nhận {{ selected.donor.full_name }} có mặt nhưng không hiến?" data-confirm-label="Xác nhận">{% csrf_token %}<input type="hidden" name="action" value="not_donated"><input type="hidden" name="status" value="attended"><button class="btn secondary sm">{% icon "circle-slash" %} Không hiến</button></form>
           <button type="button" class="btn ghost sm" data-open-dialog="undo-checkin">{% icon "undo-2" %} Hoàn tác check-in</button>
         </div>
-        <dialog class="modal-dialog" id="undo-checkin"><form method="post" action="{% url 'bloodbank:checkin_action' selected.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="undo_checkin"><input type="hidden" name="status" value="waiting">
+        <dialog class="modal-dialog" id="undo-checkin"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:checkin_action' selected.pk %}">{% csrf_token %}<input type="hidden" name="action" value="undo_checkin"><input type="hidden" name="status" value="waiting">
           <div class="modal-header"><h3 class="modal-title">Hoàn tác check-in</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
           <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="300"></textarea></div></div>
           <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Hoàn tác</button></div>
@@ -102,16 +102,16 @@
       {% endif %}
     </div>
     {% else %}
-    <div class="empty" style="padding:64px 24px"><div class="empty-icon">{% icon "scan-line" %}</div><h3>Chọn một người trong danh sách</h3><p>Tìm theo tên, số điện thoại hoặc mã đơn để check-in và ghi nhận kết quả hiến.</p></div>
+    <div class="empty u-p-64-24"><div class="empty-icon">{% icon "scan-line" %}</div><h3>Chọn một người trong danh sách</h3><p>Tìm theo tên, số điện thoại hoặc mã đơn để check-in và ghi nhận kết quả hiến.</p></div>
     {% endif %}
   </section>
 </div>
 
 <dialog class="modal-dialog" id="walkin" aria-labelledby="wi-title">
-  <form method="post" action="{% url 'bloodbank:walk_in' c.pk %}" style="display:flex;flex-direction:column;width:100%">
+  <form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:walk_in' c.pk %}">
     {% csrf_token %}
     <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "user-plus" %}</div><h3 class="modal-title" id="wi-title">Ghi nhận tại chỗ</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-    <div class="modal-body stack" style="gap:14px">
+    <div class="modal-body stack u-gap-14">
       <p class="muted">Tạo đơn tại điểm hiến (nguồn: tại điểm hiến) và check-in ngay. Người hiến cần có tài khoản trên nền tảng.</p>
       <div class="field"><label for="wi-l">Email hoặc số điện thoại <span class="field-req">*</span></label><input id="wi-l" name="lookup" class="field-input" required placeholder="VD: 0905123456"></div>
       <div class="field"><label for="wi-t">Hình thức dự kiến</label><select id="wi-t" name="donation_type" class="field-select"><option value="">Chưa rõ</option><option value="whole_blood">Toàn phần</option><option value="component">Thành phần</option></select></div>

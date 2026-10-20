@@ -11,7 +11,7 @@ export const Hero = ({
   onOpenNeedBlood,
 }: HeroProps) => {
   return (
-    <section className="hero-section" aria-label="Giới thiệu Ngân Hàng Máu Sống">
+    <section className="hero-section" aria-label="Giới thiệu Giọt Hồng">
       {/* Dong Son drum watermark top-right */}
       <img
         src="/assets/svg/dong-son-drum.svg"
@@ -37,7 +37,7 @@ export const Hero = ({
 
       {/* Center Main Content */}
       <div className="hero-content-wrapper">
-        <h1 className="hero-main-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</h1>
+        <h1 className="hero-main-title">GIỌT HỒNG</h1>
 
         <div className="hero-greeting">Xin chào</div>
 

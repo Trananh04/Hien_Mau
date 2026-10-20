@@ -13,7 +13,7 @@
   </div>
 </section>
 
-<div class="grid grid-main-side" style="margin-top:20px">
+<div class="grid grid-main-side u-mt-20">
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "users" %} Kết quả</h2></div>
     {% if donors %}
@@ -31,23 +31,23 @@
     {% if selected %}
       <div class="panel-head"><div class="person-card"><span class="avatar">{{ selected.full_name|initials }}</span><div><strong>{{ selected.full_name }}</strong><span class="muted small">{{ selected.phone|phone|default:selected.email }}</span></div></div></div>
       <div class="panel-body">
-        <dl class="dl" style="grid-template-columns:1fr auto">
+        <dl class="dl u-cols-1fr-auto">
           <dt>Lượt hiến tại bệnh viện</dt><dd class="num">{{ history.summary.count }}</dd>
           <dt>Toàn phần</dt><dd class="num">{{ history.summary.whole_ml|vnum }} ml</dd>
           <dt>Thành phần</dt><dd class="num">{{ history.summary.component_count }} lượt</dd>
           <dt>Lần gần nhất</dt><dd>{{ history.summary.last|vn_date }}</dd>
         </dl>
-        <h3 style="font-size:14px;margin:18px 0 8px;color:var(--ink)">Lượt hiến</h3>
+        <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Lượt hiến</h3>
         <div class="list-select">{% for d in history.rows %}
           <a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}"><div class="grow"><strong>{{ d.donated_at|vn_dt }}</strong><span class="sub">{{ d.get_donation_type_display }}{% if d.volume_ml %} · {{ d.volume_ml }} ml{% endif %} · {{ d.registration.campaign.name|default:"Ngoài đợt" }}</span></div>{% status_badge d %}</a>
         {% empty %}<p class="muted small">Chưa có lượt hiến tại bệnh viện.</p>{% endfor %}</div>
-        <h3 style="font-size:14px;margin:18px 0 8px;color:var(--ink)">Đơn đăng ký</h3>
+        <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Đơn đăng ký</h3>
         <div class="list-select">{% for r in regs %}
           <a href="{% url 'bloodbank:hospital_campaign_detail' r.campaign_id %}?tab=registrations"><div class="grow"><strong>{{ r.campaign.name }}</strong><span class="sub">{{ r.code }} · {{ r.registered_at|vn_dt }}</span></div>{% status_badge r %}</a>
         {% empty %}<p class="muted small">Không có đơn.</p>{% endfor %}</div>
       </div>
     {% else %}
-      <div class="empty" style="padding:64px 24px"><div class="empty-icon">{% icon "id-card" %}</div><h3>Chọn một người để xem lịch sử</h3></div>
+      <div class="empty u-p-64-24"><div class="empty-icon">{% icon "id-card" %}</div><h3>Chọn một người để xem lịch sử</h3></div>
     {% endif %}
   </section>
 </div>

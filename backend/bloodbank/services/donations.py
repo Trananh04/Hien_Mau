@@ -1,8 +1,9 @@
 """UC-DON-01..05, UC-HIS-01..04: lượt hiến thực tế, sửa/hủy có kiểm soát, lịch sử và thống kê."""
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.db.models import Count, Max, Q, Sum
+from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
 from bloodbank.models import Campaign, Donation, Product, Registration, SystemSetting
@@ -223,6 +224,28 @@ def summarize(qs):
         .order_by("component_product__name", "component_unit")
     )
     return agg
+
+
+def donation_report(hospital, start, end, campaign_id=None):
+    """SCR-27: báo cáo tiếp nhận theo khoảng ngày [start, end] (giờ Việt Nam) — theo tháng và theo đợt hiến."""
+    tz = timezone.get_current_timezone()
+    qs = Donation.objects.filter(
+        hospital=hospital,
+        donated_at__gte=timezone.make_aware(datetime.combine(start, time.min), tz),
+        donated_at__lte=timezone.make_aware(datetime.combine(end, time.max), tz),
+    )
+    if campaign_id:
+        qs = qs.filter(registration__campaign_id=campaign_id)
+    confirmed = qs.filter(status="confirmed")
+    totals = dict(n=Count("id"), ml=Sum("volume_ml", filter=Q(donation_type="whole_blood")),
+                  comp=Count("id", filter=Q(donation_type="component")))
+    by_month = confirmed.annotate(m=TruncMonth("donated_at", tzinfo=tz)).values("m").annotate(**totals).order_by("m")
+    by_campaign = (confirmed.values("registration__campaign_id", "registration__campaign__name")
+                   .annotate(**totals).order_by("-n"))
+    return {
+        "summary": summarize(qs), "by_month": by_month, "by_campaign": by_campaign,
+        "voided": qs.filter(status="voided").count(), "max_n": max([m["n"] for m in by_month] or [0]),
+    }
 
 
 def donor_history(user):

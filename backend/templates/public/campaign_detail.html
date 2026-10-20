@@ -21,7 +21,7 @@
             <dt>Địa chỉ</dt><dd>{{ c.address }}{% if c.province %}, {{ c.province }}{% endif %}</dd>
             {% if c.hospital.phone %}<dt>Liên hệ</dt><dd><a class="link" href="tel:{{ c.hospital.phone }}">{{ c.hospital.phone|phone }}</a></dd>{% endif %}
           </dl>
-          {% if c.description %}<div style="margin-top:18px;line-height:1.7;white-space:pre-line">{{ c.description }}</div>{% endif %}
+          {% if c.description %}<div class="u-mt-18 u-lh-1_7 u-ws-pre-line">{{ c.description }}</div>{% endif %}
         </div>
       </section>
 
@@ -31,7 +31,7 @@
           <h2 class="panel-title">{% icon "map" %} Bản đồ</h2>
           <a class="btn secondary sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination={% if c.latitude %}{{ c.latitude }},{{ c.longitude }}{% else %}{{ c.hospital.latitude }},{{ c.hospital.longitude }}{% endif %}">{% icon "navigation" %} Chỉ đường</a>
         </div>
-        <div id="mini-map" style="height:300px;border-radius:0 0 14px 14px"
+        <div class="u-h-300 u-br-0-0-14-14" id="mini-map"
              data-lat="{% if c.latitude %}{{ c.latitude }}{% else %}{{ c.hospital.latitude }}{% endif %}"
              data-lng="{% if c.longitude %}{{ c.longitude }}{% else %}{{ c.hospital.longitude }}{% endif %}"
              data-label="{{ c.location_name }}"></div>
@@ -39,7 +39,7 @@
       {% endif %}
     </div>
 
-    <aside class="panel" style="position:sticky;top:92px">
+    <aside class="panel u-pos-sticky u-top-92">
       <div class="panel-head"><h2 class="panel-title">{% icon "hand-heart" %} Đăng ký tham gia</h2></div>
       <div class="panel-body">
         {% if state.label %}
@@ -61,19 +61,19 @@
                 </div>
                 <p class="field-help">Hình thức thực tế do bệnh viện quyết định khi khám sàng lọc.</p>
               </div>
-              <div style="margin-top:14px">{% include "partials/field.html" with field=form.note %}</div>
-              <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "calendar-plus" %} {% if state.rereg %}Đăng ký lại{% else %}Đăng ký tham gia{% endif %}</button>
+              <div class="u-mt-14">{% include "partials/field.html" with field=form.note %}</div>
+              <button type="submit" class="btn primary lg block u-mt-18">{% icon "calendar-plus" %} {% if state.rereg %}Đăng ký lại{% else %}Đăng ký tham gia{% endif %}</button>
             </form>
           {% else %}
-            <p style="margin-bottom:14px;line-height:1.6">Đăng nhập để gửi đơn đăng ký. Đơn sẽ được bệnh viện xác nhận trước ngày hiến.</p>
+            <p class="u-mb-14 u-lh-1_6">Đăng nhập để gửi đơn đăng ký. Đơn sẽ được bệnh viện xác nhận trước ngày hiến.</p>
             <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn primary block">{% icon "log-in" %} Đăng nhập để đăng ký</a>
-            <a href="{% url 'accounts:register' %}?next={{ request.path|urlencode }}" class="btn secondary block" style="margin-top:10px">Tạo tài khoản mới</a>
+            <a href="{% url 'accounts:register' %}?next={{ request.path|urlencode }}" class="btn secondary block u-mt-10">Tạo tài khoản mới</a>
           {% endif %}
         {% else %}
           <div class="notice neutral">{% icon "calendar-x" %}<div>Đợt hiến này hiện không nhận đăng ký.</div></div>
           <a href="{% url 'bloodbank:campaigns' %}" class="btn secondary block">Xem đợt hiến khác</a>
         {% endif %}
-        <hr style="border:0;border-top:1px solid var(--line);margin:20px 0 14px">
+        <hr class="u-bd-0 u-bdt-1-solid-line u-m-20-0-14">
         <button type="button" class="link small" data-open-dialog="info-process">{% icon "circle-help" 15 %} Quy trình hiến máu gồm những bước nào?</button>
       </div>
     </aside>

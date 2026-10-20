@@ -6,7 +6,7 @@
 {% block ws_actions %}<a href="{% url 'bloodbank:admin_hospital_create' %}" class="btn primary">{% icon "plus" %} Thêm bệnh viện</a>{% endblock %}
 {% block content %}
 <section class="panel">
-  <div class="panel-head"><form method="get" class="filters" style="flex:1"><div class="field grow"><label for="hq">Tìm kiếm</label><div class="search-input">{% icon "search" %}<input id="hq" name="q" value="{{ q }}" class="field-input" placeholder="Tên, mã, tỉnh"></div></div><button class="btn secondary">Tìm</button></form></div>
+  <div class="panel-head"><form method="get" class="filters u-flex-1"><div class="field grow"><label for="hq">Tìm kiếm</label><div class="search-input">{% icon "search" %}<input id="hq" name="q" value="{{ q }}" class="field-input" placeholder="Tên, mã, tỉnh"></div></div><button class="btn secondary">Tìm</button></form></div>
   {% if page.object_list %}
   <div class="table-wrap"><table class="table stack-mobile">
     <thead><tr><th>Bệnh viện</th><th>Mã</th><th>Khu vực</th><th>Liên hệ</th><th class="num">Nhân viên</th><th>Trạng thái</th><th></th></tr></thead>

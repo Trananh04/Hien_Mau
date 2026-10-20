@@ -23,14 +23,14 @@ export const Navbar = ({
     <header className="navbar-header" id="navbar">
       <div className="navbar-container">
         {/* Brand logo & title */}
-        <a href="#navbar" className="brand-link" title="Ngân Hàng Máu Sống Việt Nam">
+        <a href="#navbar" className="brand-link" title="Giọt Hồng">
           <img
             src="/assets/png/logo-mark-red.png"
-            alt="Logo Ngân Hàng Máu Sống Việt Nam"
+            alt="Logo Giọt Hồng"
             className="brand-logo-img"
           />
           <div className="brand-text-group">
-            <span className="brand-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</span>
+            <span className="brand-title">GIỌT HỒNG</span>
             <span className="brand-tagline">Trọn tình người Việt</span>
           </div>
         </a>

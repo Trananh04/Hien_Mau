@@ -8,18 +8,18 @@
   <div class="map-layout">
     <div class="map-side">
       <div class="map-filter">
-        <select class="field-select" data-map-province aria-label="Lọc theo tỉnh/thành" style="flex:1">
+        <select class="field-select u-flex-1" data-map-province aria-label="Lọc theo tỉnh/thành">
           <option value="">Tất cả tỉnh/thành</option>
           {% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
         </select>
-        <select class="field-select" data-map-type aria-label="Loại điểm" style="flex:1">
+        <select class="field-select u-flex-1" data-map-type aria-label="Loại điểm">
           <option value="">Bệnh viện &amp; đợt hiến</option>
           <option value="hospital">Chỉ bệnh viện</option>
           <option value="campaign">Chỉ đợt hiến</option>
         </select>
       </div>
       <div class="map-list" data-map-list aria-live="polite">
-        <div class="empty"><span class="skeleton" style="width:60%"></span><span class="skeleton" style="width:40%"></span></div>
+        <div class="empty"><span class="skeleton u-w-60pct"></span><span class="skeleton u-w-40pct"></span></div>
       </div>
     </div>
     <div id="map" data-map-src="{% url 'bloodbank:map_data' %}" role="region" aria-label="Bản đồ"></div>

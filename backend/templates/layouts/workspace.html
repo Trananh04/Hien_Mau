@@ -4,8 +4,8 @@
 <div class="ws-shell" data-ws-shell>
   <aside class="ws-rail" aria-label="Điều hướng khu làm việc">
     <a href="{% url 'bloodbank:home' %}" class="ws-brand" title="Về trang chủ">
-      <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="Logo Ngân Hàng Máu Sống">
-      <div><strong>NGÂN HÀNG MÁU SỐNG</strong><span>Trọn tình người Việt</span></div>
+      <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="Logo Giọt Hồng">
+      <div><strong>GIỌT HỒNG</strong><span>Trọn tình người Việt</span></div>
     </a>
 
     {% if workspace_mode == "admin" %}
@@ -27,17 +27,6 @@
         <small>Bệnh viện đang làm việc</small>
         <strong>{{ current_hospital.name }}</strong>
         <span class="ws-role">{% icon "badge-check" 14 %} Nhân viên bệnh viện</span>
-        {% if staff_assignments|length > 1 %}
-        <form method="post" action="{% url 'bloodbank:select_hospital' %}" data-autosubmit>
-          {% csrf_token %}
-          <label class="sr-only" for="ws-hospital">Đổi bệnh viện</label>
-          <select id="ws-hospital" name="hospital_id">
-            {% for s in staff_assignments %}
-              <option value="{{ s.hospital_id }}" {% if s.hospital_id == current_hospital.id %}selected{% endif %}>{{ s.hospital.name }}</option>
-            {% endfor %}
-          </select>
-        </form>
-        {% endif %}
       </div>
       <nav class="ws-nav">
         {% for group in hospital_nav %}

@@ -4,7 +4,7 @@
 {% block ws_title %}Chờ xét nghiệm{% endblock %}
 {% block ws_sub %}<p class="ws-sub">Lượt hiến đã ghi nhận nhưng chưa nhập kho. Máu chỉ vào kho khi xét nghiệm <strong>Đạt</strong>; nhóm máu nhập kho lấy theo kết quả xét nghiệm, không theo nhóm người hiến tự khai.</p>{% endblock %}
 {% block content %}
-<section class="panel" style="margin-bottom:20px">
+<section class="panel u-mb-20">
   <div class="panel-head"><h2 class="panel-title">{% icon "flask-conical" %} Hàng chờ</h2><span class="muted small">{{ page.paginator.count }} lượt hiến</span></div>
   {% if page.object_list %}
   <div class="table-wrap"><table class="table stack-mobile">
@@ -42,10 +42,10 @@
 {% endif %}
 
 {% for d in page %}
-<dialog class="modal-dialog" id="lab-{{ d.pk }}"><form method="post" action="{% url 'bloodbank:lab_result' d.pk %}" style="display:flex;flex-direction:column;width:100%" data-lab-form>
+<dialog class="modal-dialog" id="lab-{{ d.pk }}"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:lab_result' d.pk %}" data-lab-form>
   {% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ d.form_key }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
   <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "flask-conical" %}</div><h3 class="modal-title">Kết quả xét nghiệm · {{ d.code }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body stack" style="gap:14px">
+  <div class="modal-body stack u-gap-14">
     <p class="muted small">{{ d.donor.full_name }} · {{ d.donated_at|vn_dt }}{% if d.donor.blood_group %} · nhóm tự khai {{ d.donor.get_blood_group_display }} (không dùng để nhập kho){% endif %}</p>
     <div class="radio-cards">
       <div class="radio-card"><input type="radio" id="r-ok-{{ d.pk }}" name="result" value="passed" checked><label for="r-ok-{{ d.pk }}"><strong>Đạt</strong><span class="small muted">Nhập vào kho ngay</span></label></div>

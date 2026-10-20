@@ -227,6 +227,28 @@ def close_demand(staff, demand_id, status, request=None):
     return demand
 
 
+def stock_overview(hospital, product_id=None):
+    """SCR-30: ma trận nhóm máu × quy cách, danh sách chi tiết và số tổng — lọc theo chế phẩm nếu có."""
+    from accounts.models import BLOOD_GROUP_VALUES
+
+    specs = list(ProductSpec.objects.select_related("product").filter(is_active=True, product__is_active=True)
+                 .order_by("product__kind", "product__name", "code"))
+    rows = {(s.blood_group, s.product_spec_id): s for s in Stock.objects.filter(hospital=hospital)}
+    short = {(r["blood_group"], r["spec"].pk): r["shortage"] for r in shortages(hospital)}
+    shown_specs = [s for s in specs if not product_id or str(s.product_id) == str(product_id)]
+    matrix = [{"bg": bg, "cells": [{"spec": spec, "stock": rows.get((bg, spec.pk)), "short": short.get((bg, spec.pk), 0)}
+                                   for spec in shown_specs]} for bg in BLOOD_GROUP_VALUES]
+    by_pk = {s.pk: s for s in specs}
+    detail = sorted(rows.values(), key=lambda s: (s.product_spec_id, s.blood_group))
+    for s in detail:
+        s.spec = by_pk.get(s.product_spec_id)
+    detail = [s for s in detail if s.spec and (not product_id or str(s.spec.product_id) == str(product_id))]
+    totals = {"on_hand": sum(s.quantity_on_hand for s in rows.values()),
+              "reserved": sum(s.quantity_reserved for s in rows.values()),
+              "low": sum(1 for s in rows.values() if s.below_min), "short": sum(1 for v in short.values() if v > 0)}
+    return {"matrix": matrix, "specs": shown_specs, "detail": detail, "totals": totals, "all_specs": specs}
+
+
 def shortages(hospital):
     """BR-43: Thiếu = MAX(0, SUM nhu cầu active cùng khóa − khả dụng); tính một lần mỗi khóa."""
     rows = (

@@ -10,28 +10,23 @@ from django.views.decorators.http import require_POST
 from accounts.forms import PROVINCES
 from bloodbank import content
 from bloodbank.forms import RegistrationForm
+from bloodbank.assistant import service as assistant
 from bloodbank.models import Campaign, Hospital, Registration
+from bloodbank.permissions import deny
 from bloodbank.services import campaigns as cmp
 from bloodbank.services.common import BusinessError
 
 from .helpers import paginate
 
-PUBLIC_STATUSES = ["open", "closed", "completed"]
-
-
-def public_campaigns():
-    return Campaign.objects.filter(status__in=PUBLIC_STATUSES, hospital__status="active").select_related("hospital")
-
-
 def home(request):
     now = timezone.now()
-    upcoming = public_campaigns().filter(status="open", end_time__gt=now).order_by("start_time")[:3]
+    upcoming = Campaign.objects.public().filter(status="open", end_time__gt=now).order_by("start_time")[:3]
     return render(request, "public/home.html", {"upcoming": upcoming, "news": content.NEWS})
 
 
 def campaign_list(request):
     now = timezone.now()
-    qs = public_campaigns()
+    qs = Campaign.objects.public()
     when = request.GET.get("when", "upcoming")
     if when == "upcoming":
         qs = qs.filter(end_time__gt=now).exclude(status="completed").order_by("start_time")
@@ -56,7 +51,7 @@ def campaign_list(request):
 
 
 def campaign_detail(request, pk):
-    campaign = get_object_or_404(public_campaigns(), pk=pk)
+    campaign = get_object_or_404(Campaign.objects.public(), pk=pk)
     reg = None
     if request.user.is_authenticated:
         reg = Registration.objects.filter(campaign=campaign, donor=request.user).first()
@@ -66,9 +61,7 @@ def campaign_detail(request, pk):
         if not request.user.is_authenticated:
             return redirect(f"{reverse('accounts:login')}?next={request.path}")
         if request.user.role != "member":
-            from bloodbank.permissions import _deny
-
-            _deny(request, "member_role")
+            deny(request, "member_role")
         if form.is_valid():
             try:
                 cmp.register_for_campaign(request.user, campaign, form.cleaned_data["donation_type"],
@@ -100,7 +93,7 @@ def map_data(request):
          "url": reverse("bloodbank:campaign_detail", args=[c.pk]),
          "lat": float(c.latitude if c.latitude is not None else c.hospital.latitude),
          "lng": float(c.longitude if c.longitude is not None else c.hospital.longitude)}
-        for c in public_campaigns().filter(status="open", end_time__gt=now)
+        for c in Campaign.objects.public().filter(status="open", end_time__gt=now)
         if c.latitude is not None or c.hospital.latitude is not None
     ]
     return JsonResponse({"hospitals": hospitals, "campaigns": camps})
@@ -108,7 +101,11 @@ def map_data(request):
 
 @require_POST
 def chatbot(request):
-    """BOT-01: trả lời từ nội dung đã duyệt, không kết luận lâm sàng (BR-20)."""
-    q = (request.POST.get("q") or "")[:300]
-    return JsonResponse(content.answer(q))
+    """BOT-01: trợ lý hỏi đáp — nội dung đã duyệt + dữ liệu của chính người hỏi (chỉ đọc), không kết luận lâm sàng."""
+    from .api import chat_message   # tránh vòng import: api ↔ public
+
+    if request.POST.get("reset") == "1":
+        assistant.reset(request)
+        return JsonResponse({"ok": True})
+    return chat_message(request)   # dùng chung xử lý với POST /api/chatbot/message
 

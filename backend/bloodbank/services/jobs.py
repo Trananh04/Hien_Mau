@@ -89,4 +89,11 @@ def run_all(now=None):
         "cancelled_offers": cancel_stale_offers(now),
         "escalations": escalate_patient_requests(now),
         "eligible_reminders": badges.remind_eligible_again(now),
+        "chat_purged": _purge_chat(now),
     }
+
+
+def _purge_chat(now=None):
+    from bloodbank.assistant.service import purge_old_conversations
+
+    return purge_old_conversations(now)

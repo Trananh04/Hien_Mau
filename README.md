@@ -1,4 +1,4 @@
-# Hiến Máu — Ngân Hàng Máu Sống Việt Nam
+# Giọt Hồng — Hệ thống hiến máu
 
 Hệ thống kết nối người hiến máu, người nhà bệnh nhân cần máu và các bệnh viện: đăng ký đợt hiến, ghi nhận lượt hiến,
 quản lý kho máu, điều phối máu giữa các bệnh viện và xử lý yêu cầu cần máu.
@@ -112,19 +112,71 @@ docker compose exec web python manage.py collectstatic --noinput
 
 Mọi ngưỡng (số ngày, số phút, số giờ) chỉnh tại **Quản trị → Cấu hình**. Email ở môi trường dev in ra log `web` / `scheduler`.
 
+## 5b. Trợ lý hỏi đáp (chatbot)
+
+Nút tròn góc phải mọi trang. Luồng xử lý:
+
+```
+Câu hỏi → chặn trước (khẩn cấp / y khoa cá nhân / dữ liệu người khác / mua bán / câu lệnh lạ)
+        → truy xuất tài liệu đã duyệt (RAG) + tra cứu sẵn dữ liệu theo ý định (chỉ đọc, đúng người đăng nhập)
+        → Claude tổng hợp (nếu có API key) → KIỂM TRA (mã DK-/PR- phải có trong dữ liệu thật; câu khẳng định
+          "đủ điều kiện" luôn kèm nhắc bác sĩ) → không qua / AI lỗi → chế độ từ khóa
+        → lưu hội thoại → trả lời + nguồn (tiêu đề tài liệu, phiên bản) + thẻ đợt hiến / nút liên kết
+```
+
+| Mã | Chức năng | Ví dụ | Cách làm |
+|---|---|---|---|
+| CHAT-01 | Kiến thức hiến máu | Hiến máu có ảnh hưởng sức khỏe không? | RAG |
+| CHAT-02 | Kiểm tra điều kiện sơ bộ | Tôi 20 tuổi, nặng 48kg có hiến được không? | Luật cố định + RAG; thiếu giới tính/tuổi → hỏi lại; không bao giờ kết luận "đủ điều kiện" |
+| CHAT-03 | Trước / sau khi hiến | Trước khi hiến có được ăn sáng không? | RAG |
+| CHAT-04 | Tìm đợt hiến | Hà Nội có đợt nào sắp diễn ra? | Truy vấn DB (khu vực, thời gian, vị trí; bỏ đợt đã đăng ký / trước ngày được hiến lại) |
+| CHAT-05 | Hướng dẫn đăng ký | Đăng ký hiến máu thế nào? | RAG |
+| CHAT-06 | Lịch sử hiến | Tôi đã hiến bao nhiêu lần? | DB (chỉ lượt đã xác nhận) |
+| CHAT-07 | Ngày hiến tiếp | Bao giờ tôi hiến tiếp được? | DB + luật khoảng nghỉ |
+| CHAT-08 | Lịch đăng ký | Tôi đã đăng ký ngày nào? | DB |
+| CHAT-09 | Chế phẩm máu | Tiểu cầu và hồng cầu khác nhau thế nào? | RAG |
+| CHAT-10 | Dùng website | Thay đổi thông tin cá nhân thế nào? | RAG |
+
+**Tài liệu RAG** nằm trong `backend/bloodbank/assistant/kb/*.md` — mỗi file có `id`, `title`, `source`, `version`,
+`reviewed`, `keywords`; sửa nội dung thì tăng `version` (git giữ lịch sử). Truy xuất BM25 không dấu (không cần dịch vụ
+embedding); khi tài liệu lớn có thể bổ sung pgvector. Nội dung y khoa cần cơ sở y tế rà soát trước khi dùng thật.
+
+**Ghi nhớ hội thoại:** người đã đăng nhập — lưu DB (`chat_conversations`, `chat_messages`), mở lại trợ lý là thấy cuộc
+trò chuyện trước; chỉ chủ tài khoản xem/xóa được; tự xóa sau `chat_retention_days` (mặc định 30) ngày. Khách — chỉ
+trong phiên. Nhật ký hệ thống chỉ ghi ý định/chế độ, không ghi nội dung câu hỏi.
+
+**API** (JSON, xác thực bằng phiên đăng nhập; POST/DELETE cần CSRF; chưa đăng nhập → 401, sai vai trò → 403,
+hội thoại của người khác → 404):
+
+| API | Quyền | Chức năng |
+|---|---|---|
+| `POST /api/chatbot/message` | Công khai | Gửi câu hỏi `{message, conversation_id?, lat?, lng?}` |
+| `GET /api/chatbot/conversations` | Đã đăng nhập | Danh sách hội thoại của chính mình |
+| `GET` / `DELETE /api/chatbot/conversations/{id}` | Đã đăng nhập | Xem / xóa một hội thoại của chính mình |
+| `GET /api/donations/me/history` | Người dùng | Lịch sử hiến (đã xác nhận) |
+| `GET /api/donations/me/eligibility?age=&weight_kg=&gender=` | Người dùng | Ngày được hiến lại + đối chiếu sơ bộ |
+| `GET /api/donation-campaigns?area=&date_from=&date_to=&time_of_day=&limit=&lat=&lng=` | Công khai | Tìm đợt hiến |
+| `GET /api/donation-registrations/me` | Người dùng | Lịch đăng ký và trạng thái |
+
+**Hai chế độ:** không có `ANTHROPIC_API_KEY` → chế độ từ khóa (miễn phí). Có key → Claude (mặc định
+`claude-haiku-5-5`; dùng dịch vụ trung gian tương thích `/v1/messages` bằng `CHATBOT_BASE_URL`). Trợ lý chỉ đọc —
+không đăng ký/hủy thay người dùng; nếu sau này thêm, bắt buộc có bước xác nhận rõ ràng trước khi thực hiện.
+
 ## 6. Kiểm thử
 
 ```bash
 docker compose run --rm --no-deps web python manage.py test bloodbank.tests
 ```
 
-Bộ test (115 test) chạy trên PostgreSQL thật, gồm:
+Bộ test (170 test) chạy trên PostgreSQL thật, gồm:
 - ràng buộc CSDL (CHECK / UNIQUE / trigger),
 - các luồng nghiệp vụ qua HTTP (đợt hiến, điểm hiến, kho, điều phối liên viện, yêu cầu cần máu),
 - phân quyền: mọi đường dẫn × mọi vai trò, 3 cổng đăng nhập,
 - các luồng tự động hóa ở mục 5a,
 - smoke test mở mọi màn hình với từng vai trò trên dữ liệu mẫu,
-- test hồi quy cho các lỗi tìm được trong đợt QA audit (`test_qa_audit.py`, xem `qa-audit/`).
+- test hồi quy cho các lỗi tìm được trong đợt QA audit (`test_qa_audit.py`, xem `qa-audit/`),
+- kiểm thử đồng thời nhiều luồng trên PostgreSQL thật (`test_concurrency.py`),
+- trợ lý hỏi đáp + bộ 47 câu hỏi mẫu (`test_assistant.py`, `assistant_eval.json`; phần Claude dùng client giả lập, không tốn phí).
 
 ## 7. Cấu hình (`.env`)
 
@@ -139,6 +191,12 @@ Bộ test (115 test) chạy trên PostgreSQL thật, gồm:
 | `JOBS_INTERVAL_SECONDS` | `300` | Chu kỳ chạy tác vụ định kỳ (giây) |
 | `DJANGO_DEBUG` | `1` | Chế độ phát triển |
 | `DJANGO_SECRET_KEY` | (chuỗi mẫu) | **Phải đổi** nếu triển khai thật; bắt buộc khi `DJANGO_DEBUG=0` (thiếu thì ứng dụng không khởi động) |
+| `ANTHROPIC_API_KEY` | (trống) | Khóa Claude API cho trợ lý hỏi đáp. Trống = chế độ từ khóa (không cần AI, miễn phí) |
+| `CHATBOT_MODEL` | `claude-haiku-5-5` | Mô hình Claude của trợ lý (rẻ, nhanh) |
+| `CHATBOT_RATE_LIMIT` | `20` | Số câu hỏi tối đa / 5 phút / người dùng |
+| `CHATBOT_MAX_CONCURRENT` | `8` | Số câu gửi AI cùng lúc (khóa advisory PostgreSQL, áp cho mọi worker); vượt → trả lời ngay bằng chế độ từ khóa thay vì xếp hàng |
+| `CHATBOT_DAILY_LIMIT` | `2000` | Hạn mức gọi AI mỗi ngày (chặn chi phí bất thường); hết → chế độ từ khóa |
+| `DJANGO_HTTPS` | `0` | `1` khi chạy sau HTTPS: chuyển hướng HTTPS, HSTS, cookie Secure |
 | `TRUSTED_PROXY_COUNT` | `0` | Số reverse proxy tin cậy đứng trước ứng dụng. `0` = ghi IP nhật ký theo kết nối thật, không tin header `X-Forwarded-For` |
 
 > `.env` chứa mật khẩu nên không được đưa lên git. Chỉ `.env.example` được commit.

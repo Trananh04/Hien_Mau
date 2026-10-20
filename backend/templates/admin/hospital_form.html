@@ -18,12 +18,12 @@
   </section>
 </form>
 {% if h %}
-<div class="row between" style="margin:26px 0 12px"><h2 class="panel-title" style="font-size:17px">{% icon "users" %} Tài khoản nhân viên bệnh viện</h2><button type="button" class="btn secondary" data-open-dialog="add-staff">{% icon "user-plus" %} Cấp tài khoản</button></div>
-<p class="muted small" style="margin:-4px 0 12px">Nhân viên đăng nhập tại <a class="link" href="{% url 'accounts:hospital_login' %}">cổng Bệnh viện</a> và chỉ thấy các màn hình bệnh viện. Mọi nhân viên có cùng quyền.</p>
+<div class="row between u-m-26-0-12"><h2 class="panel-title u-fs-17">{% icon "users" %} Tài khoản nhân viên bệnh viện</h2><button type="button" class="btn secondary" data-open-dialog="add-staff">{% icon "user-plus" %} Cấp tài khoản</button></div>
+<p class="muted small u-m-4-0-12">Nhân viên đăng nhập tại <a class="link" href="{% url 'accounts:hospital_login' %}">cổng Bệnh viện</a> và chỉ thấy các màn hình bệnh viện. Mọi nhân viên có cùng quyền.</p>
 {% include "partials/staff_table.html" with action_url=request.path admin_mode=True %}
-<dialog class="modal-dialog" id="add-staff"><form method="post" style="display:flex;flex-direction:column;width:100%" autocomplete="off">{% csrf_token %}<input type="hidden" name="form" value="staff_add">
+<dialog class="modal-dialog" id="add-staff"><form class="u-d-flex u-fd-column u-w-100pct" method="post" autocomplete="off">{% csrf_token %}<input type="hidden" name="form" value="staff_add">
   <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "user-plus" %}</div><h3 class="modal-title">Cấp tài khoản nhân viên — {{ h.name }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body stack" style="gap:14px">
+  <div class="modal-body stack u-gap-14">
     <p class="muted small">Nhập email của tài khoản nhân viên đã có để phân công thêm bệnh viện, hoặc email mới kèm họ tên và mật khẩu để tạo tài khoản. Tài khoản Người dùng / Quản trị không dùng làm tài khoản bệnh viện được.</p>
     <div class="field"><label for="st-e">Email <span class="field-req">*</span></label><input id="st-e" type="email" name="email" required class="field-input" autocomplete="off"></div>
     <div class="field"><label for="st-n">Họ tên <span class="muted small">(khi tạo mới)</span></label><input id="st-n" name="full_name" maxlength="150" class="field-input"></div>

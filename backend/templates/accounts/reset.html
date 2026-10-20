@@ -12,7 +12,7 @@
     {% csrf_token %}
     {% include "partials/field.html" with field=form.password %}
     {% include "partials/field.html" with field=form.password2 %}
-    <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "key-round" %} Lưu mật khẩu mới</button>
+    <button type="submit" class="btn primary lg block u-mt-18">{% icon "key-round" %} Lưu mật khẩu mới</button>
   </form>
 {% endif %}
 {% endblock %}

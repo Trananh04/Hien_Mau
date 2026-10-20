@@ -1,5 +1,6 @@
-"""Cấu hình Django cho Ngân Hàng Máu Sống Việt Nam."""
+"""Cấu hình Django cho Giọt Hồng."""
 import os
+import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -118,6 +119,9 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Cache dùng chung cho MỌI worker/luồng (bảng PostgreSQL) — giới hạn tần suất & số cuộc gọi AI đồng thời phải đếm chung
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "django_cache"}}
+
 # Triển khai sau HTTPS: đặt DJANGO_HTTPS=1 → chuyển hướng HTTPS, HSTS, cookie chỉ gửi qua HTTPS
 if os.environ.get("DJANGO_HTTPS", "0") == "1":
     SECURE_SSL_REDIRECT = True
@@ -131,8 +135,25 @@ SESSION_COOKIE_AGE = 60 * 60 * 12
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 
+# Trợ lý hỏi đáp: có ANTHROPIC_API_KEY → dùng Claude; không có → chế độ từ khóa (không cần AI)
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+if "test" in sys.argv[1:2]:
+    ANTHROPIC_API_KEY = ""  # bộ test không bao giờ gọi API thật (tốn phí, không ổn định) — test LLM dùng client giả lập
+CHATBOT_USE_LLM = os.environ.get("CHATBOT_USE_LLM", "1") == "1"
+CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "claude-haiku-5-5")
+# Địa chỉ API tương thích Claude Messages (để trống = API chính thức của Anthropic). Dịch vụ trung gian sẽ nhận
+# toàn bộ câu hỏi + kết quả công cụ — chỉ dùng nhà cung cấp tin cậy.
+CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL", "").rstrip("/") or None
+CHATBOT_MAX_TOKENS = int(os.environ.get("CHATBOT_MAX_TOKENS", "4096"))
+# Mức effort; để trống = không gửi (Claude Haiku 4.5 / Sonnet 4.5 không hỗ trợ tham số effort)
+CHATBOT_EFFORT = os.environ.get("CHATBOT_EFFORT", "" if any(v in CHATBOT_MODEL for v in ("4.5", "4-5")) else "low")
+CHATBOT_TIMEOUT = float(os.environ.get("CHATBOT_TIMEOUT", "20"))
+CHATBOT_RATE_LIMIT = int(os.environ.get("CHATBOT_RATE_LIMIT", "20"))
+CHATBOT_MAX_CONCURRENT = int(os.environ.get("CHATBOT_MAX_CONCURRENT", "8"))  # số câu gửi AI cùng lúc tối đa (toàn hệ thống)
+CHATBOT_DAILY_LIMIT = int(os.environ.get("CHATBOT_DAILY_LIMIT", "2000"))   # số câu gửi AI / ngày (kiểm soát chi phí)  # số câu / 5 phút / người dùng (hoặc phiên)
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "Ngân Hàng Máu Sống <no-reply@hienmau.local>"
+DEFAULT_FROM_EMAIL = "Giọt Hồng <no-reply@hienmau.local>"
 
 MESSAGE_TAGS = {10: "info", 20: "info", 25: "success", 30: "warning", 40: "error"}
 

@@ -77,15 +77,16 @@ class SmokeAllScreens(TestCase):
         offer = RequestOffer.objects.filter(status="accepted").first()
         supplier = Staff.objects.filter(hospital=offer.supplier_hospital).order_by("pk").first().user
         self.client.force_login(supplier)
-        self.client.post(reverse("bloodbank:select_hospital"), {"hospital_id": offer.supplier_hospital_id})
         self.get(reverse("bloodbank:offer_detail", args=[offer.pk]))
         self.get(reverse("bloodbank:offer_open", args=[offer.pk]), expect=302)
 
-    def test_hospital_selector_for_multi_hospital_staff(self):
+    def test_staff_works_at_single_hospital(self):
+        # BR-03, BR-04: mỗi nhân viên chỉ thuộc một bệnh viện → không có bộ chọn bệnh viện
+        self.assertEqual(Staff.objects.filter(user=self.staff).count(), 1)
         self.client.force_login(self.staff)
         r = self.get(reverse("bloodbank:hospital_dashboard"))
         self.assertContains(r, "ws-rail")
-        self.assertContains(r, "<option", msg_prefix="bộ chọn bệnh viện")
+        self.assertNotContains(r, 'name="hospital_id"')
 
     def test_admin_pages(self):
         self.client.force_login(self.admin)

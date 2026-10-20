@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from accounts.models import User
 from bloodbank.models import Campaign, Hospital, ProductSpec, Registration, Staff
-from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services import inventory as inv
 from bloodbank.services import patients as prq
@@ -69,9 +68,7 @@ class Command(BaseCommand):
             if u is None:
                 u = self._user(f"Nhân viên {h.name.replace('Bệnh viện ', 'BV ')}", email, f"0912000{i:03d}", role="hospital")
                 created += 1
-            Staff.objects.get_or_create(hospital=h, user=u)
-            if i == 1 and HOSPITALS[1][0] in hospitals:
-                Staff.objects.get_or_create(hospital=hospitals[HOSPITALS[1][0]], user=u)
+            Staff.objects.get_or_create(user=u, defaults={"hospital": h})
         return created
 
     def _seed(self):
@@ -84,7 +81,7 @@ class Command(BaseCommand):
         ]
         h1, h2, h3, h4, h5 = hospitals
 
-        # Một vai trò chung cho nhân viên bệnh viện; benhvien1 làm ở 2 bệnh viện → có bộ chọn bệnh viện
+        # Một vai trò chung cho nhân viên bệnh viện; mỗi nhân viên thuộc đúng một bệnh viện (BR-03, BR-04)
         self._ensure_hospital_accounts()
         staff = {i: Staff.objects.get(hospital=h, user__email=f"benhvien{i}@hienmau.vn")
                  for i, h in enumerate(hospitals, start=1)}

@@ -13,8 +13,7 @@ from bloodbank.permissions import admin_required
 from bloodbank.services import admin as admin_service
 from bloodbank.services import donations as don
 
-from .helpers import attempt, paginate
-from .hospital import _audit_filters
+from .helpers import attempt, audit_filters, paginate
 
 
 @admin_required
@@ -39,10 +38,10 @@ def stats(request):
             "hospitals": Hospital.objects.filter(status="active").count(),
             "open_campaigns": Campaign.objects.filter(status="open").count(),
             "registrations": Registration.objects.count(),
-            "open_requests": HospitalRequest.objects.filter(status__in=["open", "in_progress", "partially_fulfilled"],
+            "open_requests": HospitalRequest.objects.filter(status__in=HospitalRequest.OPEN_STATUSES,
                                                             closed_at__isnull=True).count(),
             "in_transit": RequestOffer.objects.filter(status="in_transit").count(),
-            "patient_waiting": PatientRequest.objects.filter(status__in=["submitted", "verifying"]).count(),
+            "patient_waiting": PatientRequest.objects.filter(status__in=PatientRequest.WAITING_STATUSES).count(),
         },
     })
 
@@ -110,7 +109,7 @@ def hospital_form(request, pk=None):
 
 @admin_required
 def audit(request):
-    qs, f = _audit_filters(request, AuditLog.objects.select_related("actor", "hospital"))
+    qs, f = audit_filters(request, AuditLog.objects.select_related("actor", "hospital"))
     hospital_id = request.GET.get("hospital") or ""
     if hospital_id:
         qs = qs.filter(hospital_id=hospital_id)

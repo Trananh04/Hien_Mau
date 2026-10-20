@@ -34,6 +34,16 @@ def next_campaign(hospital, now=None):
             .order_by("start_time").first())
 
 
+def with_callout_info(hospital, rows):
+    """Gắn số người đủ điều kiện và lần kêu gọi gần nhất cho mỗi dòng thiếu hụt (mỗi nhóm máu tính 1 lần)."""
+    seen = {}
+    for r in rows:
+        if r["shortage"] and r["blood_group"] not in seen:
+            seen[r["blood_group"]] = (candidates(hospital, r["blood_group"]).count(), last_callout(hospital, r["blood_group"]))
+        r["callout_count"], r["last_callout"] = seen.get(r["blood_group"], (0, None))
+    return rows
+
+
 def donor_callout(staff, blood_group, request=None):
     require(blood_group in BLOOD_GROUP_VALUES, "ERR-VALIDATION", "Chọn nhóm máu cần kêu gọi.")
     hospital, now = staff.hospital, timezone.now()

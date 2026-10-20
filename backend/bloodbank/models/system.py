@@ -99,6 +99,11 @@ class SystemSetting(models.Model):
         "prq_escalate_admin_minutes": (30, "Yêu cầu cần máu chưa được xác minh sau số phút này: báo lên Quản trị hệ thống"),
         "auth_email_max_per_window": (3, "Số email đặt lại mật khẩu / xác thực tối đa cho một tài khoản trong khung thời gian"),
         "auth_email_window_minutes": (15, "Khung thời gian giới hạn gửi email đặt lại mật khẩu / xác thực (phút)"),
+        "donor_min_age": (18, "Kiểm tra sơ bộ (trợ lý): tuổi tối thiểu thường áp dụng"),
+        "donor_max_age": (60, "Kiểm tra sơ bộ (trợ lý): tuổi tối đa thường áp dụng"),
+        "donor_min_weight_male_kg": (45, "Kiểm tra sơ bộ (trợ lý): cân nặng tối thiểu của nam (kg)"),
+        "donor_min_weight_female_kg": (42, "Kiểm tra sơ bộ (trợ lý): cân nặng tối thiểu của nữ (kg)"),
+        "chat_retention_days": (30, "Lịch sử trò chuyện với trợ lý được tự xóa sau số ngày này"),
         "lab_max_units_per_donation":(3, "Số đơn vị tối đa được nhập kho từ một lượt hiến khi xét nghiệm đạt"),
         "donor_callout_cooldown_hours":(24, "Khoảng cách tối thiểu giữa 2 lần kêu gọi người hiến cùng nhóm máu của một bệnh viện (giờ)"),
     }

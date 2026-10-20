@@ -11,7 +11,7 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-<div class="grid grid-4" style="margin-bottom:20px">
+<div class="grid grid-4 u-mb-20">
   <div class="stat"><div class="stat-label">{% icon "boxes" %} Hiện có</div><div class="stat-value">{{ totals.on_hand }}<small>đơn vị</small></div></div>
   <div class="stat"><div class="stat-label">{% icon "lock" %} Đang giữ chỗ</div><div class="stat-value">{{ totals.reserved }}<small>đơn vị</small></div><div class="stat-note">Cho đề nghị liên viện đã chấp thuận</div></div>
   <div class="stat {% if totals.low %}alert{% endif %}"><div class="stat-label">{% icon "triangle-alert" %} Dưới tối thiểu</div><div class="stat-value">{{ totals.low }}</div><div class="stat-note">Dòng tồn</div></div>
@@ -21,11 +21,11 @@
 <section class="panel">
   <div class="panel-head">
     <h2 class="panel-title">{% icon "grid-3x3" %} Ma trận khả dụng: nhóm máu × chế phẩm</h2>
-    <form method="get" data-autosubmit><label class="sr-only" for="sp">Lọc chế phẩm</label><select id="sp" name="product" class="field-select" style="min-width:220px"><option value="">Tất cả chế phẩm</option>{% for p in products %}<option value="{{ p.pk }}" {% if product_id == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></form>
+    <form method="get" data-autosubmit><label class="sr-only" for="sp">Lọc chế phẩm</label><select id="sp" name="product" class="field-select u-minw-220"><option value="">Tất cả chế phẩm</option>{% for p in products %}<option value="{{ p.pk }}" {% if product_id == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></form>
   </div>
   <div class="table-wrap">
     <table class="table stock-matrix">
-      <thead><tr><th>Nhóm máu</th>{% for s in specs %}<th>{{ s.product.name }}<span class="cell-sub" style="text-transform:none;letter-spacing:0">{{ s.name }}</span></th>{% endfor %}</tr></thead>
+      <thead><tr><th>Nhóm máu</th>{% for s in specs %}<th>{{ s.product.name }}<span class="cell-sub u-tt-none u-ls-0">{{ s.name }}</span></th>{% endfor %}</tr></thead>
       <tbody>
       {% for row in matrix %}
         <tr><td>{% blood row.bg %}</td>
@@ -41,7 +41,7 @@
       </tbody>
     </table>
   </div>
-  <div class="panel-foot" style="justify-content:flex-start"><div class="legend"><span><i style="background:var(--danger-bg);box-shadow:inset 0 0 0 1px var(--danger-line)"></i>Đang thiếu theo nhu cầu</span><span><i style="background:var(--warn-bg);box-shadow:inset 0 0 0 1px var(--warn-line)"></i>Dưới mức tối thiểu</span><span>Số lớn = khả dụng</span></div></div>
+  <div class="panel-foot u-jc-flex-start"><div class="legend"><span><i class="u-bg-danger-bg u-sh-inset-0-0-0-1-danger-line"></i>Đang thiếu theo nhu cầu</span><span><i class="u-bg-warn-bg u-sh-inset-0-0-0-1-warn-line"></i>Dưới mức tối thiểu</span><span>Số lớn = khả dụng</span></div></div>
 </section>
 
 <section class="panel">
@@ -61,10 +61,10 @@
         <td data-label="Tối thiểu" class="num">{{ s.min_stock_level }}</td>
         <td data-label="Cập nhật" class="nowrap small">{{ s.updated_at|vn_dt }}</td>
         {% if can_edit %}
-        <td data-label="Sửa nhanh"><form method="post" action="{% url 'bloodbank:stock_settings' s.pk %}" class="row" style="gap:6px;justify-content:flex-end;flex-wrap:nowrap">
+        <td data-label="Sửa nhanh"><form method="post" action="{% url 'bloodbank:stock_settings' s.pk %}" class="row u-gap-6 u-jc-flex-end u-fw-nowrap">
           {% csrf_token %}<input type="hidden" name="version" value="{{ s.version }}">
-          <input type="number" min="0" name="shareable_quantity" value="{{ s.shareable_quantity|default_if_none:'' }}" class="field-input" style="width:84px;min-height:34px" placeholder="Không" aria-label="Số chia sẻ">
-          <input type="number" min="0" name="min_stock_level" value="{{ s.min_stock_level }}" class="field-input" style="width:72px;min-height:34px" aria-label="Mức tối thiểu">
+          <input type="number" min="0" name="shareable_quantity" value="{{ s.shareable_quantity|default_if_none:'' }}" class="field-input u-w-84 u-minh-34" placeholder="Không" aria-label="Số chia sẻ">
+          <input type="number" min="0" name="min_stock_level" value="{{ s.min_stock_level }}" class="field-input u-w-72 u-minh-34" aria-label="Mức tối thiểu">
           <button class="btn secondary sm" title="Lưu" aria-label="Lưu số chia sẻ và mức tối thiểu">{% icon "check" %}</button>
           <a href="{% url 'bloodbank:stock_ledger' %}?stock={{ s.pk }}" class="btn ghost sm" title="Lịch sử" aria-label="Lịch sử biến động của dòng tồn này">{% icon "history" %}</a>
         </form></td>
@@ -78,7 +78,7 @@
 </section>
 
 {% if can_edit %}
-<dialog class="modal-dialog" id="threshold"><form method="post" action="{% url 'bloodbank:stock_threshold' %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}
+<dialog class="modal-dialog" id="threshold"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:stock_threshold' %}">{% csrf_token %}
   <div class="modal-header"><h3 class="modal-title">Khai mức tồn cho khóa mới</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body"><div class="form-grid">
     <div class="field"><label>Nhóm máu</label><select name="blood_group" class="field-select" required>{% for v, l in blood_groups %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>

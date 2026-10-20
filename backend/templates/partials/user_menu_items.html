@@ -3,7 +3,7 @@
 <div class="user-menu-head">
   <strong>{{ user.full_name }}</strong>
   <span>{{ user.email }}</span>
-  <div style="margin-top:6px"><span class="badge {% if user.role == "admin" %}danger{% elif user.role == "hospital" %}info{% else %}neutral{% endif %} plain">{{ role_label }}</span></div>
+  <div class="u-mt-6"><span class="badge {% if user.role == "admin" %}danger{% elif user.role == "hospital" %}info{% else %}neutral{% endif %} plain">{{ role_label }}</span></div>
 </div>
 {% endif %}
 {% if user.role == "member" %}

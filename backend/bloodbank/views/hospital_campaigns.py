@@ -1,9 +1,8 @@
 """SCR-21..27: đợt hiến (quản lý), điểm hiến, lượt hiến, tra cứu người hiến, báo cáo tiếp nhận."""
-from datetime import datetime, time, timedelta
+from datetime import timedelta
 
 from django.contrib import messages
-from django.db.models import Count, Q, Sum
-from django.db.models.functions import TruncMonth
+from django.db.models import Count, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -19,7 +18,7 @@ from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services.common import BusinessError
 
-from .helpers import apply_field_errors, attempt, int_or_none, paginate, parse_local_dt, safe_next
+from .helpers import apply_field_errors, attempt, date_or_none, int_or_none, paginate, parse_local_dt, safe_next
 
 
 
@@ -49,21 +48,15 @@ def campaigns(request):
 @staff_required
 def campaign_form(request, pk=None):
     campaign = _campaign(request, pk) if pk else None
-    if campaign and campaign.status in ("completed", "cancelled"):
+    if campaign and not campaign.is_editable:
         messages.error(request, "Đợt đã kết thúc hoặc đã hủy, không thể sửa.")
         return redirect("bloodbank:hospital_campaign_detail", pk=campaign.pk)
     initial = {"province": request.hospital.province}
     bg = request.GET.get("blood_group")
     if not campaign and bg in BLOOD_GROUP_VALUES:
-        # Tạo nhanh từ dòng thiếu hụt
-        initial.update(name=f"Hiến máu khẩn — cần nhóm {bg}", location_name=request.hospital.name,
-                       address=request.hospital.address,
-                       description=f"{request.hospital.name} đang thiếu máu nhóm {bg}. Mời người hiến đã đủ thời gian "
-                                   "nghỉ đến đăng ký; mọi nhóm máu vẫn được tiếp nhận.")
+        initial.update(cmp.urgent_campaign_initial(request.hospital, bg))   # tạo nhanh từ dòng thiếu hụt
     if campaign:
-        initial = {k: getattr(campaign, k) for k in cmp.CAMPAIGN_FIELDS}
-        for k in ("start_time", "end_time"):
-            initial[k] = timezone.localtime(initial[k])
+        initial = cmp.campaign_form_initial(campaign)
     form = CampaignForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         try:
@@ -133,7 +126,7 @@ def registration_action(request, pk):
 @staff_required
 def checkin(request, pk):
     campaign = _campaign(request, pk)
-    if campaign.status not in ("open", "closed", "completed"):
+    if not campaign.checkin_open:
         messages.error(request, "Chỉ mở điểm hiến cho đợt đang mở hoặc đã ngừng nhận đăng ký.")
         return redirect("bloodbank:hospital_campaign_detail", pk=pk)
     regs = campaign.registrations.select_related("donor").exclude(status="cancelled")
@@ -149,11 +142,11 @@ def checkin(request, pk):
         regs = regs.filter(cond)
     status = request.GET.get("status", "waiting")
     if status == "waiting":
-        regs = regs.filter(status__in=["pending", "approved"])
+        regs = regs.filter(status__in=Registration.WAITING_STATUSES)
     elif status == "attended":
-        regs = regs.filter(status="attended")
+        regs = regs.filter(status=Registration.Status.ATTENDED)
     elif status == "done":
-        regs = regs.filter(status__in=["donated", "not_donated", "no_show", "rejected"])
+        regs = regs.filter(status__in=Registration.DONE_STATUSES)
     regs = regs.order_by("donor__full_name")
     selected = None
     reg_id = int_or_none(request.GET.get("reg"))
@@ -169,8 +162,8 @@ def checkin(request, pk):
         "started": timezone.now() >= campaign.start_time, "form_data": request.session.pop("donation_form", None),
         "needs_confirm": request.session.pop("donation_needs_confirm", None),
         "selected_donation": selected.donations.filter(status="confirmed").first() if selected else None,
-        "interval_warning": don.interval_warning(selected.donor) if selected and selected.status in (
-            "pending", "approved", "attended") else None,
+        "interval_warning": don.interval_warning(selected.donor)
+        if selected and selected.status in Registration.ACTIVE_STATUSES else None,
     })
 
 
@@ -249,7 +242,7 @@ def donation_detail(request, pk):
     logs = AuditLog.objects.filter(entity_type="donations", entity_id=d.pk).select_related("actor")
     summary_before = don.summarize(Donation.objects.filter(donor=d.donor))
     return render(request, "hospital/donation_detail.html", {
-        "d": d, "logs": logs, "can_manage": d.status == "confirmed", "summary": summary_before,
+        "d": d, "logs": logs, "can_manage": d.status == Donation.Status.CONFIRMED, "summary": summary_before,
         "products": Product.objects.filter(is_active=True, kind="component"),
     })
 
@@ -296,44 +289,14 @@ def donor_lookup(request):
 
 
 # ---------------------------------------------------------------- SCR-27 Báo cáo tiếp nhận
-def _parse_date(value, default):
-    try:
-        return datetime.strptime(value, "%Y-%m-%d").date()
-    except (TypeError, ValueError):
-        return default
-
-
 @staff_required
 def donation_report(request):
     today = timezone.localdate()
-    start = _parse_date(request.GET.get("from"), today.replace(day=1) - timedelta(days=150))
-    end = _parse_date(request.GET.get("to"), today)
-    tz = timezone.get_current_timezone()
-    qs = Donation.objects.filter(
-        hospital=request.hospital,
-        donated_at__gte=timezone.make_aware(datetime.combine(start, time.min), tz),
-        donated_at__lte=timezone.make_aware(datetime.combine(end, time.max), tz),
-    )
+    start = date_or_none(request.GET.get("from")) or today.replace(day=1) - timedelta(days=150)
+    end = date_or_none(request.GET.get("to")) or today
     campaign_id = request.GET.get("campaign") or ""
-    if campaign_id:
-        qs = qs.filter(registration__campaign_id=campaign_id)
-    summary = don.summarize(qs)
-    confirmed = qs.filter(status="confirmed")
-    by_month = (
-        confirmed.annotate(m=TruncMonth("donated_at", tzinfo=tz)).values("m")
-        .annotate(n=Count("id"), ml=Sum("volume_ml", filter=Q(donation_type="whole_blood")),
-                  comp=Count("id", filter=Q(donation_type="component")))
-        .order_by("m")
-    )
-    by_campaign = (
-        confirmed.values("registration__campaign_id", "registration__campaign__name")
-        .annotate(n=Count("id"), ml=Sum("volume_ml", filter=Q(donation_type="whole_blood")),
-                  comp=Count("id", filter=Q(donation_type="component")))
-        .order_by("-n")
-    )
-    max_n = max([m["n"] for m in by_month] or [0])
+    report = don.donation_report(request.hospital, start, end, int_or_none(campaign_id))
     return render(request, "hospital/donation_report.html", {
-        "summary": summary, "by_month": by_month, "by_campaign": by_campaign, "from": start, "to": end,
-        "campaign_id": campaign_id, "campaigns": Campaign.objects.filter(hospital=request.hospital).order_by("-start_time"),
-        "voided": qs.filter(status="voided").count(), "max_n": max_n,
+        **report, "from": start, "to": end, "campaign_id": campaign_id,
+        "campaigns": Campaign.objects.filter(hospital=request.hospital).order_by("-start_time"),
     })

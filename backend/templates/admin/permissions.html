@@ -4,7 +4,7 @@
 {% block ws_title %}Phân quyền màn hình{% endblock %}
 {% block ws_sub %}<p class="ws-sub">Mỗi vai trò đăng nhập ở một cổng riêng và chỉ mở được các màn hình được đánh dấu. Mọi request đều được kiểm tra theo bảng này; đường dẫn chưa khai báo bị chặn.</p>{% endblock %}
 {% block content %}
-<div class="grid grid-3" style="margin-bottom:20px">
+<div class="grid grid-3 u-mb-20">
   {% for p in portals %}
   <div class="stat">
     <div class="stat-label">{% icon p.icon %} {{ p.label }}</div>
@@ -22,7 +22,7 @@
       {% ifchanged r.screen.area %}<tr class="perm-group"><td colspan="{{ columns|length|add:2 }}">{{ r.screen.area }}</td></tr>{% endifchanged %}
       <tr>
         <td class="nowrap small muted">{{ r.screen.code }}</td>
-        <td><strong style="font-size:14px">{{ r.screen.title }}</strong></td>
+        <td><strong class="u-fs-14">{{ r.screen.title }}</strong></td>
         {% for allowed in r.cells %}
         <td class="center">{% if allowed %}<span class="perm-yes" title="Được mở" aria-label="Được mở">{% icon "check" 16 %}</span>{% else %}<span class="perm-no" title="Bị chặn" aria-label="Bị chặn">{% icon "minus" 16 %}</span>{% endif %}</td>
         {% endfor %}

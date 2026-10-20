@@ -6,7 +6,7 @@
 {% block content %}
 <section class="panel">
   <div class="panel-head">
-    <form method="get" class="filters" style="flex:1">
+    <form method="get" class="filters u-flex-1">
       {% if scope == "system" %}<div class="field"><label for="ah">Bệnh viện</label><select id="ah" name="hospital" class="field-select"><option value="">Tất cả</option>{% for h in hospitals %}<option value="{{ h.pk }}" {% if f.hospital == h.pk|stringformat:"s" %}selected{% endif %}>{{ h.name }}</option>{% endfor %}</select></div>{% endif %}
       <div class="field"><label for="ae">Đối tượng</label><select id="ae" name="entity" class="field-select"><option value="">Tất cả</option>{% for e in entities %}<option value="{{ e }}" {% if f.entity == e %}selected{% endif %}>{{ e|entity_label }}</option>{% endfor %}</select></div>
       <div class="field"><label for="aa">Hành động</label><select id="aa" name="action" class="field-select"><option value="">Tất cả</option>{% for a in actions %}<option value="{{ a }}" {% if f.action == a %}selected{% endif %}>{{ a|action_label }}</option>{% endfor %}</select></div>
@@ -26,10 +26,10 @@
         <td data-label="Hành động"><span class="badge {% if log.action == 'access_denied' or log.action == 'login_failed' %}danger{% elif log.action == 'view_sensitive' %}warn{% else %}neutral{% endif %} plain">{{ log.action|action_label }}</span></td>
         <td data-label="Đối tượng">{{ log.entity_type|entity_label }} #{{ log.entity_id }}</td>
         {% if scope == "system" %}<td data-label="Bệnh viện">{{ log.hospital.name|default:"—" }}</td>{% endif %}
-        <td data-label="Chi tiết" class="small" style="max-width:360px">
+        <td data-label="Chi tiết" class="small u-maxw-360">
           {% if log.old_values or log.new_values %}
-          <details><summary class="link" style="cursor:pointer">Xem dữ liệu</summary>
-            <div style="margin-top:6px;font-size:12px;line-height:1.5;overflow-wrap:anywhere">
+          <details><summary class="link u-cur-pointer">Xem dữ liệu</summary>
+            <div class="u-mt-6 u-fs-12 u-lh-1_5 u-overflow-wrap-anywhere">
               {% if log.old_values %}<div><strong>Trước:</strong> {% for k, v in log.old_values.items %}{{ k }}={{ v|default_if_none:"—" }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
               {% if log.new_values %}<div><strong>Sau:</strong> {% for k, v in log.new_values.items %}{{ k }}={{ v|default_if_none:"—" }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
             </div>

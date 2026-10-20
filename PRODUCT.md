@@ -15,7 +15,7 @@ Khi hai nhóm tranh chấp ưu tiên trên trang chủ, người cần máu gấ
 
 ## Product Purpose
 
-"Ngân Hàng Máu Sống Việt Nam" (khẩu hiệu "Trọn tình người Việt") là một mạng lưới người hiến máu "sống": thay vì máu trong kho, đây là danh sách người hiến sẵn sàng được gọi khi có ca cần. Thành công nghĩa là rút ngắn thời gian từ lúc gia đình bệnh nhân gửi yêu cầu đến lúc có người hiến phù hợp đến bệnh viện.
+"Giọt Hồng" (khẩu hiệu "Trọn tình người Việt") là một mạng lưới người hiến máu "sống": thay vì máu trong kho, đây là danh sách người hiến sẵn sàng được gọi khi có ca cần. Thành công nghĩa là rút ngắn thời gian từ lúc gia đình bệnh nhân gửi yêu cầu đến lúc có người hiến phù hợp đến bệnh viện.
 
 Đây là **đồ án / dự án học tập**, chưa vận hành thật.
 
@@ -40,7 +40,7 @@ Ghép trực tiếp yêu cầu máu với người hiến theo **nhóm máu + Rh
 
 ## Brand Commitments
 
-- Tên: "Ngân Hàng Máu Sống Việt Nam"; khẩu hiệu "Trọn tình người Việt".
+- Tên: "Giọt Hồng"; khẩu hiệu "Trọn tình người Việt".
 - Tài sản có sẵn trong `frontend/public/assets/`: logo mark (đỏ và trắng), hình trái tim + giọt máu, họa tiết trống đồng Đông Sơn, nền hero, sóng ribbon, nền footer. Đây là tài sản dựng lại từ một ảnh mockup do AI tạo (xem `frontend/public/assets/README.md`). Bản sắc thị giác **chưa được cam kết** là cố định.
 
 ## Evidence on Hand

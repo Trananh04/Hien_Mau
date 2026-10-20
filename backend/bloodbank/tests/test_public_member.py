@@ -20,7 +20,7 @@ class HomeAndAuthTests(TestCase):
         r = self.client.get("/")
         self.assertEqual(r.status_code, 200)
         html = r.content.decode()
-        for needle in ["NGÂN HÀNG MÁU SỐNG VIỆT NAM", "Be+Vietnam+Pro", "Dancing+Script", "btn-heart-theme",
+        for needle in ["GIỌT HỒNG", "Be+Vietnam+Pro", "Dancing+Script", "btn-heart-theme",
                        "btn-cross-theme", "Tôi cần xin máu", "TIN TỨC HOẠT ĐỘNG HIẾN MÁU", "lucide.min.js",
                        "footer-section"]:
             self.assertIn(needle, html)
@@ -232,7 +232,8 @@ class ChatbotTests(TestCase):
 
     def test_refuses_clinical_conclusion(self):
         r = self.client.post(reverse("bloodbank:chatbot"), {"q": "Tôi bị tiểu đường có được hiến không?"}).json()
-        self.assertIn("không thể đưa ra kết luận y khoa", r["answer"])
+        self.assertIn("không thể kết luận", r["answer"])
+        self.assertIn("bác sĩ", r["answer"].lower())
 
     def test_hospital_word_is_not_clinical(self):
         r = self.client.post(reverse("bloodbank:chatbot"), {"q": "Bệnh viện nào gần tôi trên bản đồ?"}).json()

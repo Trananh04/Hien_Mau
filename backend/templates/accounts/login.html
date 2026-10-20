@@ -19,11 +19,11 @@
   <input type="hidden" name="next" value="{{ next }}">
   {% include "partials/field.html" with field=form.email %}
   {% include "partials/field.html" with field=form.password %}
-  <div class="row between" style="margin-top:12px">
+  <div class="row between u-mt-12">
     <span></span>
     <a href="{% url 'accounts:forgot_password' %}" class="link small">Quên mật khẩu?</a>
   </div>
-  <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "log-in" %} Đăng nhập</button>
+  <button type="submit" class="btn primary lg block u-mt-18">{% icon "log-in" %} Đăng nhập</button>
 </form>
 {% if role == "member" %}
 <p class="auth-switch">Chưa có tài khoản? <a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link">Đăng ký ngay</a></p>

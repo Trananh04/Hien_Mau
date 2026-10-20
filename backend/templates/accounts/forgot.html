@@ -10,7 +10,7 @@
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "partials/field.html" with field=form.email %}
-    <button type="submit" class="btn primary lg block" style="margin-top:18px">{% icon "send" %} Gửi liên kết</button>
+    <button type="submit" class="btn primary lg block u-mt-18">{% icon "send" %} Gửi liên kết</button>
   </form>
   <p class="auth-switch"><a href="{% url 'accounts:login' %}" class="link">Quay lại đăng nhập</a></p>
 {% endif %}

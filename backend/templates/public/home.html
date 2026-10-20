@@ -2,13 +2,13 @@
 {% load static %}
 {% block title %}Trang chủ{% endblock %}
 {% block content %}
-<section class="hero-section" aria-label="Giới thiệu Ngân Hàng Máu Sống">
+<section class="hero-section" aria-label="Giới thiệu Giọt Hồng">
   <img src="{% static 'assets/svg/dong-son-drum.svg' %}" alt="" aria-hidden="true" class="hero-drum-bg">
   <img src="{% static 'assets/png/heart-blood-drop-vector.png' %}" alt="Trái tim và giọt máu nhân ái" class="hero-heart-vector">
   <img src="{% static 'assets/png/hero-waves.png' %}" alt="" aria-hidden="true" class="hero-waves-ribbon">
 
   <div class="hero-content-wrapper">
-    <h1 class="hero-main-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</h1>
+    <h1 class="hero-main-title">GIỌT HỒNG</h1>
     <div class="hero-greeting">Xin chào{% if user.is_authenticated %}, {{ user.short_name }}{% endif %}</div>
     <p class="hero-description">Hãy đăng ký tham gia cùng chúng tôi để tạo ra nguồn máu vô tận, sẵn sàng giúp đỡ cộng đồng và lan tỏa những giá trị nhân văn cao đẹp.</p>
 
@@ -99,23 +99,23 @@
 </section>
 
 {{ news|json_script:"news-data" }}
-<dialog class="modal-dialog" id="news-dialog" style="max-width:680px" aria-label="Chi tiết tin tức">
-  <div style="display:flex;flex-direction:column;width:100%;max-height:90vh">
+<dialog class="modal-dialog u-maxw-680" id="news-dialog" aria-label="Chi tiết tin tức">
+  <div class="u-d-flex u-fd-column u-w-100pct u-maxh-90vh">
     <div class="modal-header">
       <div class="modal-title-row">
-        <span style="display:inline-flex;align-items:center;gap:6px;color:#2563eb;font-size:13px;font-weight:600">{% icon "calendar" 16 %} <span data-news-date></span></span>
+        <span class="u-d-inline-flex u-ai-center u-gap-6 u-c-x2563eb u-fs-13 u-fwt-600">{% icon "calendar" 16 %} <span data-news-date></span></span>
       </div>
       <button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button>
     </div>
     <div class="modal-body">
-      <div style="width:100%;height:240px;border-radius:10px;overflow:hidden;margin-bottom:18px"><img data-news-img src="{{ news.0.image }}" alt="{{ news.0.title }}" style="width:100%;height:100%;object-fit:cover"></div>
-      <h2 data-news-title style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.35;margin-bottom:12px"></h2>
-      <p data-news-excerpt style="font-size:15px;font-weight:500;color:#1e3a8a;margin-bottom:16px;line-height:1.6;font-style:italic"></p>
-      <div style="font-size:14.5px;color:#334155;line-height:1.75"><p data-news-content></p></div>
-      <p class="muted small" style="margin-top:16px">Nội dung tin tức là dữ liệu mẫu của dự án học tập.</p>
+      <div class="u-w-100pct u-h-240 u-br-10 u-ov-hidden u-mb-18"><img class="u-w-100pct u-h-100pct u-of-cover" data-news-img src="{{ news.0.image }}" alt="{{ news.0.title }}"></div>
+      <h2 class="u-fs-20 u-fwt-800 u-c-x0f172a u-lh-1_35 u-mb-12" data-news-title></h2>
+      <p class="u-fs-15 u-fwt-500 u-c-x1e3a8a u-mb-16 u-lh-1_6 u-fst-italic" data-news-excerpt></p>
+      <div class="u-fs-14_5 u-c-x334155 u-lh-1_75"><p data-news-content></p></div>
+      <p class="muted small u-mt-16">Nội dung tin tức là dữ liệu mẫu của dự án học tập.</p>
     </div>
-    <div class="modal-footer" style="justify-content:space-between">
-      <button type="button" class="btn-secondary" data-news-share style="display:inline-flex;align-items:center;gap:8px">{% icon "share-2" 16 %} <span>Chia sẻ tin tức</span></button>
+    <div class="modal-footer u-jc-space-between">
+      <button type="button" class="btn-secondary u-d-inline-flex u-ai-center u-gap-8" data-news-share>{% icon "share-2" 16 %} <span>Chia sẻ tin tức</span></button>
       <button type="button" class="btn-primary" data-close-dialog>Đóng bài viết</button>
     </div>
   </div>

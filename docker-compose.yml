@@ -44,7 +44,7 @@ services:
     # Dev: mount mã nguồn từ máy + tự nạp lại khi sửa code. Image dùng khi triển khai chạy user `app`, không --reload;
     # riêng dev chạy root vì thư mục mount (staticfiles/) thuộc quyền máy host.
     user: root
-    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--reload", "--access-logfile", "-"]
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--worker-class", "gthread", "--threads", "8", "--timeout", "120", "--reload", "--access-logfile", "-"]
     env_file:
       - .env
     environment:

@@ -8,6 +8,12 @@ from .hospitals import LATLNG_PAIR, Hospital
 DONATION_TYPES = [("whole_blood", "Toàn phần"), ("component", "Thành phần"), ("other", "Khác")]
 
 
+class CampaignQuerySet(models.QuerySet):
+    def public(self):
+        """Đợt hiến hiển thị công khai: đã công bố (mở / ngừng nhận / hoàn tất) của bệnh viện đang hoạt động."""
+        return self.filter(status__in=Campaign.PUBLIC_STATUSES, hospital__status="active").select_related("hospital")
+
+
 class Campaign(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Nháp"
@@ -15,6 +21,12 @@ class Campaign(models.Model):
         CLOSED = "closed", "Ngừng nhận đăng ký"
         COMPLETED = "completed", "Đã hoàn tất"
         CANCELLED = "cancelled", "Đã hủy"
+
+    PUBLIC_STATUSES = ("open", "closed", "completed")
+    RUNNING_STATUSES = ("open", "closed")                  # đang diễn ra / tiếp nhận người hiến
+    CHECKIN_STATUSES = ("open", "closed", "completed")     # mở được màn hình điểm hiến
+
+    objects = CampaignQuerySet.as_manager()
 
     hospital = models.ForeignKey(Hospital, on_delete=models.RESTRICT, related_name="campaigns")
     name = models.CharField(max_length=255)
@@ -61,6 +73,14 @@ class Campaign(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def is_editable(self):
+        return self.status not in (self.Status.COMPLETED, self.Status.CANCELLED)
+
+    @property
+    def checkin_open(self):
+        return self.status in self.CHECKIN_STATUSES
+
 
 class Registration(models.Model):
     class Status(models.TextChoices):
@@ -72,6 +92,10 @@ class Registration(models.Model):
         DONATED = "donated", "Đã hiến"
         NOT_DONATED = "not_donated", "Có mặt, không hiến"
         NO_SHOW = "no_show", "Vắng mặt"
+
+    WAITING_STATUSES = ("pending", "approved")                       # chờ đến điểm hiến; người hiến còn hủy được
+    ACTIVE_STATUSES = ("pending", "approved", "attended")            # đơn chưa kết thúc
+    DONE_STATUSES = ("donated", "not_donated", "no_show", "rejected")
 
     class Source(models.TextChoices):
         ONLINE = "online", "Trực tuyến"
@@ -112,3 +136,11 @@ class Registration(models.Model):
     @property
     def code(self):
         return f"DK-{self.id:06d}"
+
+    @property
+    def can_cancel(self):
+        return self.status in self.WAITING_STATUSES
+
+    def can_reregister(self, now):
+        c = self.campaign
+        return self.status == self.Status.CANCELLED and c.status == Campaign.Status.OPEN and c.end_time > now

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import admin, hospital, hospital_campaigns as hc, hospital_inventory as hi, hospital_transfers as ht
-from .views import member, public
+from .views import api, member, public
 
 app_name = "bloodbank"
 
@@ -13,6 +13,14 @@ urlpatterns = [
     path("ban-do/", public.map_view, name="map"),
     path("ban-do/du-lieu/", public.map_data, name="map_data"),
     path("api/chatbot/", public.chatbot, name="chatbot"),
+    # API trợ lý & dữ liệu cá nhân (JSON)
+    path("api/chatbot/message", api.chat_message, name="api_chat_message"),
+    path("api/chatbot/conversations", api.conversations, name="api_conversations"),
+    path("api/chatbot/conversations/<int:pk>", api.conversation, name="api_conversation"),
+    path("api/donation-campaigns", api.campaigns, name="api_campaigns"),
+    path("api/donations/me/history", api.my_history, name="api_my_history"),
+    path("api/donations/me/eligibility", api.my_eligibility, name="api_my_eligibility"),
+    path("api/donation-registrations/me", api.my_registrations, name="api_my_registrations"),
 
     # Cá nhân (SCR-07..13)
     path("tai-khoan/", member.profile, name="profile"),
@@ -31,7 +39,6 @@ urlpatterns = [
 
     # Bệnh viện (SCR-20..40)
     path("benh-vien/", hospital.dashboard, name="hospital_dashboard"),
-    path("benh-vien/chon/", hospital.choose_hospital, name="select_hospital"),
     path("benh-vien/dot-hien/", hc.campaigns, name="hospital_campaigns"),
     path("benh-vien/dot-hien/tao/", hc.campaign_form, name="hospital_campaign_create"),
     path("benh-vien/dot-hien/<int:pk>/", hc.campaign_detail, name="hospital_campaign_detail"),

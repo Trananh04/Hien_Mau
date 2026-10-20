@@ -65,8 +65,12 @@ class RoleMatrixTests(TestCase):
             url = url_for(name)
             self.client.logout()
             r = self.client.get(url)
-            self.assertEqual(r.status_code, 302, f"khách → {name}")
-            self.assertTrue(r["Location"].startswith(reverse(access.login_url_for(roles))), f"{name} → {r['Location']}")
+            if url.startswith("/api/"):   # API trả JSON 401 thay vì chuyển trang
+                self.assertEqual(r.status_code, 401, f"khách → {name}")
+                self.assertEqual(r.json()["error"]["code"], "ERR-AUTH-UNAUTHENTICATED")
+            else:
+                self.assertEqual(r.status_code, 302, f"khách → {name}")
+                self.assertTrue(r["Location"].startswith(reverse(access.login_url_for(roles))), f"{name} → {r['Location']}")
             for role, user in self.users.items():
                 self.client.force_login(user)
                 r = self.client.get(url)

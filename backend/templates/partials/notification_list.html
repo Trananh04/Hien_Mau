@@ -1,7 +1,7 @@
 {# Danh sách thông báo dùng chung: khu cá nhân (Người dùng) và khu làm việc (Bệnh viện / Quản trị). #}
 <section class="panel">
   <div class="panel-head">
-    <div class="tabs" style="margin:0;border:0">
+    <div class="tabs u-m-0 u-bd-0">
       <a href="?" class="tab {% if not unread_only %}active{% endif %}">Tất cả</a>
       <a href="?unread=1" class="tab {% if unread_only %}active{% endif %}">Chưa đọc {% if unread_count %}<span class="count">{{ unread_count }}</span>{% endif %}</a>
     </div>
@@ -10,13 +10,13 @@
     {% endif %}
   </div>
   {% if page.object_list %}
-  <ul class="list-select" style="list-style:none">
+  <ul class="list-select u-lst-none">
     {% for n in page %}
-    <li style="display:flex;gap:14px;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--line);{% if not n.read_at %}background:#fffafa{% endif %}">
-      <span class="empty-icon" style="width:40px;height:40px;margin:0;flex-shrink:0">{% icon "bell-ring" 18 %}</span>
-      <div style="flex:1;min-width:0">
-        <strong style="display:block;color:var(--ink);font-size:14.5px">{{ n.title }}</strong>
-        {% if n.body %}<span class="muted small" style="display:block;margin-top:2px">{{ n.body }}</span>{% endif %}
+    <li class="notif-item{% if not n.read_at %} is-unread{% endif %}">
+      <span class="empty-icon u-w-40 u-h-40 u-m-0 u-fsh-0">{% icon "bell-ring" 18 %}</span>
+      <div class="u-flex-1 u-minw-0">
+        <strong class="u-d-block u-c-ink u-fs-14_5">{{ n.title }}</strong>
+        {% if n.body %}<span class="muted small u-d-block u-mt-2">{{ n.body }}</span>{% endif %}
         <span class="muted small">{{ n.created_at|vn_dt }}</span>
       </div>
       <form method="post" action="{% url 'bloodbank:notifications_read' %}">

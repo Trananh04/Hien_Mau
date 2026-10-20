@@ -1,7 +1,7 @@
 <article class="campaign-card">
   <div class="campaign-date">
     <div class="date-block" aria-hidden="true"><b>TH {{ c.start_time|vn_dt:"%m" }}</b><span>{{ c.start_time|vn_dt:"%d" }}</span></div>
-    <div style="min-width:0">
+    <div class="u-minw-0">
       <h3><a href="{% url 'bloodbank:campaign_detail' c.pk %}">{{ c.name }}</a></h3>
       <div class="muted small">{{ c.hospital.name }}</div>
     </div>

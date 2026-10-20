@@ -19,4 +19,5 @@ USER app
 EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
 # Cấu hình chạy thật: không --reload (docker-compose.yml bật --reload cho môi trường dev)
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
+# gthread: mỗi worker 8 luồng — request chờ dịch vụ ngoài (trợ lý AI) không chặn các trang khác; timeout 120s cho AI chậm
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--worker-class", "gthread", "--threads", "8", "--timeout", "120", "--access-logfile", "-"]

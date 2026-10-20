@@ -4,7 +4,7 @@
 {% block member %}
 <section class="panel">
   <div class="panel-head">
-    <div class="tabs" style="margin:0;border:0">
+    <div class="tabs u-m-0 u-bd-0">
       <a href="?" class="tab {% if not status %}active{% endif %}">Tất cả</a>
       <a href="?status=active" class="tab {% if status == 'active' %}active{% endif %}">Đang hiệu lực</a>
       <a href="?status=done" class="tab {% if status == 'done' %}active{% endif %}">Đã kết thúc</a>
@@ -25,7 +25,7 @@
           <td data-label="Thao tác"><div class="table-actions">
             {% if r.can_cancel %}
               <form method="post" action="{% url 'bloodbank:cancel_registration' r.pk %}" data-confirm="Hủy đơn đăng ký đợt “{{ r.campaign.name }}”?" data-confirm-detail="Bạn có thể đăng ký lại nếu đợt vẫn đang nhận đăng ký." data-confirm-label="Hủy đơn">{% csrf_token %}<button type="submit" class="btn danger sm">Hủy đăng ký</button></form>
-            {% elif r.can_reregister %}
+            {% elif r.reregister_allowed %}
               <form method="post" action="{% url 'bloodbank:reregister' r.pk %}">{% csrf_token %}<button type="submit" class="btn secondary sm">{% icon "rotate-ccw" %} Đăng ký lại</button></form>
             {% elif r.status == "donated" %}
               <a href="{% url 'bloodbank:my_history' %}" class="btn ghost sm">Xem lượt hiến</a>

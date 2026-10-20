@@ -23,3 +23,6 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# Ảnh chụp màn hình sinh ra khi chạy kiểm thử giao diện
+qa-audit/evidence/runs/**/*.png

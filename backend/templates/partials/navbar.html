@@ -1,10 +1,10 @@
 {% load static %}
 <header class="navbar-header" id="navbar">
   <div class="navbar-container">
-    <a href="{% url 'bloodbank:home' %}" class="brand-link" title="Ngân Hàng Máu Sống Việt Nam">
-      <img src="{% static 'assets/png/logo-mark-red.png' %}" alt="Logo Ngân Hàng Máu Sống Việt Nam" class="brand-logo-img">
+    <a href="{% url 'bloodbank:home' %}" class="brand-link" title="Giọt Hồng">
+      <img src="{% static 'assets/png/logo-mark-red.png' %}" alt="Logo Giọt Hồng" class="brand-logo-img">
       <div class="brand-text-group">
-        <span class="brand-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</span>
+        <span class="brand-title">GIỌT HỒNG</span>
         <span class="brand-tagline">Trọn tình người Việt</span>
       </div>
     </a>
@@ -53,7 +53,7 @@
     <a href="{% url 'bloodbank:home' %}#tin-tuc" class="nav-link-item">Tin tức &amp; sự kiện</a>
     {% if user.is_authenticated %}
       <div class="user-block">
-        <div class="person-card" style="padding:4px 0 8px">
+        <div class="person-card u-p-4-0-8">
           <span class="avatar">{{ user.full_name|initials }}</span>
           <div><strong>{{ user.full_name }}</strong><span class="muted small">{{ user.email }}</span></div>
         </div>
@@ -62,7 +62,7 @@
       </div>
     {% else %}
       <a href="{% url 'accounts:login' %}" class="btn secondary block">Đăng nhập</a>
-      <a href="{% url 'accounts:register' %}" class="nav-cta-btn" style="width:100%;justify-content:center">Đăng ký ngay</a>
+      <a href="{% url 'accounts:register' %}" class="nav-cta-btn u-w-100pct u-jc-center">Đăng ký ngay</a>
     {% endif %}
   </div>
 </header>

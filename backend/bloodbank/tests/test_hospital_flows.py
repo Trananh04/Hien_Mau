@@ -8,7 +8,7 @@ from django.utils import timezone
 from accounts.models import User
 
 from bloodbank.models import (
-    AuditLog, Donation, HospitalRequest, Notification, PatientRequest, Registration, RequestOffer, Stock, StockTxn,
+    AuditLog, Donation, HospitalRequest, Notification, Registration, Stock, StockTxn,
 )
 from bloodbank.services import inventory as inv
 from bloodbank.services.common import BusinessError
@@ -375,6 +375,22 @@ class AdminTests(TestCase):
         r = self.client.get(reverse("bloodbank:hospital_staff"))
         self.assertContains(r, "Nhân Viên Mới")
         self.assertNotContains(r, "Thu hồi")
+
+    def test_staff_belongs_to_single_hospital(self):
+        # BR-03, BR-04: nhân viên đang làm ở bệnh viện này không được gán thêm vào bệnh viện khác
+        other = f.hospital()
+        self.client.force_login(self.admin)
+        url = reverse("bloodbank:admin_hospital_edit", args=[other.pk])
+        r = self.client.post(url, {"form": "staff_add", "email": self.ha.email}, follow=True)
+        self.assertContains(r, "đang làm việc tại bệnh viện khác")
+        self.assertEqual(list(self.ha.staffs.values_list("hospital_id", flat=True)), [self.h.pk])
+        # Thu hồi phân công cũ rồi gán lại → chuyển sang bệnh viện mới, vẫn chỉ một hồ sơ phân công
+        st = self.ha.staffs.get()
+        self.client.post(reverse("bloodbank:admin_hospital_edit", args=[self.h.pk]),
+                         {"form": "staff_update", "staff_id": st.pk, "op": "deactivate"})
+        self.client.post(url, {"form": "staff_add", "email": self.ha.email})
+        st = self.ha.staffs.get()
+        self.assertEqual((st.hospital_id, st.is_active), (other.pk, True))
 
     def test_admin_locks_user_and_manages_catalog(self):
         u = f.user()

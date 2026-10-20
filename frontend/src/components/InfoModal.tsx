@@ -10,12 +10,12 @@ export const InfoModal = ({ type, onClose }: InfoModalProps) => {
 
   const contentMap = {
     about: {
-      title: 'Về Chúng Tôi - Ngân Hàng Máu Sống Việt Nam',
+      title: 'Về Chúng Tôi - Giọt Hồng',
       icon: <Activity size={22} />,
       body: (
         <div>
           <p style={{ marginBottom: '14px', lineHeight: 1.6 }}>
-            <strong>Ngân Hàng Máu Sống Việt Nam</strong> là dự án vì cộng đồng, được thành lập với mục tiêu xây dựng một mạng lưới dữ liệu người hiến máu tình nguyện sẵn sàng hỗ trợ khẩn cấp trên mọi miền đất nước.
+            <strong>Giọt Hồng</strong> là dự án vì cộng đồng, được thành lập với mục tiêu xây dựng một mạng lưới dữ liệu người hiến máu tình nguyện sẵn sàng hỗ trợ khẩn cấp trên mọi miền đất nước.
           </p>
           <p style={{ marginBottom: '14px', lineHeight: 1.6 }}>
             Với thông điệp <em>"Trọn tình người Việt"</em>, chúng tôi cam kết kết nối trực tiếp, kịp thời giữa người bệnh cần máu và người tình nguyện hiến máu, giảm thiểu tối đa thời gian chờ đợi trong các ca cấp cứu sinh tử.
@@ -60,7 +60,7 @@ export const InfoModal = ({ type, onClose }: InfoModalProps) => {
       body: (
         <div>
           <p style={{ marginBottom: '14px', lineHeight: 1.6 }}>
-            Ngân Hàng Máu Sống Việt Nam coi trọng sự riêng tư và bảo mật thông tin cá nhân của các tình nguyện viên và người cần máu.
+            Giọt Hồng coi trọng sự riêng tư và bảo mật thông tin cá nhân của các tình nguyện viên và người cần máu.
           </p>
           <h4 style={{ fontSize: '15px', color: '#0f172a', margin: '14px 0 8px' }}>Cam kết của chúng tôi:</h4>
           <ul style={{ paddingLeft: '20px', lineHeight: 1.6, color: '#334155' }}>

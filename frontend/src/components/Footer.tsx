@@ -4,7 +4,7 @@ interface FooterProps {
 
 export const Footer = ({ onOpenInfo }: FooterProps) => {
   return (
-    <footer className="footer-section" id="footer" aria-label="Chân trang Ngân Hàng Máu Sống">
+    <footer className="footer-section" id="footer" aria-label="Chân trang Giọt Hồng">
       <div className="footer-inner-container">
         {/* Top 3 columns */}
         <div className="footer-columns-row">
@@ -13,11 +13,11 @@ export const Footer = ({ onOpenInfo }: FooterProps) => {
             <div className="footer-logo-wrapper">
               <img
                 src="/assets/png/logo-mark-white.png"
-                alt="Logo Ngân Hàng Máu Sống Trắng"
+                alt="Logo Giọt Hồng Trắng"
                 className="footer-logo-img"
               />
             </div>
-            <h4 className="footer-brand-title">NGÂN HÀNG MÁU SỐNG VIỆT NAM</h4>
+            <h4 className="footer-brand-title">GIỌT HỒNG</h4>
             <p className="footer-brand-desc">
               Dự án cộng đồng kết nối người tình nguyện hiến máu vì một xã hội khỏe mạnh hơn.
             </p>
@@ -97,7 +97,7 @@ export const Footer = ({ onOpenInfo }: FooterProps) => {
             Chung tay lan tỏa nguồn máu nhân ái, vì một cộng đồng khỏe mạnh hơn.
           </p>
           <p className="footer-copyright">
-            © 2026 Bản quyền thuộc về Ngân hàng Máu Sống Việt Nam.
+            © 2026 Bản quyền thuộc về Giọt Hồng.
           </p>
         </div>
       </div>

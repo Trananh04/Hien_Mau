@@ -16,9 +16,9 @@ from bloodbank.services import badges
 from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services import patients as prq_service
-from bloodbank.services.common import BusinessError
+from bloodbank.services.common import BusinessError, mark_notifications_read
 
-from .helpers import attempt, int_or_none, paginate
+from .helpers import attempt, int_or_none, paginate, safe_next
 
 
 @member_required
@@ -46,14 +46,13 @@ def my_registrations(request):
     qs = Registration.objects.filter(donor=request.user).select_related("campaign__hospital").order_by("-registered_at")
     status = request.GET.get("status")
     if status == "active":
-        qs = qs.filter(status__in=["pending", "approved", "attended"])
+        qs = qs.filter(status__in=Registration.ACTIVE_STATUSES)
     elif status == "done":
-        qs = qs.exclude(status__in=["pending", "approved", "attended"])
+        qs = qs.exclude(status__in=Registration.ACTIVE_STATUSES)
     now = timezone.now()
     page = paginate(request, qs, 15)
     for reg in page:
-        reg.can_cancel = reg.status in ("pending", "approved")
-        reg.can_reregister = reg.status == "cancelled" and reg.campaign.status == "open" and reg.campaign.end_time > now
+        reg.reregister_allowed = reg.can_reregister(now)
     return render(request, "member/registrations.html", {"page": page, "status": status, "tab": "registrations"})
 
 
@@ -139,16 +138,9 @@ def my_patient_request_detail(request, pk):
     if prq is None:
         raise Http404
     just_created = (timezone.now() - prq.created_at).total_seconds() < 120 and prq.status == "submitted"
-    steps = [
-        ("submitted", "Đã gửi", "Hệ thống đã tiếp nhận yêu cầu."),
-        ("verifying", "Bệnh viện xác minh", "Bệnh viện điều trị kiểm tra thông tin và nhóm máu."),
-        ("processing", "Đang điều phối", "Bệnh viện tìm nguồn máu phù hợp."),
-        ("fulfilled", "Hoàn tất", "Bệnh viện xác nhận đã xử lý xong."),
-    ]
-    order = {"submitted": 0, "verifying": 1, "verified": 1, "processing": 2, "fulfilled": 3}
     return render(request, "member/patient_request_detail.html", {
-        "prq": prq, "just_created": just_created, "steps": steps, "current": order.get(prq.status, -1),
-        "can_cancel": prq.status in ("submitted", "verifying", "verified"), "tab": "patient",
+        "prq": prq, "just_created": just_created, "steps": PatientRequest.PROGRESS_STEPS,
+        "current": prq.progress_index, "can_cancel": prq.can_cancel, "tab": "patient",
     })
 
 
@@ -211,14 +203,10 @@ def notifications(request):
 @signed_in_required
 @require_POST
 def notifications_read(request):
-    qs = Notification.objects.filter(user=request.user, channel="in_app", read_at__isnull=True)
-    if request.POST.get("id"):
-        qs = qs.filter(pk=int_or_none(request.POST["id"]))  # id sai kiểu → không đánh dấu gì (không phải "tất cả")
-    qs.update(read_at=timezone.now())
-    target = request.POST.get("next")
-    if target and target.startswith("/") and not target.startswith("//"):
-        return redirect(target)
-    return redirect("bloodbank:notifications")
+    nid = request.POST.get("id")
+    if not nid or int_or_none(nid) is not None:   # id sai kiểu → không đánh dấu gì (không phải "tất cả")
+        mark_notifications_read(request.user, int_or_none(nid))
+    return safe_next(request, "bloodbank:notifications")
 
 
 @signed_in_required

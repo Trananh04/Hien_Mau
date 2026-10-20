@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from bloodbank import access
 from bloodbank.models import Donation, Notification, PatientRequest, RequestOffer
-from bloodbank.permissions import assignments, current_staff
+from bloodbank.permissions import current_staff
 
 # (nhóm, nhãn, url name, icon)
 HOSPITAL_NAV = [
@@ -61,7 +61,6 @@ def workspace(request):
         "unread_count": Notification.objects.filter(user=user, channel="in_app", read_at__isnull=True).count(),
         "current_staff": staff,
         "current_hospital": staff.hospital if staff else None,
-        "staff_assignments": list(assignments(user)) if staff else [],
         "is_staff_user": staff is not None,
         "workspace_mode": "admin" if user.role == access.ADMIN else "hospital",
         "role_label": access.ROLE_LABELS.get(user.role),
@@ -72,7 +71,7 @@ def workspace(request):
             "bloodbank:lab_queue": Donation.objects.filter(hospital=staff.hospital, status="confirmed",
                                                            lab_status="pending").count(),
             "bloodbank:hospital_patient_requests": PatientRequest.objects.filter(
-                hospital=staff.hospital, status__in=["submitted", "verifying"]).count(),
+                hospital=staff.hospital, status__in=PatientRequest.WAITING_STATUSES).count(),
         }
         ctx["hospital_nav"] = _nav(user, HOSPITAL_NAV, counts)
     if user.role == access.ADMIN:

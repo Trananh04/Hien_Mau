@@ -9,17 +9,17 @@
     <section class="panel">
       <div class="panel-head"><h2 class="panel-title">{% icon "file-heart" %} Thông tin yêu cầu</h2></div>
       <div class="panel-body">
-        <div class="row" style="margin-bottom:16px">{% blood prq.blood_group "lg" %}<div><strong style="font-size:17px;color:var(--ink)">{{ prq.quantity_units }} đơn vị · {{ prq.blood_product.name|default:"chế phẩm chưa rõ" }}</strong><div class="muted small">{% if prq.blood_group %}Nhóm máu {{ prq.blood_group }}{% if not prq.verified_at %} (người gửi tự khai){% endif %}{% else %}Chưa rõ nhóm máu{% endif %}</div></div></div>
+        <div class="row u-mb-16">{% blood prq.blood_group "lg" %}<div><strong class="u-fs-17 u-c-ink">{{ prq.quantity_units }} đơn vị · {{ prq.blood_product.name|default:"chế phẩm chưa rõ" }}</strong><div class="muted small">{% if prq.blood_group %}Nhóm máu {{ prq.blood_group }}{% if not prq.verified_at %} (người gửi tự khai){% endif %}{% else %}Chưa rõ nhóm máu{% endif %}</div></div></div>
         <dl class="dl">
           <dt>Tên bệnh nhân</dt><dd>{{ prq.patient_name|default:"Không cung cấp" }}</dd>
           <dt>Người liên hệ</dt><dd>{{ prq.contact_name }} · <a class="link" href="tel:{{ prq.contact_phone }}">{{ prq.contact_phone|phone }}</a></dd>
           <dt>Tài khoản gửi</dt><dd>{{ prq.requester.full_name }} · {{ prq.requester.email }}</dd>
           <dt>Cần trước</dt><dd>{{ prq.needed_by|vn_dt }}</dd>
           <dt>Đồng ý chia sẻ</dt><dd>{{ prq.consent_at|vn_dt }}</dd>
-          {% if prq.note %}<dt>Ghi chú</dt><dd style="white-space:pre-line">{{ prq.note }}</dd>{% endif %}
+          {% if prq.note %}<dt>Ghi chú</dt><dd class="u-ws-pre-line">{{ prq.note }}</dd>{% endif %}
           {% if prq.verified_by %}<dt>Xác minh bởi</dt><dd>{{ prq.verified_by.full_name }} · {{ prq.verified_at|vn_dt }}</dd>{% endif %}
           {% if prq.reject_reason %}<dt>Lý do từ chối</dt><dd>{{ prq.reject_reason }}</dd>{% endif %}
-          {% if prq.resolution_note %}<dt>Kết quả xử lý</dt><dd style="white-space:pre-line">{{ prq.resolution_note }}</dd>{% endif %}
+          {% if prq.resolution_note %}<dt>Kết quả xử lý</dt><dd class="u-ws-pre-line">{{ prq.resolution_note }}</dd>{% endif %}
           {% if prq.linked_support_request %}<dt>Yêu cầu liên viện</dt><dd><a class="link" href="{% url 'bloodbank:support_request_detail' prq.linked_support_request_id %}">{{ prq.linked_support_request.request_code }}</a> {% status_badge prq.linked_support_request %}</dd>{% endif %}
           {% if prq.linked_campaign %}<dt>Đợt hiến kết nối</dt><dd><a class="link" href="{% url 'bloodbank:hospital_campaign_detail' prq.linked_campaign_id %}">{{ prq.linked_campaign.name }}</a></dd>{% endif %}
         </dl>
@@ -36,7 +36,7 @@
 
   <aside class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "mouse-pointer-click" %} Xử lý</h2></div>
-    <div class="panel-body stack" style="gap:12px">
+    <div class="panel-body stack u-gap-12">
       {% if not actions %}<p class="muted">Yêu cầu đã ở trạng thái cuối, không còn thao tác.</p>{% endif %}
       {% if "start_verify" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start_verify"><button class="btn secondary block">{% icon "clipboard-check" %} Nhận xác minh</button></form>
@@ -44,7 +44,7 @@
       {% if "verify" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" data-confirm="Xác nhận yêu cầu {{ prq.request_code }} là hợp lệ?" data-confirm-detail="Sau khi xác minh, yêu cầu được phép điều phối và cấp phát." data-confirm-label="Xác minh">{% csrf_token %}<input type="hidden" name="action" value="verify">
           <div class="field"><label for="vbg">Nhóm máu đã xác minh <span class="field-req">*</span></label><select id="vbg" name="blood_group" class="field-select" required><option value="">-- Chọn --</option>{% for v, l in blood_groups %}<option value="{{ v }}" {% if prq.blood_group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
-          <button class="btn success block" style="margin-top:10px">{% icon "shield-check" %} Xác minh</button>
+          <button class="btn success block u-mt-10">{% icon "shield-check" %} Xác minh</button>
         </form>
       {% endif %}
       {% if "reject" in actions %}<button type="button" class="btn danger block" data-open-dialog="prq-reject">{% icon "x" %} Từ chối</button>{% endif %}
@@ -59,7 +59,7 @@
         <a href="{% url 'bloodbank:source_search' %}?blood_group={{ prq.blood_group|urlencode }}{% if prq.blood_product_id %}&product={{ prq.blood_product_id }}{% endif %}&qty={{ prq.quantity_units }}&patient_request={{ prq.pk }}" class="btn secondary block">{% icon "search" %} Tạo yêu cầu liên viện</a>
       {% endif %}
       {% if "link_campaign" in actions %}
-        <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" class="row" style="flex-wrap:nowrap">{% csrf_token %}<input type="hidden" name="action" value="link_campaign">
+        <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" class="row u-fw-nowrap">{% csrf_token %}<input type="hidden" name="action" value="link_campaign">
           <select name="campaign_id" class="field-select" aria-label="Đợt hiến" required><option value="">Kết nối đợt hiến…</option>{% for c in campaigns %}<option value="{{ c.pk }}" {% if prq.linked_campaign_id == c.pk %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
           <button class="btn secondary" title="Kết nối đợt hiến" aria-label="Kết nối với đợt hiến đã chọn">{% icon "link" %}</button>
         </form>
@@ -70,17 +70,17 @@
   </aside>
 </div>
 
-<dialog class="modal-dialog" id="prq-reject"><form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="reject">
+<dialog class="modal-dialog" id="prq-reject"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reject">
   <div class="modal-header"><h3 class="modal-title">Từ chối yêu cầu</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea><p class="field-help">Người gửi nhận thông báo kèm lý do.</p></div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Từ chối</button></div>
 </form></dialog>
-<dialog class="modal-dialog" id="prq-fulfill"><form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="fulfill">
+<dialog class="modal-dialog" id="prq-fulfill"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="fulfill">
   <div class="modal-header"><h3 class="modal-title">Hoàn tất yêu cầu</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body"><div class="field"><label>Kết quả xử lý <span class="field-req">*</span></label><textarea name="resolution_note" class="field-textarea" required></textarea><p class="field-help">Không ghi bệnh án hay kết quả xét nghiệm.</p></div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Hoàn tất</button></div>
 </form></dialog>
-<dialog class="modal-dialog" id="prq-cancel"><form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="cancel">
+<dialog class="modal-dialog" id="prq-cancel"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="cancel">
   <div class="modal-header"><h3 class="modal-title">Hủy yêu cầu</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea></div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Hủy yêu cầu</button></div>

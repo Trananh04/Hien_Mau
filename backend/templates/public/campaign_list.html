@@ -8,7 +8,7 @@
     <a href="{% qs when='past' page=None %}" class="tab {% if when == 'past' %}active{% endif %}" role="tab">{% icon "calendar-check-2" %} Đã diễn ra</a>
   </div>
 
-  <form method="get" class="filters" style="margin-bottom:22px">
+  <form method="get" class="filters u-mb-22">
     <input type="hidden" name="when" value="{{ when }}">
     <div class="field grow">
       <label for="q">Tìm kiếm</label>

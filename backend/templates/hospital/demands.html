@@ -26,10 +26,10 @@
   {% endif %}
 </section>
 
-<div class="grid grid-main-side" style="margin-top:20px">
+<div class="grid grid-main-side u-mt-20">
   <section class="panel">
     <div class="panel-head">
-      <div class="tabs" style="margin:0;border:0">
+      <div class="tabs u-m-0 u-bd-0">
         <a href="?status=active" class="tab {% if status == 'active' %}active{% endif %}">Đang cần</a>
         <a href="?status=fulfilled" class="tab {% if status == 'fulfilled' %}active{% endif %}">Đã đáp ứng</a>
         <a href="?status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">Đã hủy</a>
@@ -60,7 +60,7 @@
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "clipboard-plus" %} {% if demand %}Sửa nhu cầu{% else %}Khai báo nhu cầu{% endif %}</h2></div>
     <form method="post" novalidate>{% csrf_token %}
-      <div class="panel-body stack" style="gap:14px">
+      <div class="panel-body stack u-gap-14">
         {% include "partials/field.html" with field=form.blood_group %}
         {% include "partials/field.html" with field=form.product_spec_id %}
         {% include "partials/field.html" with field=form.required_quantity %}

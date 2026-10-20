@@ -21,7 +21,7 @@ services:
   qa-web:
     build: ../../backend
     # Giống production: không --reload, DEBUG tắt, 4 worker để thử đồng thời
-    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--access-logfile", "-"]
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "gthread", "--threads", "8", "--timeout", "120", "--access-logfile", "-"]
     environment:
       DJANGO_DEBUG: ${QA_DJANGO_DEBUG:-0}
       DJANGO_SECRET_KEY: ${QA_SECRET_KEY:?đặt QA_SECRET_KEY trong qa.env}

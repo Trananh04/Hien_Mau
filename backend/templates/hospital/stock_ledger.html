@@ -6,7 +6,7 @@
 {% block content %}
 <section class="panel">
   <div class="panel-head">
-    <form method="get" class="filters" style="flex:1">
+    <form method="get" class="filters u-flex-1">
       {% if f.stock %}<input type="hidden" name="stock" value="{{ f.stock }}">{% endif %}
       <div class="field"><label for="lt">Loại</label><select id="lt" name="type" class="field-select"><option value="">Tất cả</option>{% for v, l in types %}<option value="{{ v }}" {% if f.type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
       <div class="field"><label for="lb">Nhóm máu</label><select id="lb" name="blood_group" class="field-select"><option value="">Tất cả</option>{% for v, l in blood_groups %}<option value="{{ v }}" {% if f.blood_group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>

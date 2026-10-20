@@ -21,6 +21,7 @@ class HospitalRequest(models.Model):
         EXPIRED = "expired", "Hết hạn"
 
     FINAL_STATUSES = ("fulfilled", "cancelled", "expired")
+    OPEN_STATUSES = ("open", "in_progress", "partially_fulfilled")
 
     request_code = models.CharField(max_length=30, unique=True)
     requesting_hospital = models.ForeignKey(Hospital, on_delete=models.RESTRICT, related_name="support_requests")

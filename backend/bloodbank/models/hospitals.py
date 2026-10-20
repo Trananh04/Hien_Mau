@@ -63,9 +63,9 @@ class Staff(models.Model):
 
     class Meta:
         db_table = "staffs"
-        indexes = [models.Index(fields=["user"], name="idx_staffs_user")]
         constraints = [
-            models.UniqueConstraint(fields=["hospital", "user"], name="uq_staffs_hospital_user"),
+            # BR-03, BR-04: mỗi nhân viên chỉ có một hồ sơ phân công, thuộc duy nhất một bệnh viện
+            models.UniqueConstraint(fields=["user"], name="uq_staffs_user"),
             models.CheckConstraint(
                 condition=Q(staff_role__in=["staff"]),
                 name="chk_staffs_role",

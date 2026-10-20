@@ -82,10 +82,13 @@ def assign_staff(actor, hospital, data, request=None):
         else:
             require(user.role == "hospital", "ERR-STAFF-ROLE")
             require(user.status == "active", "ERR-AUTH-LOCKED", "Tài khoản nhân viên này đang bị khóa hoặc đã xóa.")
-        existing = Staff.objects.select_for_update().filter(hospital=hospital, user=user).first()
+        # BR-03, BR-04: mỗi nhân viên chỉ có một hồ sơ phân công, tại một bệnh viện
+        existing = Staff.objects.select_for_update().filter(user=user).first()
         if existing and existing.is_active:
-            raise BusinessError("ERR-STAFF-DUPLICATE")
+            raise BusinessError("ERR-STAFF-DUPLICATE" if existing.hospital_id == hospital.pk else "ERR-STAFF-OTHER-HOSPITAL")
         if existing:
+            # Phân công cũ đã thu hồi → kích hoạt lại, chuyển sang bệnh viện mới nếu khác
+            existing.hospital = hospital
             existing.is_active = True
             existing.save()
             staff, action = existing, "reactivate"

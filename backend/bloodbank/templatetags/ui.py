@@ -32,8 +32,9 @@ STATUS_TONES = {
 
 @register.simple_tag
 def icon(name, size=None, cls=""):
-    style = f"width:{size}px;height:{size}px" if size else ""
-    return format_html('<i data-lucide="{}" class="{}" style="{}" aria-hidden="true"></i>', name, cls, style)
+    # Kích thước bằng class (ui.css: .icon-14 … .icon-26) — không dùng style inline (CSP không có 'unsafe-inline')
+    classes = " ".join(c for c in (cls, f"icon-{int(size)}" if size else "") if c)
+    return format_html('<i data-lucide="{}" class="{}" aria-hidden="true"></i>', name, classes)
 
 
 @register.simple_tag

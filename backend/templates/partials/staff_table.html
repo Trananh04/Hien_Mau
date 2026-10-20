@@ -4,8 +4,8 @@
   <div class="table-wrap"><table class="table stack-mobile">
     <thead><tr><th>Nhân viên</th><th>Điện thoại</th><th>Trạng thái</th><th>Phân công từ</th>{% if admin_mode %}<th class="num">Thao tác</th>{% endif %}</tr></thead>
     <tbody>{% for s in staffs %}
-      <tr {% if not s.is_active %}style="opacity:.6"{% endif %}>
-        <td data-label="Nhân viên"><div class="person-card"><span class="avatar">{{ s.user.full_name|initials }}</span><div><strong style="font-size:14px">{{ s.user.full_name }}</strong><span class="muted small">{{ s.user.email }}</span></div></div></td>
+      <tr{% if not s.is_active %} class="u-op-60"{% endif %}>
+        <td data-label="Nhân viên"><div class="person-card"><span class="avatar">{{ s.user.full_name|initials }}</span><div><strong class="u-fs-14">{{ s.user.full_name }}</strong><span class="muted small">{{ s.user.email }}</span></div></div></td>
         <td data-label="Điện thoại" class="nowrap">{{ s.user.phone|phone|default:"—" }}</td>
         <td data-label="Trạng thái">{% if s.is_active %}<span class="badge ok">Đang hiệu lực</span>{% else %}<span class="badge neutral">Đã thu hồi</span>{% endif %}{% if s.user.status != "active" %} {% status_badge s.user %}{% endif %}</td>
         <td data-label="Từ" class="small nowrap">{{ s.created_at|vn_date }}</td>

@@ -2,23 +2,21 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
 
 from bloodbank.forms import HospitalForm, ProductForm, SpecForm
 from bloodbank.models import (
     AuditLog, Campaign, Notification, PatientRequest, Product, ProductSpec, Registration, RequestOffer, Staff, Stock,
 )
-from bloodbank.permissions import current_staff, select_hospital, staff_required
+from bloodbank.permissions import current_staff, staff_required
 from bloodbank.services import admin as admin_service
 from bloodbank.services import inventory as inv
 from bloodbank.services import lab
 from bloodbank.services import transfers as trf
 
-from .helpers import attempt, int_or_none, paginate
+from .helpers import attempt, audit_filters, int_or_none, paginate
 
 
 
@@ -28,10 +26,10 @@ def dashboard(request):
     now = timezone.now()
     trf.expire_overdue(h)
     ctx = {"now": now}
-    ctx["active_campaigns"] = Campaign.objects.filter(hospital=h, status__in=["open", "closed"]).order_by("start_time")[:5]
+    ctx["active_campaigns"] = Campaign.objects.filter(hospital=h, status__in=Campaign.RUNNING_STATUSES).order_by("start_time")[:5]
     ctx["pending_regs"] = Registration.objects.filter(campaign__hospital=h, status="pending",
-                                                      campaign__status__in=["open", "closed"]).count()
-    ctx["today_campaigns"] = Campaign.objects.filter(hospital=h, status__in=["open", "closed"],
+                                                      campaign__status__in=Campaign.RUNNING_STATUSES).count()
+    ctx["today_campaigns"] = Campaign.objects.filter(hospital=h, status__in=Campaign.RUNNING_STATUSES,
                                                      start_time__lte=now + timedelta(hours=12), end_time__gte=now)
     stocks = list(Stock.objects.filter(hospital=h).select_related("product_spec__product"))
     ctx["low_stocks"] = [s for s in stocks if s.below_min][:8]
@@ -41,23 +39,12 @@ def dashboard(request):
     ctx["incoming_pending"] = RequestOffer.objects.filter(supplier_hospital=h, status="pending").count()
     ctx["to_receive"] = RequestOffer.objects.filter(request__requesting_hospital=h, status="in_transit").count()
     ctx["to_dispatch"] = RequestOffer.objects.filter(supplier_hospital=h, status="accepted").count()
-    ctx["prq_waiting"] = PatientRequest.objects.filter(hospital=h, status__in=["submitted", "verifying"]).count()
+    ctx["prq_waiting"] = PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.WAITING_STATUSES).count()
     ctx["prq_recent"] = PatientRequest.objects.filter(hospital=h).exclude(
-        status__in=["fulfilled", "cancelled", "rejected"]).order_by("-created_at")[:5]
+        status__in=PatientRequest.FINAL_STATUSES).order_by("-created_at")[:5]
     ctx["lab_pending"] = lab.lab_queue(h).count()
     ctx["notifications"] = Notification.objects.filter(user=request.user, channel="in_app").order_by("-created_at")[:6]
     return render(request, "hospital/dashboard.html", ctx)
-
-
-@require_POST
-def choose_hospital(request):
-    if not request.user.is_authenticated:
-        return redirect("accounts:login")
-    try:
-        hospital_id = int(request.POST.get("hospital_id"))
-    except (TypeError, ValueError):
-        raise Http404
-    return select_hospital(request, hospital_id)
 
 
 def offer_open(request, pk):
@@ -106,24 +93,9 @@ def hospital_staff(request):
 
 
 # ---------------------------------------------------------------- SCR-40 Nhật ký bệnh viện
-def _audit_filters(request, qs):
-    f = {k: request.GET.get(k) or "" for k in ("entity", "action", "actor", "from", "to")}
-    if f["entity"]:
-        qs = qs.filter(entity_type=f["entity"])
-    if f["action"]:
-        qs = qs.filter(action=f["action"])
-    if f["actor"]:
-        qs = qs.filter(Q(actor__email__icontains=f["actor"]) | Q(actor__full_name__icontains=f["actor"]))
-    if f["from"]:
-        qs = qs.filter(created_at__date__gte=f["from"])
-    if f["to"]:
-        qs = qs.filter(created_at__date__lte=f["to"])
-    return qs, f
-
-
 @staff_required
 def hospital_audit(request):
-    qs, f = _audit_filters(request, AuditLog.objects.filter(hospital=request.hospital).select_related("actor"))
+    qs, f = audit_filters(request, AuditLog.objects.filter(hospital=request.hospital).select_related("actor"))
     return render(request, "shared/audit.html", {
         "page": paginate(request, qs, 30), "f": f, "scope": "hospital",
         "entities": AuditLog.objects.filter(hospital=request.hospital).values_list("entity_type", flat=True).distinct(),

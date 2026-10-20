@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from accounts.models import BLOOD_GROUP_VALUES, BLOOD_GROUPS
+from accounts.models import BLOOD_GROUPS
 from bloodbank.forms import DemandForm
 from bloodbank.models import Demand, PatientRequest, Product, ProductSpec, Stock, StockTxn
 from bloodbank.permissions import staff_required
@@ -18,31 +18,11 @@ from .helpers import attempt, date_or_none, int_or_none, new_key, paginate, safe
 @staff_required
 def stock(request):
     """Ma trận nhóm máu × chế phẩm/quy cách; nhân viên sửa nhanh Chia sẻ/Tối thiểu."""
-    h = request.hospital
-    specs = list(ProductSpec.objects.select_related("product").filter(is_active=True, product__is_active=True)
-                 .order_by("product__kind", "product__name", "code"))
-    rows = {(s.blood_group, s.product_spec_id): s for s in Stock.objects.filter(hospital=h)}
-    shortages = {(r["blood_group"], r["spec"].pk): r["shortage"] for r in inv.shortages(h)}
     product_id = request.GET.get("product")
-    shown_specs = [s for s in specs if not product_id or str(s.product_id) == product_id]
-    matrix = []
-    for bg in BLOOD_GROUP_VALUES:
-        cells = []
-        for spec in shown_specs:
-            st = rows.get((bg, spec.pk))
-            cells.append({"spec": spec, "stock": st, "short": shortages.get((bg, spec.pk), 0)})
-        matrix.append({"bg": bg, "cells": cells})
-    detail = sorted(rows.values(), key=lambda s: (s.product_spec_id, s.blood_group))
-    for s in detail:
-        s.spec = next((x for x in specs if x.pk == s.product_spec_id), None)
-    detail = [s for s in detail if s.spec and (not product_id or str(s.spec.product_id) == product_id)]
-    totals = {"on_hand": sum(s.quantity_on_hand for s in rows.values()),
-              "reserved": sum(s.quantity_reserved for s in rows.values()),
-              "low": sum(1 for s in rows.values() if s.below_min), "short": sum(1 for v in shortages.values() if v > 0)}
     return render(request, "hospital/stock.html", {
-        "matrix": matrix, "specs": shown_specs, "detail": detail, "totals": totals,
+        **inv.stock_overview(request.hospital, product_id),
         "products": Product.objects.filter(is_active=True), "product_id": product_id,
-        "can_edit": True, "blood_groups": BLOOD_GROUPS, "all_specs": specs,
+        "can_edit": True, "blood_groups": BLOOD_GROUPS,
     })
 
 
@@ -99,7 +79,7 @@ def stock_txn_form(request, kind):
     if mode == "issue":
         stocks = [s for s in stocks if s.available > 0] or list(stocks)
     initial_stock = request.GET.get("stock") or data.get("stock_id")
-    prqs = PatientRequest.objects.filter(hospital=h, status__in=["verified", "processing"]).order_by("-created_at")
+    prqs = PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.ACTIVE_STATUSES).order_by("-created_at")
     return render(request, "hospital/stock_txn_form.html", {
         "mode": mode, "kind": kind, "stocks": stocks, "specs": ProductSpec.objects.select_related("product").filter(
             is_active=True, product__is_active=True), "products": Product.objects.filter(is_active=True),
@@ -153,19 +133,8 @@ def demands(request, pk=None):
         qs = qs.filter(status=status)
     return render(request, "hospital/demands.html", {
         "form": form, "demand": demand, "page": paginate(request, qs, 20), "status": status,
-        "shortages": shortage_actions(h, inv.shortages(h)),
+        "shortages": callout.with_callout_info(h, inv.shortages(h)),
     })
-
-
-def shortage_actions(hospital, rows):
-    """Gắn số người đủ điều kiện và lần kêu gọi gần nhất cho mỗi dòng thiếu."""
-    cache = {}
-    for r in rows:
-        if r["shortage"] and r["blood_group"] not in cache:
-            last = callout.last_callout(hospital, r["blood_group"])
-            cache[r["blood_group"]] = (callout.candidates(hospital, r["blood_group"]).count(), last)
-        r["callout_count"], r["last_callout"] = cache.get(r["blood_group"], (0, None))
-    return rows
 
 
 @staff_required

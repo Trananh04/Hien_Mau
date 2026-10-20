@@ -65,6 +65,24 @@ def parse_local_dt(value):
         return None
 
 
+def audit_filters(request, qs):
+    """Bộ lọc màn hình nhật ký (bệnh viện SCR-40 / hệ thống) từ query string."""
+    from django.db.models import Q
+
+    f = {k: request.GET.get(k) or "" for k in ("entity", "action", "actor", "from", "to")}
+    if f["entity"]:
+        qs = qs.filter(entity_type=f["entity"])
+    if f["action"]:
+        qs = qs.filter(action=f["action"])
+    if f["actor"]:
+        qs = qs.filter(Q(actor__email__icontains=f["actor"]) | Q(actor__full_name__icontains=f["actor"]))
+    if date_or_none(f["from"]):
+        qs = qs.filter(created_at__date__gte=date_or_none(f["from"]))
+    if date_or_none(f["to"]):
+        qs = qs.filter(created_at__date__lte=date_or_none(f["to"]))
+    return qs, f
+
+
 def safe_next(request, default):
     """Chỉ chấp nhận đường dẫn nội bộ (chặn open redirect)."""
     from django.shortcuts import redirect

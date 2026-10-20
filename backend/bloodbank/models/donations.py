@@ -28,9 +28,8 @@ class Donation(models.Model):
         FAILED = "failed", "Không đạt"
 
     donor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, related_name="donations")
-    registration = models.ForeignKey(
-        Registration, on_delete=models.RESTRICT, null=True, blank=True, related_name="donations"
-    )
+    # BR-10: mỗi hồ sơ hiến máu bắt buộc thuộc về một đơn đăng ký
+    registration = models.ForeignKey(Registration, on_delete=models.RESTRICT, related_name="donations")
     hospital = models.ForeignKey(Hospital, on_delete=models.RESTRICT, related_name="donations")
     donation_type = models.CharField(max_length=15, choices=DONATION_TYPES, default="whole_blood")
     volume_ml = models.IntegerField(null=True, blank=True)
@@ -77,7 +76,7 @@ class Donation(models.Model):
             # Tương đương cột sinh active_registration_id + UNIQUE: mỗi đơn tối đa 1 lượt confirmed
             models.UniqueConstraint(
                 fields=["registration"],
-                condition=Q(status="confirmed", registration__isnull=False),
+                condition=Q(status="confirmed"),
                 name="uq_donations_active_registration",
             ),
             models.CheckConstraint(

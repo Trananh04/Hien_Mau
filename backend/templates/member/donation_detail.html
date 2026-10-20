@@ -2,7 +2,7 @@
 {% block title %}Chi tiết lượt hiến {{ d.code }}{% endblock %}
 {% block band %}{% url 'bloodbank:my_history' as hist %}{% include "partials/band.html" with title="Lượt hiến "|add:d.code parent_url=hist parent_label="Lịch sử hiến máu" crumb=d.code %}{% endblock %}
 {% block member %}
-<section class="panel" style="max-width:820px">
+<section class="panel u-maxw-820">
   <div class="panel-head"><h2 class="panel-title">{% icon "droplet" %} Thông tin lượt hiến</h2>{% status_badge d %}</div>
   <div class="panel-body">
     {% if d.status == "voided" %}<div class="notice danger">{% icon "ban" %}<div>Lượt hiến này đã bị bệnh viện hủy hiệu lực và không được tính vào lịch sử. Lý do: {{ d.void_reason }}</div></div>{% endif %}

@@ -22,6 +22,17 @@ class PatientRequest(models.Model):
         CANCELLED = "cancelled", "Đã hủy"
 
     FINAL_STATUSES = ("rejected", "fulfilled", "cancelled")
+    WAITING_STATUSES = ("submitted", "verifying")            # chờ bệnh viện xác minh
+    ACTIVE_STATUSES = ("verified", "processing")             # đã xác minh, đang điều phối
+    CANCELLABLE_STATUSES = ("submitted", "verifying", "verified")
+    # Các bước hiển thị cho người gửi: (trạng thái, tiêu đề, mô tả)
+    PROGRESS_STEPS = (
+        ("submitted", "Đã gửi", "Hệ thống đã tiếp nhận yêu cầu."),
+        ("verifying", "Bệnh viện xác minh", "Bệnh viện điều trị kiểm tra thông tin và nhóm máu."),
+        ("processing", "Đang điều phối", "Bệnh viện tìm nguồn máu phù hợp."),
+        ("fulfilled", "Hoàn tất", "Bệnh viện xác nhận đã xử lý xong."),
+    )
+    _PROGRESS_INDEX = {"submitted": 0, "verifying": 1, "verified": 1, "processing": 2, "fulfilled": 3}
 
     request_code = models.CharField(max_length=30, unique=True)
     requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, related_name="patient_requests")
@@ -90,3 +101,12 @@ class PatientRequest(models.Model):
     @property
     def is_final(self):
         return self.status in self.FINAL_STATUSES
+
+    @property
+    def can_cancel(self):
+        return self.status in self.CANCELLABLE_STATUSES
+
+    @property
+    def progress_index(self):
+        """Vị trí trong PROGRESS_STEPS; -1 khi bị từ chối / đã hủy."""
+        return self._PROGRESS_INDEX.get(self.status, -1)

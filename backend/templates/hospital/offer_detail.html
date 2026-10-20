@@ -8,19 +8,19 @@
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "file-text" %} Nội dung yêu cầu</h2></div>
     <div class="panel-body">
-      <div class="row" style="margin-bottom:16px">{% blood r.blood_group "lg" %}<div><strong style="font-size:17px;color:var(--ink)">{{ r.product_spec.product.name }} — {{ r.product_spec.name }}</strong><div class="muted small">Bên yêu cầu còn thiếu {{ remaining }} / {{ r.quantity_needed }} đơn vị</div></div></div>
+      <div class="row u-mb-16">{% blood r.blood_group "lg" %}<div><strong class="u-fs-17 u-c-ink">{{ r.product_spec.product.name }} — {{ r.product_spec.name }}</strong><div class="muted small">Bên yêu cầu còn thiếu {{ remaining }} / {{ r.quantity_needed }} đơn vị</div></div></div>
       <dl class="dl">
         <dt>Bệnh viện yêu cầu</dt><dd>{{ r.requesting_hospital.name }}{% if r.requesting_hospital.phone %} · <a class="link" href="tel:{{ r.requesting_hospital.phone }}">{{ r.requesting_hospital.phone|phone }}</a>{% endif %}</dd>
         <dt>Đề nghị bạn cấp</dt><dd>{{ o.quantity_requested|default:"Không nêu số cụ thể" }}</dd>
         <dt>Cần trước</dt><dd>{{ r.needed_by|vn_dt }}</dd>
-        {% if r.note %}<dt>Ghi chú</dt><dd style="white-space:pre-line">{{ r.note }}</dd>{% endif %}
+        {% if r.note %}<dt>Ghi chú</dt><dd class="u-ws-pre-line">{{ r.note }}</dd>{% endif %}
         {% if o.quantity %}<dt>Đã chấp thuận</dt><dd>{{ o.quantity }} đơn vị · {{ o.responded_at|vn_dt }}</dd>{% endif %}
         {% if o.dispatched_at %}<dt>Đã xuất</dt><dd>{{ o.dispatched_at|vn_dt }}</dd>{% endif %}
         {% if o.received_at %}<dt>Bên nhận xác nhận</dt><dd>{{ o.quantity_received }} đơn vị · {{ o.received_at|vn_dt }}</dd>{% endif %}
         {% if o.reject_reason %}<dt>Lý do từ chối</dt><dd>{{ o.reject_reason }}</dd>{% endif %}
         {% if o.failure_reason %}<dt>Lý do thất bại</dt><dd>{{ o.failure_reason }}</dd>{% endif %}
       </dl>
-      <p class="field-help" style="margin-top:14px">Bạn không thấy đề nghị của bệnh viện khác cho cùng yêu cầu.</p>
+      <p class="field-help u-mt-14">Bạn không thấy đề nghị của bệnh viện khác cho cùng yêu cầu.</p>
     </div>
   </section>
 
@@ -29,10 +29,10 @@
       <div class="panel-head"><h2 class="panel-title">{% icon "warehouse" %} Kho của bạn</h2></div>
       <div class="panel-body">
         {% if stock %}
-        <dl class="dl" style="grid-template-columns:1fr auto">
+        <dl class="dl u-cols-1fr-auto">
           <dt>Hiện có</dt><dd class="num">{{ stock.quantity_on_hand }}</dd>
           <dt>Đang giữ chỗ</dt><dd class="num">{{ stock.quantity_reserved }}</dd>
-          <dt>Khả dụng</dt><dd class="num" style="color:var(--ok)">{{ available }}</dd>
+          <dt>Khả dụng</dt><dd class="num u-c-ok">{{ available }}</dd>
         </dl>
         {% else %}<p class="muted">Chưa có dòng tồn cho nhóm máu/quy cách này.</p>{% endif %}
       </div>
@@ -40,12 +40,12 @@
 
     <section class="panel">
       <div class="panel-head"><h2 class="panel-title">{% icon "mouse-pointer-click" %} Thao tác</h2></div>
-      <div class="panel-body stack" style="gap:12px">
+      <div class="panel-body stack u-gap-12">
         {% if "accept" in actions %}
         <form method="post" action="{% url 'bloodbank:offer_action' o.pk %}" novalidate>{% csrf_token %}<input type="hidden" name="action" value="accept">
           <div class="field"><label for="aq">Số lượng chấp thuận <span class="field-req">*</span></label><input id="aq" type="number" name="quantity" min="1" max="{{ suggested }}" value="{{ suggested }}" required class="field-input"><p class="field-help">Tối đa {{ suggested }} — MIN(số đề nghị, khả dụng {{ available }}, còn thiếu {{ remaining }}).</p></div>
-          <div class="field" style="margin-top:10px"><label for="an">Ghi chú</label><input id="an" name="note" class="field-input" maxlength="300"></div>
-          <button class="btn success block" style="margin-top:12px" {% if suggested < 1 %}disabled{% endif %}>{% icon "check" %} Chấp thuận &amp; giữ chỗ</button>
+          <div class="field u-mt-10"><label for="an">Ghi chú</label><input id="an" name="note" class="field-input" maxlength="300"></div>
+          <button class="btn success block u-mt-12" {% if suggested < 1 %}disabled{% endif %}>{% icon "check" %} Chấp thuận &amp; giữ chỗ</button>
         </form>
         <button type="button" class="btn danger block" data-open-dialog="reject-offer">{% icon "x" %} Từ chối</button>
         {% endif %}
@@ -63,16 +63,16 @@
 </div>
 
 {% if "accept" in actions %}
-<dialog class="modal-dialog" id="reject-offer"><form method="post" action="{% url 'bloodbank:offer_action' o.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="reject">
+<dialog class="modal-dialog" id="reject-offer"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:offer_action' o.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reject">
   <div class="modal-header"><h3 class="modal-title">Từ chối đề nghị {{ r.request_code }}</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea></div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Từ chối</button></div>
 </form></dialog>
 {% endif %}
 {% if "fail" in actions %}
-<dialog class="modal-dialog" id="fail-offer"><form method="post" action="{% url 'bloodbank:offer_action' o.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}<input type="hidden" name="action" value="fail"><input type="hidden" name="idempotency_key" value="{{ key }}">
+<dialog class="modal-dialog" id="fail-offer"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:offer_action' o.pk %}">{% csrf_token %}<input type="hidden" name="action" value="fail"><input type="hidden" name="idempotency_key" value="{{ key }}">
   <div class="modal-header"><h3 class="modal-title">Báo giao nhận thất bại</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body stack" style="gap:14px">
+  <div class="modal-body stack u-gap-14">
     <div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea></div>
     <div class="field"><label>Số đơn vị đã quay về kho của bạn</label><input type="number" name="returned_qty" min="0" max="{{ o.quantity }}" value="0" class="field-input"><p class="field-help">Phần quay về được cộng lại vào kho (transfer_return).</p></div>
     <div class="consequence">Không hoàn tác được.</div>

@@ -24,6 +24,8 @@ ERROR_MESSAGES = {
     "ERR-AUTH-LOCKED": "Tài khoản đang bị khóa. Vui lòng liên hệ quản trị viên hoặc thử lại sau.",
     "ERR-AUTH-WEAK-PASSWORD": "Mật khẩu chưa đủ mạnh.",
     "ERR-STAFF-DUPLICATE": "Tài khoản này đã được phân công tại bệnh viện.",
+    "ERR-STAFF-OTHER-HOSPITAL": "Tài khoản này đang làm việc tại bệnh viện khác. Mỗi nhân viên chỉ thuộc một bệnh viện — "
+                                "hãy thu hồi phân công cũ trước.",
     "ERR-STAFF-LAST-ADMIN": "Hệ thống phải còn ít nhất một Quản trị hệ thống đang hoạt động.",
     "ERR-STAFF-ROLE": "Email này thuộc tài khoản Người dùng hoặc Quản trị. Tài khoản nhân viên bệnh viện phải là tài khoản riêng.",
     "ERR-AUTH-PORTAL": "Tài khoản này không đăng nhập được tại cổng này.",
@@ -74,7 +76,7 @@ CONSTRAINT_CODES = {
     "chk_record_volume_positive": "ERR-DON-VOLUME-REQUIRED",
     "chk_record_component_fields": "ERR-DON-COMPONENT-REQUIRED",
     "uq_registrations_campaign_donor": "ERR-REG-DUPLICATE",
-    "uq_staffs_hospital_user": "ERR-STAFF-DUPLICATE",
+    "uq_staffs_user": "ERR-STAFF-OTHER-HOSPITAL",
     "uq_offers_request_supplier": "ERR-STATE-INVALID",
     "uq_txn_offer_type": "ERR-STATE-INVALID",
     "uq_txn_idempotency": "ERR-INV-IDEMPOTENCY-MISMATCH",
@@ -194,6 +196,14 @@ def notify(user, type_, title, body=None, entity=None, entity_type=None, entity_
         delivery_status=Notification.Delivery.SENT,
         sent_at=timezone.now(),
     )
+
+
+def mark_notifications_read(user, notification_id=None):
+    """Đánh dấu đã đọc thông báo trong ứng dụng của chính người dùng — 1 thông báo hoặc tất cả."""
+    qs = Notification.objects.filter(user=user, channel=Notification.Channel.IN_APP, read_at__isnull=True)
+    if notification_id is not None:
+        qs = qs.filter(pk=notification_id)
+    return qs.update(read_at=timezone.now())
 
 
 def alert(users, type_, title, body=None, entity=None):

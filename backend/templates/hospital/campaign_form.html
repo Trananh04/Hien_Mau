@@ -32,13 +32,13 @@
     <section class="panel">
       <div class="panel-head"><h2 class="panel-title">{% icon "map-pin" %} Vị trí trên bản đồ</h2></div>
       <div class="panel-body">
-        <p class="field-help" style="margin-bottom:10px">Bấm lên bản đồ để chọn vị trí (không bắt buộc). Bỏ trống sẽ dùng vị trí bệnh viện.</p>
-        <div id="picker" data-map-picker data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ default_lat|stringformat:"f" }}" data-default-lng="{{ default_lng|stringformat:"f" }}" style="height:280px;border-radius:12px;border:1px solid var(--line)"></div>
-        <div class="form-grid" style="margin-top:12px">
+        <p class="field-help u-mb-10">Bấm lên bản đồ để chọn vị trí (không bắt buộc). Bỏ trống sẽ dùng vị trí bệnh viện.</p>
+        <div class="u-h-280 u-br-12 u-bd-1-solid-line" id="picker" data-map-picker data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ default_lat|stringformat:"f" }}" data-default-lng="{{ default_lng|stringformat:"f" }}"></div>
+        <div class="form-grid u-mt-12">
           {% include "partials/field.html" with field=form.latitude %}
           {% include "partials/field.html" with field=form.longitude %}
         </div>
-        <button type="button" class="btn ghost sm" data-clear-pin style="margin-top:8px">{% icon "eraser" %} Xóa vị trí</button>
+        <button type="button" class="btn ghost sm u-mt-8" data-clear-pin>{% icon "eraser" %} Xóa vị trí</button>
       </div>
     </section>
   </div>

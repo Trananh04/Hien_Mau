@@ -3,7 +3,7 @@ from django.db.models import Count, Max, Min, Q, Sum
 from django.utils import timezone
 
 from accounts.models import User, normalize_phone
-from bloodbank.models import Campaign, Donation, Registration, Staff
+from bloodbank.models import Campaign, Donation, Registration
 
 from .common import BusinessError, audit, business_transaction, notify, require, snapshot
 
@@ -14,6 +14,23 @@ C = Campaign.Status
 
 
 # ---------------------------------------------------------------- Đợt hiến
+def urgent_campaign_initial(hospital, blood_group):
+    """Nội dung gợi sẵn khi tạo nhanh đợt hiến từ dòng thiếu hụt nhóm máu."""
+    return {
+        "name": f"Hiến máu khẩn — cần nhóm {blood_group}", "location_name": hospital.name, "address": hospital.address,
+        "description": f"{hospital.name} đang thiếu máu nhóm {blood_group}. Mời người hiến đã đủ thời gian "
+                       "nghỉ đến đăng ký; mọi nhóm máu vẫn được tiếp nhận.",
+    }
+
+
+def campaign_form_initial(campaign):
+    """Giá trị ban đầu của form sửa đợt hiến (giờ hiển thị theo giờ Việt Nam)."""
+    initial = {k: getattr(campaign, k) for k in CAMPAIGN_FIELDS}
+    for k in ("start_time", "end_time"):
+        initial[k] = timezone.localtime(initial[k])
+    return initial
+
+
 def _check_campaign_data(data):
     if data["end_time"] <= data["start_time"]:
         raise BusinessError("ERR-CMP-TIME-RANGE", field_errors={"end_time": "Phải sau thời gian bắt đầu."})

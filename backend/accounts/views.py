@@ -29,7 +29,7 @@ def _home_for(user):
 PORTALS = {
     access.MEMBER: {
         "title": "Đăng nhập", "lead": "Dành cho người hiến máu và người nhà bệnh nhân.", "icon": "log-in",
-        "greeting": "Xin chào", "art_title": "NGÂN HÀNG MÁU SỐNG VIỆT NAM",
+        "greeting": "Xin chào", "art_title": "GIỌT HỒNG",
         "art_text": "Hãy đăng ký tham gia cùng chúng tôi để tạo ra nguồn máu vô tận, sẵn sàng giúp đỡ cộng đồng và lan tỏa những giá trị nhân văn cao đẹp.",
     },
     access.HOSPITAL: {

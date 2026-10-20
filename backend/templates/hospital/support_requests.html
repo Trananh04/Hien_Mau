@@ -7,18 +7,18 @@
 {% block content %}
 <section class="panel">
   <div class="panel-head">
-    <form method="get" data-autosubmit class="row"><label for="ss" class="small muted">Trạng thái</label><select id="ss" name="status" class="field-select" style="min-width:200px"><option value="">Tất cả</option><option value="open" {% if status == 'open' %}selected{% endif %}>Đang mở (chưa đóng)</option>{% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form>
+    <form method="get" data-autosubmit class="row"><label for="ss" class="small muted">Trạng thái</label><select id="ss" name="status" class="field-select u-minw-200"><option value="">Tất cả</option><option value="open" {% if status == 'open' %}selected{% endif %}>Đang mở (chưa đóng)</option>{% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form>
   </div>
   {% if page.object_list %}
   <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Mã</th><th>Nhóm máu / chế phẩm</th><th>Ưu tiên</th><th style="min-width:200px">Tiến độ</th><th>Cần trước</th><th>Trạng thái</th><th></th></tr></thead>
+    <thead><tr><th>Mã</th><th>Nhóm máu / chế phẩm</th><th>Ưu tiên</th><th class="u-minw-200">Tiến độ</th><th>Cần trước</th><th>Trạng thái</th><th></th></tr></thead>
     <tbody>{% for r in page %}
       <tr>
         <td data-label="Mã"><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="cell-title">{{ r.request_code }}</a><span class="cell-sub">{{ r.created_at|vn_dt }}</span></td>
         <td data-label="Nhóm máu">{% blood r.blood_group "sm" %} {{ r.product_spec.product.name }}<span class="cell-sub">{{ r.product_spec.name }}</span></td>
         <td data-label="Ưu tiên">{% status_badge r field="priority" %}</td>
         <td data-label="Tiến độ">
-          <div class="progress" title="Đã nhận {{ r.numbers.received }} · Đang chuyển {{ r.numbers.transit }} · Cam kết {{ r.numbers.committed }}"><span class="p-received" style="width:{{ r.numbers.received|pct:r.numbers.needed }}%"></span><span class="p-transit" style="width:{{ r.numbers.transit|pct:r.numbers.needed }}%"></span><span class="p-committed" style="width:{{ r.numbers.committed|pct:r.numbers.needed }}%"></span></div>
+          <div class="progress" title="Đã nhận {{ r.numbers.received }} · Đang chuyển {{ r.numbers.transit }} · Cam kết {{ r.numbers.committed }}"><span class="p-received" data-pct="{{ r.numbers.received|pct:r.numbers.needed }}"></span><span class="p-transit" data-pct="{{ r.numbers.transit|pct:r.numbers.needed }}"></span><span class="p-committed" data-pct="{{ r.numbers.committed|pct:r.numbers.needed }}"></span></div>
           <span class="cell-sub">Nhận {{ r.numbers.received }}/{{ r.numbers.needed }} · còn thiếu {{ r.numbers.remaining }}</span>
         </td>
         <td data-label="Cần trước" class="nowrap">{{ r.needed_by|vn_dt }}</td>

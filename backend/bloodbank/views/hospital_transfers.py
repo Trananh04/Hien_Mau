@@ -73,7 +73,7 @@ def support_requests(request):
     qs = HospitalRequest.objects.filter(requesting_hospital=request.hospital).select_related("product_spec__product")
     status = request.GET.get("status") or ""
     if status == "open":
-        qs = qs.filter(status__in=["open", "in_progress", "partially_fulfilled"], closed_at__isnull=True)
+        qs = qs.filter(status__in=HospitalRequest.OPEN_STATUSES, closed_at__isnull=True)
     elif status:
         qs = qs.filter(status=status)
     page = paginate(request, qs, 20)
@@ -155,12 +155,10 @@ def offer_detail(request, pk):
     req = offer.request
     stock = Stock.objects.filter(hospital=request.hospital, blood_group=req.blood_group,
                                  product_spec_id=req.product_spec_id).first()
-    n = trf.request_numbers(req)
     available = stock.available if stock else 0
-    suggested = min(x for x in [offer.quantity_requested or n["remaining"], available, n["remaining"]] if x is not None)
     return render(request, "hospital/offer_detail.html", {
-        "o": offer, "r": req, "stock": stock, "available": available, "remaining": n["remaining"],
-        "suggested": max(suggested, 0), "actions": trf.offer_actions(offer, "supplier", request.staff), "key": new_key(),
+        "o": offer, "r": req, "stock": stock, "available": available,
+        "remaining": trf.request_numbers(req)["remaining"], "suggested": trf.suggested_offer_quantity(offer, available), "actions": trf.offer_actions(offer, "supplier", request.staff), "key": new_key(),
     })
 
 
@@ -195,9 +193,9 @@ def patient_requests(request):
     qs = PatientRequest.objects.filter(hospital=request.hospital).select_related("blood_product")
     status = request.GET.get("status", "waiting")
     if status == "waiting":
-        qs = qs.filter(status__in=["submitted", "verifying"])
+        qs = qs.filter(status__in=PatientRequest.WAITING_STATUSES)
     elif status == "active":
-        qs = qs.filter(status__in=["verified", "processing"])
+        qs = qs.filter(status__in=PatientRequest.ACTIVE_STATUSES)
     elif status:
         qs = qs.filter(status=status)
     return render(request, "hospital/patient_requests.html", {"page": paginate(request, qs, 20), "status": status})

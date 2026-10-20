@@ -1,14 +1,14 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Tổng quan · {{ current_hospital.name }}{% endblock %}
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tổng quan</span>{% endblock %}
-{% block ws_title %}<span class="band-greeting" style="display:block;font-size:30px">Xin chào, {{ user.short_name }}</span>Tổng quan bệnh viện{% endblock %}
+{% block ws_title %}<span class="band-greeting u-d-block u-fs-30">Xin chào, {{ user.short_name }}</span>Tổng quan bệnh viện{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{{ current_hospital.name }} · Nhân viên bệnh viện · Số liệu tính từ dữ liệu gốc tại thời điểm xem.</p>{% endblock %}
 {% block ws_actions %}
   <a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">{% icon "calendar-plus" %} Tạo đợt hiến</a>
   <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="btn secondary">{% icon "package-plus" %} Nhập kho</a>
 {% endblock %}
 {% block content %}
-<div class="grid grid-4" style="margin-bottom:20px">
+<div class="grid grid-4 u-mb-20">
   {% if pending_regs is not None %}
   <a class="stat" href="{% url 'bloodbank:hospital_campaigns' %}?status=open"><div class="stat-label">{% icon "clipboard-list" %} Đơn chờ duyệt</div><div class="stat-value">{{ pending_regs }}</div><div class="stat-note">Trong các đợt đang mở</div></a>
   {% endif %}
@@ -32,14 +32,14 @@
     <div class="list-select">
       {% for c in active_campaigns %}
       <a href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}">
-        <div class="date-block" aria-hidden="true" style="width:50px"><b>TH {{ c.start_time|vn_dt:"%m" }}</b><span style="font-size:18px">{{ c.start_time|vn_dt:"%d" }}</span></div>
+        <div class="date-block u-w-50" aria-hidden="true"><b>TH {{ c.start_time|vn_dt:"%m" }}</b><span class="u-fs-18">{{ c.start_time|vn_dt:"%d" }}</span></div>
         <div class="grow"><strong>{{ c.name }}</strong><span class="sub">{{ c.start_time|vn_dt }} · {{ c.location_name }}</span></div>
         {% status_badge c %}
       </a>
       {% endfor %}
     </div>
     {% for c in today_campaigns %}
-    <div class="panel-foot" style="justify-content:space-between;align-items:center">
+    <div class="panel-foot u-jc-space-between u-ai-center">
       <span class="small"><strong>{{ c.name }}</strong> đang/ sắp diễn ra</span>
       <a href="{% url 'bloodbank:checkin' c.pk %}" class="btn primary sm">{% icon "scan-line" %} Mở điểm hiến</a>
     </div>
@@ -60,7 +60,7 @@
         {% for s in low_stocks %}<tr class="row-warn"><td>{% blood s.blood_group "sm" %}</td><td>{{ s.product_spec }}</td><td class="num">{{ s.available }}</td><td class="num">Tối thiểu {{ s.min_stock_level }}</td></tr>{% endfor %}
       </tbody>
     </table></div>
-    {% if shortages %}<div class="panel-foot"><span class="small muted" style="margin-right:auto">Xin hỗ trợ liên viện, tạo đợt hiến hoặc kêu gọi người hiến.</span><a href="{% url 'bloodbank:demands' %}" class="btn primary sm">{% icon "trending-down" %} Xử lý thiếu hụt</a></div>{% endif %}
+    {% if shortages %}<div class="panel-foot"><span class="small muted u-mr-auto">Xin hỗ trợ liên viện, tạo đợt hiến hoặc kêu gọi người hiến.</span><a href="{% url 'bloodbank:demands' %}" class="btn primary sm">{% icon "trending-down" %} Xử lý thiếu hụt</a></div>{% endif %}
     {% else %}
     <div class="empty"><div class="empty-icon">{% icon "shield-check" %}</div><h3>Không có cảnh báo</h3><p>Không dòng tồn nào dưới mức tối thiểu và không có nhu cầu đang thiếu.</p></div>
     {% endif %}
@@ -82,7 +82,7 @@
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "bell" %} Thông báo gần đây</h2><a href="{% url 'bloodbank:notifications' %}" class="btn ghost sm">Tất cả</a></div>
     {% if notifications %}
-    <ul class="timeline" style="padding:18px 20px 4px 42px">
+    <ul class="timeline u-p-18-20-4-42">
       {% for n in notifications %}<li><div class="t-title">{{ n.title }}</div><div class="t-time">{{ n.created_at|vn_dt }}</div></li>{% endfor %}
     </ul>
     {% else %}<div class="empty"><h3>Chưa có thông báo</h3></div>{% endif %}

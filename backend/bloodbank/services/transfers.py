@@ -426,6 +426,13 @@ def report_failure(staff, offer_id, reason, returned_qty, key, request=None):
     return offer
 
 
+def suggested_offer_quantity(offer, available):
+    """Số gợi ý khi bệnh viện cấp chấp thuận: không vượt số được hỏi, số còn thiếu và số khả dụng trong kho."""
+    remaining = request_numbers(offer.request)["remaining"]
+    asked = offer.quantity_requested or remaining
+    return max(min(x for x in (asked, available, remaining) if x is not None), 0)
+
+
 def offer_actions(offer, side, staff):
     """Nút theo trạng thái (Ch.7 mục 7.7)."""
     s = offer.status

@@ -13,18 +13,18 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-<section class="panel" style="margin-bottom:20px">
+<section class="panel u-mb-20">
   <div class="panel-body">
-    <div class="row between" style="margin-bottom:12px">
-      <div class="row">{% blood r.blood_group "lg" %}<div><strong style="font-size:17px;color:var(--ink)">{{ r.product_spec.product.name }} — {{ r.product_spec.name }}</strong><div class="muted small">Cần {{ n.needed }} đơn vị{% if r.needed_by %} trước {{ r.needed_by|vn_dt }}{% endif %}</div></div></div>
-      <div class="stat-value" style="margin:0">{{ n.received }}<small>/ {{ n.needed }} đã nhận</small></div>
+    <div class="row between u-mb-12">
+      <div class="row">{% blood r.blood_group "lg" %}<div><strong class="u-fs-17 u-c-ink">{{ r.product_spec.product.name }} — {{ r.product_spec.name }}</strong><div class="muted small">Cần {{ n.needed }} đơn vị{% if r.needed_by %} trước {{ r.needed_by|vn_dt }}{% endif %}</div></div></div>
+      <div class="stat-value u-m-0">{{ n.received }}<small>/ {{ n.needed }} đã nhận</small></div>
     </div>
-    <div class="progress" style="height:18px" role="img" aria-label="Đã nhận {{ n.received }}, đang chuyển {{ n.transit }}, đã cam kết {{ n.committed }}, còn thiếu {{ n.remaining }}">
-      <span class="p-received" style="width:{{ n.received|pct:n.needed }}%"></span><span class="p-transit" style="width:{{ n.transit|pct:n.needed }}%"></span><span class="p-committed" style="width:{{ n.committed|pct:n.needed }}%"></span>
+    <div class="progress u-h-18" role="img" aria-label="Đã nhận {{ n.received }}, đang chuyển {{ n.transit }}, đã cam kết {{ n.committed }}, còn thiếu {{ n.remaining }}">
+      <span class="p-received" data-pct="{{ n.received|pct:n.needed }}"></span><span class="p-transit" data-pct="{{ n.transit|pct:n.needed }}"></span><span class="p-committed" data-pct="{{ n.committed|pct:n.needed }}"></span>
     </div>
-    <div class="legend"><span><i style="background:var(--ok)"></i>Đã nhận {{ n.received }}</span><span><i style="background:var(--info)"></i>Đang chuyển {{ n.transit }}</span><span><i style="background:#f59e0b"></i>Đã cam kết {{ n.committed }}</span><span><i style="background:var(--ground-strong)"></i>Còn thiếu {{ n.remaining }}</span></div>
-    {% if r.note %}<p style="margin-top:12px;white-space:pre-line" class="small">{{ r.note }}</p>{% endif %}
-    {% for p in patient_requests %}<p class="small" style="margin-top:8px">{% icon "link" 14 %} Liên kết yêu cầu người cần máu <a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{{ p.request_code }}</a></p>{% endfor %}
+    <div class="legend"><span><i class="u-bg-ok"></i>Đã nhận {{ n.received }}</span><span><i class="u-bg-info"></i>Đang chuyển {{ n.transit }}</span><span><i class="u-bg-xf59e0b"></i>Đã cam kết {{ n.committed }}</span><span><i class="u-bg-ground-strong"></i>Còn thiếu {{ n.remaining }}</span></div>
+    {% if r.note %}<p class="small u-mt-12 u-ws-pre-line">{{ r.note }}</p>{% endif %}
+    {% for p in patient_requests %}<p class="small u-mt-8">{% icon "link" 14 %} Liên kết yêu cầu người cần máu <a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{{ p.request_code }}</a></p>{% endfor %}
   </div>
 </section>
 
@@ -47,10 +47,10 @@
           {% if "reinvite" in o.actions and not r.is_final and not r.closed_at %}<form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="reinvite"><input type="hidden" name="offer_id" value="{{ o.pk }}"><button class="btn secondary sm">{% icon "rotate-ccw" %} Mời lại</button></form>{% endif %}
         </div>
         {% if "receive" in o.actions %}
-        <dialog class="modal-dialog" id="receive-{{ o.pk }}"><form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" style="display:flex;flex-direction:column;width:100%">{% csrf_token %}
+        <dialog class="modal-dialog" id="receive-{{ o.pk }}"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:support_request_action' r.pk %}">{% csrf_token %}
           <input type="hidden" name="action" value="receive"><input type="hidden" name="offer_id" value="{{ o.pk }}"><input type="hidden" name="idempotency_key" value="{{ key }}-{{ o.pk }}">
           <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "package-check" %}</div><h3 class="modal-title">Xác nhận nhận hàng từ {{ o.supplier_hospital.name }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-          <div class="modal-body stack" style="gap:14px">
+          <div class="modal-body stack u-gap-14">
             <p>Bên cấp đã xuất <strong>{{ o.quantity }}</strong> đơn vị lúc {{ o.dispatched_at|vn_dt }}. Nhập đúng số thực nhận — kho của bạn được cộng đúng số này.</p>
             <div class="field"><label>Số thực nhận <span class="field-req">*</span></label><input type="number" name="quantity_received" min="0" max="{{ o.quantity }}" value="{{ o.quantity }}" required class="field-input"><p class="field-help">Tối đa {{ o.quantity }} — số đã xuất.</p></div>
             <label class="check-row"><input type="checkbox" name="returned" value="1"> Phần chênh lệch (nếu có) đã quay về bên cấp</label>
@@ -77,7 +77,7 @@
     <thead><tr><th>Bệnh viện</th><th>Khu vực</th><th class="num">Có thể hỗ trợ</th><th class="num">Mời</th></tr></thead>
     <tbody>{% for row in invite_rows %}
       <tr><td data-label="Bệnh viện">{{ row.hospital.name }}</td><td data-label="Khu vực">{{ row.hospital.area }}</td><td data-label="Có thể hỗ trợ" class="num">{{ row.can_support }}</td>
-        <td><form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" class="row" style="justify-content:flex-end;gap:6px;flex-wrap:nowrap">{% csrf_token %}<input type="hidden" name="action" value="invite"><input type="hidden" name="hospital_id" value="{{ row.hospital.pk }}"><input type="number" name="quantity" min="1" max="{{ row.can_support }}" placeholder="{{ n.remaining|default:row.can_support }}" class="field-input" style="width:80px;min-height:34px" aria-label="Số đề nghị"><button class="btn secondary sm">{% icon "send" %} Gửi</button></form></td></tr>
+        <td><form method="post" action="{% url 'bloodbank:support_request_action' r.pk %}" class="row u-jc-flex-end u-gap-6 u-fw-nowrap">{% csrf_token %}<input type="hidden" name="action" value="invite"><input type="hidden" name="hospital_id" value="{{ row.hospital.pk }}"><input type="number" name="quantity" min="1" max="{{ row.can_support }}" placeholder="{{ n.remaining|default:row.can_support }}" class="field-input u-w-80 u-minh-34" aria-label="Số đề nghị"><button class="btn secondary sm">{% icon "send" %} Gửi</button></form></td></tr>
     {% endfor %}</tbody>
   </table></div>
   {% else %}<div class="empty"><p>Không còn bệnh viện nào đang chia sẻ chế phẩm này.</p></div>{% endif %}

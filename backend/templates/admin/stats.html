@@ -4,7 +4,7 @@
 {% block ws_title %}Thống kê toàn hệ thống{% endblock %}
 {% block ws_sub %}<p class="ws-sub">Tính trực tiếp từ dữ liệu gốc của nền tảng (dự án học tập — dữ liệu hiển thị là dữ liệu mẫu).</p>{% endblock %}
 {% block content %}
-<div class="grid grid-4" style="margin-bottom:20px">
+<div class="grid grid-4 u-mb-20">
   <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lượt hiến xác nhận</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">Toàn phần {{ summary.whole_ml|vnum }} ml · thành phần {{ summary.component_count }} lượt</div></div>
   <div class="stat"><div class="stat-label">{% icon "users" %} Tài khoản</div><div class="stat-value">{{ counts.users }}</div><div class="stat-note">{{ counts.registrations }} đơn đăng ký hiến</div></div>
   <div class="stat"><div class="stat-label">{% icon "hospital" %} Bệnh viện hoạt động</div><div class="stat-value">{{ counts.hospitals }}</div><div class="stat-note">{{ counts.open_campaigns }} đợt hiến đang mở</div></div>
@@ -14,10 +14,10 @@
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "droplets" %} Tồn kho theo nhóm máu (bệnh viện đang hoạt động)</h2></div>
     <div class="table-wrap"><table class="table">
-      <thead><tr><th>Nhóm máu</th><th class="num">Hiện có</th><th class="num">Khả dụng</th><th style="width:45%">Hiện có (đơn vị)</th></tr></thead>
+      <thead><tr><th>Nhóm máu</th><th class="num">Hiện có</th><th class="num">Khả dụng</th><th class="u-w-45pct">Hiện có (đơn vị)</th></tr></thead>
       <tbody>{% for bg, v in stock_by_group.items %}
         <tr><td>{% blood bg "sm" %}</td><td class="num">{{ v.on_hand }}</td><td class="num">{{ v.available }}</td>
-          <td><div class="progress" style="height:12px" title="{{ bg }}: {{ v.on_hand }} hiện có, {{ v.available }} khả dụng"><span style="background:var(--primary);width:{{ v.on_hand|pct:max_avail }}%"></span></div></td></tr>
+          <td><div class="progress u-h-12" title="{{ bg }}: {{ v.on_hand }} hiện có, {{ v.available }} khả dụng"><span class="u-bg-primary" data-pct="{{ v.on_hand|pct:max_avail }}"></span></div></td></tr>
       {% endfor %}</tbody>
     </table></div>
   </section>

@@ -10,6 +10,12 @@
   window.renderIcons = renderIcons;
   renderIcons();
 
+  /* ---------- Thanh tiến độ: độ rộng từ data-pct (gán qua CSSOM — CSP không cho thuộc tính style inline) */
+  document.querySelectorAll('[data-pct]').forEach(function (el) {
+    var v = parseFloat(String(el.getAttribute('data-pct')).replace(',', '.'));
+    el.style.width = (isFinite(v) ? Math.max(0, Math.min(100, v)) : 0) + '%';
+  });
+
   function getCookie(name) {
     var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
     return match ? decodeURIComponent(match[1]) : '';
@@ -257,27 +263,76 @@
         if (open) input.focus();
       });
     });
-    function add(text, who, source) {
-      var div = document.createElement('div');
-      div.className = 'bot-msg ' + who;
-      div.textContent = text;
-      if (source) {
-        var s = document.createElement('span');
-        s.className = 'src';
-        s.textContent = 'Nguồn: ' + source;
-        div.appendChild(s);
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    /* Mọi nội dung từ máy chủ được gán bằng textContent / thuộc tính (không innerHTML) → không có XSS */
+    function add(text, who, data) {
+      data = data || {};
+      var div = el('div', 'bot-msg ' + who, text);
+      (data.cards || []).forEach(function (c) {
+        var card = el('a', 'bot-card');
+        card.href = c.url;
+        card.appendChild(el('strong', null, c.name));
+        card.appendChild(el('span', null, c.time));
+        card.appendChild(el('span', null, c.place + ' · ' + c.hospital));
+        if (c.distance_km != null) card.appendChild(el('span', 'bot-card-dist', 'Cách ~' + String(c.distance_km).replace('.', ',') + ' km'));
+        card.appendChild(el('span', 'bot-card-cta', 'Xem & đăng ký →'));
+        div.appendChild(card);
+      });
+      if ((data.links || []).length) {
+        var row = el('div', 'bot-links');
+        data.links.forEach(function (l) {
+          if (!l.url || l.url.charAt(0) !== '/') return;   // chỉ đường dẫn nội bộ
+          var a = el('a', 'btn ghost sm', l.label);
+          a.href = l.url;
+          row.appendChild(a);
+        });
+        div.appendChild(row);
       }
+      if (data.source) div.appendChild(el('span', 'src', 'Nguồn: ' + data.source));
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;
+      return div;
     }
+    var coords = null;   // vị trí chỉ giữ trong trang, gửi kèm câu hỏi — không lưu ở máy chủ
+    var convId = null;   // cuộc trò chuyện hiện tại (chỉ khi đã đăng nhập — lưu ở máy chủ)
+    var convUrl = panel.getAttribute('data-bot-conv-url');
+    var loaded = false;
+    // Đã đăng nhập: mở trợ lý lần đầu → tải lại cuộc trò chuyện gần nhất (ghi nhớ hội thoại)
+    function loadLatest() {
+      if (loaded || !convUrl) return;
+      loaded = true;
+      fetch(convUrl, { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : { conversations: [] }; })
+        .then(function (d) {
+          var c = (d.conversations || [])[0];
+          if (!c) return null;
+          convId = c.id;
+          return fetch(convUrl + '/' + c.id, { credentials: 'same-origin' }).then(function (r) { return r.json(); });
+        })
+        .then(function (d) {
+          if (!d || !d.messages || !d.messages.length) return;
+          add('— Tiếp tục cuộc trò chuyện trước —', 'bot pending');
+          d.messages.slice(-10).forEach(function (m) { add(m.text, m.role === 'user' ? 'me' : 'bot', m); });
+        })
+        .catch(function () { /* không tải được lịch sử: vẫn trò chuyện mới bình thường */ });
+    }
+    document.querySelectorAll('[data-bot-toggle]').forEach(function (b) { b.addEventListener('click', loadLatest); });
     function ask(q) {
       add(q, 'me');
+      var pending = add('Đang trả lời…', 'bot pending');
       var body = new FormData();
       body.append('q', q);
+      if (convId) body.append('conversation_id', convId);
+      if (coords) { body.append('lat', coords.lat); body.append('lng', coords.lng); }
       fetch(url, { method: 'POST', body: body, headers: { 'X-CSRFToken': getCookie('csrftoken') }, credentials: 'same-origin' })
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(function (data) { add(data.answer, 'bot', data.source); })
-        .catch(function () { add('Xin lỗi, trợ lý đang gặp sự cố. Vui lòng thử lại sau ít phút.', 'bot'); });
+        .then(function (data) { pending.remove(); if (data.conversation_id) convId = data.conversation_id; add(data.answer, 'bot', data); })
+        .catch(function () { pending.remove(); add('Xin lỗi, trợ lý đang gặp sự cố. Vui lòng thử lại sau ít phút.', 'bot'); });
     }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -288,7 +343,24 @@
       ask(q);
     }, true);
     panel.querySelectorAll('[data-bot-suggest] button').forEach(function (b) {
-      b.addEventListener('click', function () { ask(b.textContent); });
+      b.addEventListener('click', function () {
+        var q = b.textContent.trim();
+        if (!b.hasAttribute('data-bot-geo') || !navigator.geolocation) { ask(q); return; }
+        // Xin vị trí khi người dùng chủ động bấm; từ chối → vẫn gợi ý theo tỉnh/thành trong hồ sơ
+        navigator.geolocation.getCurrentPosition(function (p) {
+          coords = { lat: p.coords.latitude.toFixed(5), lng: p.coords.longitude.toFixed(5) };
+          ask(q);
+        }, function () { ask(q); }, { timeout: 8000, maximumAge: 600000 });
+      });
+    });
+    var reset = panel.querySelector('[data-bot-reset]');
+    if (reset) reset.addEventListener('click', function () {
+      var body = new FormData(); body.append('reset', '1');
+      fetch(url, { method: 'POST', body: body, headers: { 'X-CSRFToken': getCookie('csrftoken') }, credentials: 'same-origin' });
+      while (log.children.length > 1) log.removeChild(log.lastChild);
+      coords = null;
+      convId = null;   // câu hỏi tiếp theo tạo cuộc trò chuyện mới (cuộc cũ vẫn lưu, xem qua API)
+      input.focus();
     });
   }
 

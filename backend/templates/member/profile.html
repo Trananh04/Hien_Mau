@@ -4,7 +4,7 @@
 {% block member %}
 {% if not user.email_verified_at %}
 <div class="notice warn">{% icon "mail-warning" %}
-  <div style="flex:1">Email <strong>{{ user.email }}</strong> chưa được xác thực.</div>
+  <div class="u-flex-1">Email <strong>{{ user.email }}</strong> chưa được xác thực.</div>
   <form method="post" action="{% url 'accounts:resend_verification' %}">{% csrf_token %}<button type="submit" class="btn secondary sm">Gửi lại email xác thực</button></form>
 </div>
 {% endif %}
@@ -34,16 +34,16 @@
     <section class="panel">
       <div class="panel-head"><h2 class="panel-title">{% icon "droplet" %} Đóng góp của bạn</h2></div>
       <div class="panel-body">
-        <div class="person-card" style="margin-bottom:16px">
+        <div class="person-card u-mb-16">
           {% blood user.blood_group "lg" %}
           <div><strong>{{ user.full_name }}</strong><span class="muted small">Nhóm máu tự khai: {{ user.get_blood_group_display|default:"chưa rõ" }}</span></div>
         </div>
-        <dl class="dl" style="grid-template-columns:1fr auto">
+        <dl class="dl u-cols-1fr-auto">
           <dt>Lượt hiến được xác nhận</dt><dd class="num">{{ summary.count }}</dd>
           <dt>Máu toàn phần</dt><dd class="num">{{ summary.whole_ml|vnum }} ml</dd>
           <dt>Lần gần nhất</dt><dd>{{ summary.last|vn_date }}</dd>
         </dl>
-        <a href="{% url 'bloodbank:my_history' %}" class="btn secondary block" style="margin-top:16px">Xem lịch sử hiến</a>
+        <a href="{% url 'bloodbank:my_history' %}" class="btn secondary block u-mt-16">Xem lịch sử hiến</a>
       </div>
     </section>
 
@@ -51,7 +51,7 @@
       <div class="panel-head"><h2 class="panel-title">{% icon "key-round" %} Đổi mật khẩu</h2></div>
       <form method="post" novalidate>
         {% csrf_token %}<input type="hidden" name="form" value="password">
-        <div class="panel-body stack" style="gap:14px">
+        <div class="panel-body stack u-gap-14">
           {% include "partials/field.html" with field=pw_form.old_password %}
           {% include "partials/field.html" with field=pw_form.password %}
           {% include "partials/field.html" with field=pw_form.password2 %}

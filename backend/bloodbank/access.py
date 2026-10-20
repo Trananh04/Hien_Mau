@@ -39,6 +39,8 @@ S = Screen
 SCREENS = [
     # ---------------------------------------------------------------- Công khai
     S("SCR-01", "Trang chủ & chatbot", "Công khai", (PUBLIC,), ("bloodbank:home", "bloodbank:chatbot")),
+    S("API-01", "API trợ lý: gửi câu hỏi, tìm đợt hiến", "Công khai", (PUBLIC,), (
+        "bloodbank:api_chat_message", "bloodbank:api_campaigns")),
     S("SCR-02", "Danh sách đợt hiến", "Công khai", (PUBLIC,), ("bloodbank:campaigns",)),
     S("SCR-03", "Chi tiết đợt hiến (đăng ký hiến: chỉ Người dùng)", "Công khai", (PUBLIC,), ("bloodbank:campaign_detail",)),
     S("SCR-04", "Bản đồ điểm hiến", "Công khai", (PUBLIC,), ("bloodbank:map", "bloodbank:map_data")),
@@ -55,13 +57,18 @@ SCREENS = [
     S("SCR-12", "Yêu cầu cần máu của tôi", "Người dùng", (MEMBER,), (
         "bloodbank:my_patient_requests", "bloodbank:my_patient_request_detail", "bloodbank:cancel_patient_request")),
 
+    S("API-03", "API dữ liệu cá nhân: lịch sử hiến, ngày hiến lại/kiểm tra sơ bộ, lịch đăng ký", "Người dùng", (MEMBER,), (
+        "bloodbank:api_my_history", "bloodbank:api_my_eligibility", "bloodbank:api_my_registrations")),
+
     # ---------------------------------------------------------------- Dùng chung khi đã đăng nhập
     S("SCR-14", "Thông báo", "Dùng chung", SIGNED_IN, ("bloodbank:notifications", "bloodbank:notifications_read")),
+    S("API-02", "API trợ lý: lịch sử trò chuyện của chính mình", "Dùng chung", SIGNED_IN, (
+        "bloodbank:api_conversations", "bloodbank:api_conversation")),
     S("SCR-15", "Tài khoản công tác (hồ sơ, đổi mật khẩu)", "Dùng chung", WORKSPACE, ("bloodbank:work_account",)),
     S("SCR-16", "Đăng xuất", "Dùng chung", SIGNED_IN, ("accounts:logout",)),
 
     # ---------------------------------------------------------------- Bệnh viện
-    S("SCR-20", "Tổng quan bệnh viện", "Bệnh viện", (HOSPITAL,), ("bloodbank:hospital_dashboard", "bloodbank:select_hospital")),
+    S("SCR-20", "Tổng quan bệnh viện", "Bệnh viện", (HOSPITAL,), ("bloodbank:hospital_dashboard",)),
     S("SCR-21", "Quản lý đợt hiến", "Bệnh viện", (HOSPITAL,), (
         "bloodbank:hospital_campaigns", "bloodbank:hospital_campaign_create", "bloodbank:hospital_campaign_detail",
         "bloodbank:hospital_campaign_edit", "bloodbank:hospital_campaign_action", "bloodbank:registration_action")),

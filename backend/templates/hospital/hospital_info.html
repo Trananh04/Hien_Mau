@@ -10,7 +10,7 @@
     <div class="panel-head"><h2 class="panel-title">{% icon "building-2" %} Hồ sơ bệnh viện</h2>{% if not can_edit %}<span class="badge neutral plain">Chỉ xem</span>{% endif %}</div>
     <div class="panel-body">
       {% include "partials/form_errors.html" %}
-      <fieldset {% if not can_edit %}disabled{% endif %} style="border:0">
+      <fieldset class="u-bd-0" {% if not can_edit %}disabled{% endif %}>
         <div class="form-grid">
           {% for field in form %}{% include "partials/field.html" with field=field %}{% endfor %}
         </div>
