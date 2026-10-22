@@ -5,12 +5,13 @@ Menu chỉ hiện mục mà vai trò hiện tại mở được theo bảng `blo
 from django.urls import reverse
 
 from bloodbank import access
-from bloodbank.models import Donation, Notification, PatientRequest, RequestOffer
+from bloodbank.models import Campaign, Donation, Notification, PatientRequest, Registration, RequestOffer
 from bloodbank.permissions import current_staff
 
 # (nhóm, nhãn, url name, icon)
 HOSPITAL_NAV = [
     ("", "Tổng quan", "bloodbank:hospital_dashboard", "layout-dashboard"),
+    ("Người cần máu", "Yêu cầu cần máu", "bloodbank:hospital_patient_requests", "heart-handshake"),
     ("Hiến máu", "Đợt hiến máu", "bloodbank:hospital_campaigns", "calendar-heart"),
     ("Hiến máu", "Tra cứu người hiến", "bloodbank:donor_lookup", "user-search"),
     ("Hiến máu", "Báo cáo tiếp nhận", "bloodbank:donation_report", "chart-column"),
@@ -21,7 +22,6 @@ HOSPITAL_NAV = [
     ("Liên viện", "Tìm nguồn liên viện", "bloodbank:source_search", "search"),
     ("Liên viện", "Yêu cầu đã gửi", "bloodbank:support_requests", "send"),
     ("Liên viện", "Đề nghị đến bệnh viện", "bloodbank:incoming_offers", "inbox"),
-    ("Người cần máu", "Yêu cầu cần máu", "bloodbank:hospital_patient_requests", "heart-handshake"),
     ("Bệnh viện", "Thông tin bệnh viện", "bloodbank:hospital_info", "building-2"),
     ("Bệnh viện", "Nhân viên", "bloodbank:hospital_staff", "users"),
     ("Bệnh viện", "Danh mục chế phẩm", "bloodbank:catalog", "package"),
@@ -29,17 +29,19 @@ HOSPITAL_NAV = [
 ]
 
 ADMIN_NAV = [
+    ("Quản trị", "Cảnh báo", "bloodbank:admin_alerts", "siren"),
     ("Quản trị", "Thống kê hệ thống", "bloodbank:admin_stats", "chart-pie"),
     ("Quản trị", "Người dùng", "bloodbank:admin_users", "users"),
     ("Quản trị", "Bệnh viện", "bloodbank:admin_hospitals", "hospital"),
     ("Quản trị", "Danh mục chế phẩm", "bloodbank:catalog", "package"),
     ("Hệ thống", "Phân quyền", "bloodbank:admin_permissions", "key-round"),
+    ("Hệ thống", "Trợ lý hỏi đáp", "bloodbank:admin_assistant", "message-circle-heart"),
     ("Hệ thống", "Cấu hình", "bloodbank:admin_settings", "sliders-horizontal"),
     ("Hệ thống", "Nhật ký hệ thống", "bloodbank:admin_audit", "scroll-text"),
 ]
 
 
-def _nav(user, items, counts=None):
+def _nav(user, items, counts=None, request=None):
     groups = []
     for group, label, url, icon in items:
         if not access.can_open(user, url):
@@ -48,7 +50,22 @@ def _nav(user, items, counts=None):
             groups.append({"name": group, "items": []})
         groups[-1]["items"].append({"label": label, "url": url, "icon": icon, "href": reverse(url),
                                     "count": (counts or {}).get(url)})
+    closed = set(request.COOKIES.get("ws_closed", "").split(".")) if request else set()
+    path = request.path if request else ""
+    for g in groups:   # tổng số chờ xử lý của nhóm: hiện cạnh tên nhóm khi nhóm đang thu gọn
+        g["count"] = sum(i["count"] or 0 for i in g["items"])
+        g["key"] = _slug(g["name"] or "home")
+        has_active = any(path.startswith(i["href"]) for i in g["items"])
+        g["open"] = has_active or g["key"] not in closed      # nhóm chứa trang hiện tại luôn mở
     return groups
+
+
+def _slug(text):
+    import re
+    import unicodedata
+
+    t = unicodedata.normalize("NFD", text.lower()).replace("đ", "d")
+    return re.sub(r"[^a-z0-9]+", "-", "".join(c for c in t if unicodedata.category(c) != "Mn")).strip("-")
 
 
 def workspace(request):
@@ -64,6 +81,7 @@ def workspace(request):
         "is_staff_user": staff is not None,
         "workspace_mode": "admin" if user.role == access.ADMIN else "hospital",
         "role_label": access.ROLE_LABELS.get(user.role),
+        "ws_collapsed": request.COOKIES.get("ws_collapsed") == "1",
     }
     if staff:
         counts = {
@@ -72,8 +90,16 @@ def workspace(request):
                                                            lab_status="pending").count(),
             "bloodbank:hospital_patient_requests": PatientRequest.objects.filter(
                 hospital=staff.hospital, status__in=PatientRequest.WAITING_STATUSES).count(),
+            # Đơn đăng ký chờ duyệt trong các đợt đang tiếp nhận; hàng liên viện đang trên đường tới
+            "bloodbank:hospital_campaigns": Registration.objects.filter(
+                campaign__hospital=staff.hospital, status=Registration.Status.PENDING,
+                campaign__status__in=Campaign.RUNNING_STATUSES).count(),
+            "bloodbank:support_requests": RequestOffer.objects.filter(
+                request__requesting_hospital=staff.hospital, status="in_transit").count(),
         }
-        ctx["hospital_nav"] = _nav(user, HOSPITAL_NAV, counts)
+        ctx["hospital_nav"] = _nav(user, HOSPITAL_NAV, counts, request)
     if user.role == access.ADMIN:
-        ctx["admin_nav"] = _nav(user, ADMIN_NAV)
+        from bloodbank.services.admin import urgent_alert_count
+
+        ctx["admin_nav"] = _nav(user, ADMIN_NAV, {"bloodbank:admin_alerts": urgent_alert_count()}, request)
     return ctx

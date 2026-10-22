@@ -49,7 +49,28 @@ def rate_limited(request):
 
 
 # ---------------------------------------------------------------- Bảo vệ khi nhiều người hỏi cùng lúc
-LLM_LOCK_CLASS = 7311   # không gian khóa advisory riêng của trợ lý
+LLM_LOCK_CLASS = 7311
+# Công cụ đọc dữ liệu của chính người hỏi → ý định tương ứng trong chế độ từ khóa
+PERSONAL_TOOLS = {"my_donation_history": "history", "my_eligibility": "eligibility",
+                  "my_registrations": "my_registrations", "my_patient_requests": "my_patient_requests"}   # không gian khóa advisory riêng của trợ lý
+
+
+def llm_day_key(day=None):
+    return f"assistant-llm-day:{(day or timezone.localdate()).isoformat()}"
+
+
+def llm_calls_today():
+    """Số lượt gọi AI hôm nay. Bộ đếm nằm trong cache; nếu bị mất (cache dọn bớt mục, khởi động lại)
+    thì khởi tạo lại từ nhật ký (câu AI đã trả lời hôm nay) để hạn mức ngày không bao giờ bị đặt về 0."""
+    from bloodbank.models import AuditLog
+
+    key = llm_day_key()
+    count = cache.get(key)
+    if count is None:
+        count = AuditLog.objects.filter(action="assistant_query", new_values__mode="llm",
+                                        created_at__date=timezone.localdate()).count()
+        cache.add(key, count, 2 * 86400)
+    return count
 
 
 def _llm_slot():
@@ -58,8 +79,8 @@ def _llm_slot():
 
     Suất = khóa advisory của PostgreSQL: nguyên tử trên mọi worker/luồng, và tự nhả khi kết nối đóng
     (worker chết không làm kẹt suất). Hạn mức ngày đếm trên cache — gần đúng, đủ để chặn chi phí bất thường."""
-    day = f"assistant-llm-day:{timezone.localdate().isoformat()}"
-    if cache.get(day, 0) >= settings.CHATBOT_DAILY_LIMIT:
+    day = llm_day_key()
+    if llm_calls_today() >= settings.CHATBOT_DAILY_LIMIT:
         return None
     with connection.cursor() as cur:
         for slot in range(settings.CHATBOT_MAX_CONCURRENT):
@@ -173,12 +194,19 @@ def answer(request, question, lat=None, lng=None, conversation_id=None):
     else:
         docs = knowledge.search(question)                       # RAG: truy xuất 1 lần, dùng cho cả 2 chế độ
         pre = rules.prefetch(question, ctx)                     # câu hỏi về dữ liệu → tra cứu sẵn (chỉ đọc)
-        slot = _llm_slot() if llm.enabled() else None
+        # Hỏi dữ liệu của chính mình khi chưa có tài khoản Người dùng → trả lời cố định ngay, không gọi AI
+        need_login = bool(pre and pre[2].get("login_required"))
+        slot = _llm_slot() if llm.enabled() and not need_login else None
         if slot is not None:
             try:
                 res = llm.ask(question, ctx, _history(request, conv), docs=docs,
                               prefetched=pre[1:] if pre else None)
                 res["answer"] = verify.check(res["answer"], res["evidence"])
+                personal = [PERSONAL_TOOLS[t] for t in res["tools_used"] if t in PERSONAL_TOOLS]
+                if personal and not ctx.member:
+                    # AI tự tra dữ liệu cá nhân khi chưa có tài khoản Người dùng → dùng câu trả lời cố định
+                    pre = rules.prefetch(question, ctx, intent=personal[0])
+                    raise llm.LLMUnavailable("hỏi dữ liệu cá nhân khi chưa có tài khoản Người dùng")
                 result = {**res, "mode": "llm", "intent": ",".join(res["tools_used"]) or "chat", "source": None}
             except llm.LLMUnavailable as exc:
                 log.warning("Chatbot chuyển sang chế độ từ khóa: %s", exc)
@@ -186,7 +214,7 @@ def answer(request, question, lat=None, lng=None, conversation_id=None):
                 log.warning("Câu trả lời AI không qua kiểm tra (%s) — dùng chế độ từ khóa", exc)
             finally:
                 _llm_release(slot)
-        elif llm.enabled():
+        elif llm.enabled() and not need_login:
             log.info("Chatbot: AI đang bận / hết hạn mức ngày — trả lời bằng chế độ từ khóa")
         if result is None:
             result = {**rules.answer(question, ctx, docs=docs, pre=pre), "mode": "rules"}

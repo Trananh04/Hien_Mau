@@ -1,6 +1,7 @@
 """Lớp phân quyền thứ nhất: mọi request được đối chiếu với bảng màn hình trong `bloodbank/access.py`."""
 from django.contrib.auth.views import redirect_to_login
-from django.http import JsonResponse
+from django.conf import settings
+from django.http import Http404, JsonResponse
 from django.urls import reverse
 
 from bloodbank import access
@@ -39,6 +40,16 @@ class SecurityHeadersMiddleware:
         return response
 
 
+def admin_ip_allowed(request):
+    """ADMIN_ALLOWED_IPS trống → không giới hạn. IP lấy theo client_ip (chỉ tin X-Forwarded-For sau proxy tin cậy)."""
+    allowed = settings.ADMIN_ALLOWED_IPS
+    if not allowed:
+        return True
+    from bloodbank.services.common import client_ip
+
+    return client_ip(request) in allowed
+
+
 class ScreenAccessMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -55,6 +66,17 @@ class ScreenAccessMiddleware:
             from bloodbank.permissions import deny
 
             deny(request, "route_not_configured")
+        if match.view_name == "accounts:admin_login" or access.is_admin_only(roles):
+            # Cổng quản trị không xác nhận là mình tồn tại: chưa đăng nhập, sai vai trò hay IP ngoài danh sách đều 404
+            from bloodbank.permissions import deny
+
+            if not admin_ip_allowed(request):
+                deny(request, "admin_ip_not_allowed", hide=True)
+            if match.view_name != "accounts:admin_login":
+                if not request.user.is_authenticated:
+                    raise Http404          # khách / bot dò đường dẫn: không ghi nhật ký cho khỏi ngập
+                if request.user.role != access.ADMIN:
+                    deny(request, "admin_only", hide=True)
         if access.PUBLIC in roles:
             return None
         user = request.user

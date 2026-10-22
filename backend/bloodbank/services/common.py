@@ -17,7 +17,7 @@ ERROR_MESSAGES = {
     "ERR-VALIDATION": "Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại các trường được đánh dấu.",
     "ERR-CONFLICT": "Dữ liệu vừa được người khác thay đổi. Vui lòng tải lại trang rồi thử lại.",
     "ERR-STATE-INVALID": "Thao tác không hợp lệ với trạng thái hiện tại.",
-    "ERR-INTERNAL": "Chưa xác định được kết quả. Bấm Thử lại — hệ thống sẽ không ghi trùng.",
+    "ERR-INTERNAL": "Chưa xác định được kết quả. Bấm Thử lại, hệ thống sẽ không ghi trùng.",
     "ERR-AUTH-EMAIL-TAKEN": "Email này đã được đăng ký.",
     "ERR-AUTH-PHONE-TAKEN": "Số điện thoại này đã được đăng ký.",
     "ERR-AUTH-INVALID-CREDENTIALS": "Email hoặc mật khẩu không đúng.",

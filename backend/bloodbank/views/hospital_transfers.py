@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from accounts.forms import PROVINCES
+from accounts.provinces import PROVINCES
 from accounts.models import BLOOD_GROUPS
 from bloodbank.forms import SupportRequestForm
 from bloodbank.models import Campaign, HospitalRequest, PatientRequest, Product, ProductSpec, RequestOffer, Stock

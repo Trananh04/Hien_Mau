@@ -18,6 +18,11 @@ if not SECRET_KEY:
     raise ImproperlyConfigured("Thiếu DJANGO_SECRET_KEY (bắt buộc khi DJANGO_DEBUG=0).")
 # Số reverse proxy tin cậy đứng trước ứng dụng (0 = không tin header X-Forwarded-For, dùng REMOTE_ADDR)
 TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", "0") or 0)
+
+# Cổng quản trị không có liên kết công khai. Khi chạy thật nên đổi đường dẫn đăng nhập thành chuỗi khó đoán
+# và (tùy chọn) chỉ cho phép một số IP; ngoài danh sách → trang 404 như thể không tồn tại.
+ADMIN_LOGIN_PATH = (os.environ.get("ADMIN_LOGIN_PATH", "quan-tri/dang-nhap").strip("/") or "quan-tri/dang-nhap") + "/"
+ADMIN_ALLOWED_IPS = env_list("ADMIN_ALLOWED_IPS")
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:8080")
 
@@ -120,7 +125,9 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Cache dùng chung cho MỌI worker/luồng (bảng PostgreSQL) — giới hạn tần suất & số cuộc gọi AI đồng thời phải đếm chung
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "django_cache"}}
+# MAX_ENTRIES mặc định chỉ 300: vượt ngưỡng Django xóa bớt theo thứ tự khóa → có thể xóa mất bộ đếm lượt gọi AI
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "django_cache",
+                      "OPTIONS": {"MAX_ENTRIES": 50000}}}
 
 # Triển khai sau HTTPS: đặt DJANGO_HTTPS=1 → chuyển hướng HTTPS, HSTS, cookie chỉ gửi qua HTTPS
 if os.environ.get("DJANGO_HTTPS", "0") == "1":

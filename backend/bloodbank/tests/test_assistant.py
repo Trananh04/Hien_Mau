@@ -223,6 +223,33 @@ class LLMModeTests(AssistantData):
         self.assertEqual([m["role"] for m in msgs], ["user", "assistant", "user"])
         self.assertEqual(msgs[1]["content"], "Câu 1")
 
+    def test_personal_question_when_logged_out_gets_fixed_login_answer(self):
+        # 1) Nhận ra ngay bằng từ khóa → không gọi AI, không trích nguồn, có nút Đăng nhập / Tạo tài khoản
+        client = mock.Mock()
+        with mock.patch.object(llm, "client", return_value=client):
+            data = self.client.post(reverse("bloodbank:chatbot"), {"q": "Huy hiệu của tôi là gì"}).json()
+        client.messages.create.assert_not_called()
+        self.assertIn("Bạn chưa đăng nhập", data["answer"])
+        self.assertIsNone(data["source"])
+        self.assertEqual([l["label"] for l in data["links"]], ["Đăng nhập", "Tạo tài khoản"])
+        # 2) AI tự gọi công cụ dữ liệu cá nhân → câu trả lời của AI bị thay bằng câu cố định
+        client = mock.Mock()
+        client.messages.create.side_effect = [
+            fake_response([tool_use("my_donation_history", {})], "tool_use"),
+            fake_response([text("Bạn cần đăng nhập. Huy hiệu tính theo mốc 1, 3, 5 lần. (Nguồn: Lịch sử hiến máu)")]),
+        ]
+        with mock.patch.object(llm, "client", return_value=client):
+            data = self.client.post(reverse("bloodbank:chatbot"), {"q": "cho mình xem thành tích nhé"}).json()
+        self.assertIn("Bạn chưa đăng nhập nên mình chưa xem được lịch sử hiến máu", data["answer"])
+        self.assertNotIn("Nguồn", data["answer"])
+        self.assertIsNone(data["source"])
+
+    def test_staff_asking_personal_question_told_member_only(self):
+        self.client.force_login(self.staff_user)
+        data = self.client.post(reverse("bloodbank:chatbot"), {"q": "khi nào tôi được hiến lại"}).json()
+        self.assertIn("chỉ dành cho tài khoản Người dùng", data["answer"])
+        self.assertEqual(data["links"], [])
+
     @override_settings(CHATBOT_MAX_CONCURRENT=2)
     def test_busy_llm_answers_with_rules_immediately(self):
         from bloodbank.assistant import service

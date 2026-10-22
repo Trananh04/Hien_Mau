@@ -10,6 +10,21 @@
   window.renderIcons = renderIcons;
   renderIcons();
 
+  /* ---------- Tin tức trang chủ: dải chạy ngang dừng khi khuất khỏi màn hình */
+  var newsBand = document.querySelector('[data-news]');
+  if (newsBand && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { newsBand.classList.toggle('is-paused', !e.isIntersecting); });
+    }).observe(newsBand);
+  }
+
+  /* ---------- Form vừa gửi có lỗi: đưa con trỏ tới trường sai đầu tiên (lỗi hiện ngay dưới từng trường) */
+  var firstBad = document.querySelector('.field.has-error input:not([type=hidden]), .field.has-error select, .field.has-error textarea');
+  if (firstBad) {
+    firstBad.scrollIntoView({ block: 'center' });
+    firstBad.focus({ preventScroll: true });
+  }
+
   /* ---------- Thanh tiến độ: độ rộng từ data-pct (gán qua CSSOM — CSP không cho thuộc tính style inline) */
   document.querySelectorAll('[data-pct]').forEach(function (el) {
     var v = parseFloat(String(el.getAttribute('data-pct')).replace(',', '.'));
@@ -60,14 +75,49 @@
     }
   });
 
-  /* ---------- Thanh bên khu làm việc trên điện thoại ---------- */
+  /* ---------- Thanh bên khu làm việc ---------- */
   var shell = document.querySelector('[data-ws-shell]');
   if (shell) {
-    document.querySelectorAll('[data-ws-toggle]').forEach(function (b) {
-      b.addEventListener('click', function () { shell.classList.toggle('nav-open'); });
+    /* Trạng thái giao diện theo từng người xem, lưu cookie để máy chủ dựng sẵn (không nháy khi tải trang) */
+    function setPref(k, v) { document.cookie = k + '=' + v + '; path=/; max-age=31536000; SameSite=Lax'; }
+    var toggles = document.querySelectorAll('[data-ws-toggle]');
+    function setDrawer(open) {
+      shell.classList.toggle('nav-open', open);
+      toggles.forEach(function (b) { b.setAttribute('aria-expanded', String(open)); });
+    }
+    toggles.forEach(function (b) {
+      b.setAttribute('aria-expanded', 'false');
+      b.addEventListener('click', function () { setDrawer(!shell.classList.contains('nav-open')); });
     });
     document.querySelectorAll('[data-ws-close]').forEach(function (b) {
-      b.addEventListener('click', function () { shell.classList.remove('nav-open'); });
+      b.addEventListener('click', function () { setDrawer(false); });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && shell.classList.contains('nav-open')) setDrawer(false);
+    });
+
+    /* Thu nhỏ thanh bên (máy tính) — nhớ lựa chọn */
+    var collapseBtn = document.querySelector('[data-ws-collapse]');
+    function setCollapsed(on) {
+      shell.classList.toggle('is-collapsed', on);
+      if (collapseBtn) {
+        collapseBtn.setAttribute('aria-pressed', String(on));
+        collapseBtn.setAttribute('aria-label', on ? 'Mở rộng menu' : 'Thu gọn menu');
+      }
+    }
+    if (collapseBtn) collapseBtn.addEventListener('click', function () {
+      var on = !shell.classList.contains('is-collapsed');
+      setCollapsed(on);
+      setPref('ws_collapsed', on ? '1' : '0');
+    });
+
+    /* Nhóm menu thu gọn được — nhớ các nhóm đã đóng (nhóm chứa trang hiện tại máy chủ luôn mở) */
+    document.querySelectorAll('[data-ws-sec]').forEach(function (sec) {
+      sec.addEventListener('toggle', function () {
+        var closed = [].map.call(document.querySelectorAll('[data-ws-sec]:not([open])'),
+          function (s) { return s.getAttribute('data-ws-sec'); });
+        setPref('ws_closed', closed.join('.'));
+      });
     });
   }
 
@@ -241,7 +291,7 @@
       box.querySelector('[data-change]').textContent = (sign === '-' ? '−' : '+') + qty;
       box.querySelector('[data-after]').textContent = after;
       var hint = form.querySelector('[data-available-hint]');
-      if (hint) hint.textContent = 'Tối đa ' + available + ' — khả dụng';
+      if (hint) hint.textContent = 'Tối đa ' + available + ' (khả dụng)';
     }
     form.addEventListener('input', update);
     form.addEventListener('change', update);
@@ -280,7 +330,7 @@
         card.appendChild(el('span', null, c.time));
         card.appendChild(el('span', null, c.place + ' · ' + c.hospital));
         if (c.distance_km != null) card.appendChild(el('span', 'bot-card-dist', 'Cách ~' + String(c.distance_km).replace('.', ',') + ' km'));
-        card.appendChild(el('span', 'bot-card-cta', 'Xem & đăng ký →'));
+        card.appendChild(el('span', 'bot-card-cta', 'Xem và đăng ký'));
         div.appendChild(card);
       });
       if ((data.links || []).length) {
@@ -316,7 +366,7 @@
         })
         .then(function (d) {
           if (!d || !d.messages || !d.messages.length) return;
-          add('— Tiếp tục cuộc trò chuyện trước —', 'bot pending');
+          add('Cuộc trò chuyện trước', 'bot pending');
           d.messages.slice(-10).forEach(function (m) { add(m.text, m.role === 'user' ? 'me' : 'bot', m); });
         })
         .catch(function () { /* không tải được lịch sử: vẫn trò chuyện mới bình thường */ });
@@ -364,37 +414,6 @@
     });
   }
 
-  /* ---------- Tin tức trang chủ: mở chi tiết ---------- */
-  var newsData = document.getElementById('news-data');
-  if (newsData) {
-    var items = JSON.parse(newsData.textContent);
-    var dlg = document.getElementById('news-dialog');
-    document.addEventListener('click', function (e) {
-      var card = e.target.closest('[data-news-id]');
-      if (!card) return;
-      showNews(card.getAttribute('data-news-id'));
-    });
-    document.addEventListener('keydown', function (e) {
-      var card = e.target.closest && e.target.closest('[data-news-id]');
-      if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); showNews(card.getAttribute('data-news-id')); }
-    });
-    function showNews(id) {
-      var item = items.find(function (n) { return String(n.id) === String(id); });
-      if (!item) return;
-      dlg.querySelector('[data-news-date]').textContent = item.date;
-      dlg.querySelector('[data-news-img]').src = item.image;
-      dlg.querySelector('[data-news-img]').alt = item.title;
-      dlg.querySelector('[data-news-title]').textContent = item.title;
-      dlg.querySelector('[data-news-excerpt]').textContent = item.excerpt;
-      dlg.querySelector('[data-news-content]').textContent = item.fullContent;
-      dlg.showModal();
-    }
-    var share = document.querySelector('[data-news-share]');
-    if (share) share.addEventListener('click', function () {
-      var done = function () { share.querySelector('span').textContent = 'Đã sao chép liên kết'; };
-      if (navigator.clipboard) { navigator.clipboard.writeText(location.href).then(done, done); } else { done(); }
-    });
-  }
 })();
 
 /* Form kết quả xét nghiệm: chỉ hiện nhóm máu / quy cách khi chọn "Đạt" */

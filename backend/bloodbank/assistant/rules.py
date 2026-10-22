@@ -15,7 +15,9 @@ from . import knowledge, tools
 ELIGIBILITY = ["hien lai", "khi nao duoc hien", "bao gio duoc hien", "khi nao toi duoc hien", "bao lau nua",
                "du thoi gian nghi", "lan hien tiep", "hien tiep", "khi nao co the hien", "bao gio hien duoc"]
 HISTORY = ["hien may lan", "hien bao nhieu lan", "da hien bao nhieu", "so lan hien cua toi", "toi da hien",
-           "lan gan nhat toi hien", "lan hien gan nhat", "lich su hien cua toi", "tong so lan hien"]
+           "lan gan nhat toi hien", "lan hien gan nhat", "lich su hien cua toi", "tong so lan hien",
+           "lich su hien mau cua toi", "lich su cua toi", "huy hieu cua toi", "may huy hieu", "toi duoc huy hieu",
+           "toi co huy hieu", "toi dat huy hieu"]
 MY_REGS = ["don dang ky", "don cua toi", "duoc duyet chua", "da duyet chua", "dang ky cua toi", "toi da dang ky",
            "lich dang ky", "dang ky ngay nao", "dang ky hien mau ngay nao"]
 MY_PRQ = ["yeu cau can mau cua toi", "yeu cau cua toi", "yeu cau toi da gui", "yeu cau xin mau cua toi", "pr "]
@@ -68,9 +70,9 @@ def detect_intent(question):
 
 def known_areas():
     """Địa danh có trong dữ liệu (quận/huyện, tỉnh của bệnh viện và đợt hiến) + 63 tỉnh/thành."""
-    from accounts.forms import PROVINCES
+    from accounts.provinces import area_names
 
-    names = set(PROVINCES)
+    names = set(area_names())
     for district, province in Hospital.objects.filter(status="active").values_list("district", "province"):
         names.update(filter(None, [district, province]))
     names.update(filter(None, Campaign.objects.filter(status="open").values_list("province", flat=True)))
@@ -82,7 +84,9 @@ def extract_area(question):
     for name in known_areas():
         n = _norm(name)
         if n and re.search(rf"\b{re.escape(n)}\b", q):
-            return name
+            from accounts.provinces import normalize_province
+
+            return normalize_province(name) or name    # "Quảng Nam" → "Đà Nẵng" (sau sắp xếp 2025)
     return None
 
 
@@ -236,4 +240,6 @@ def answer(question, ctx, docs=None, pre=None):
         return {"answer": plain_text(top["text"]), "source": knowledge.cite(top), "intent": "faq",
                 "doc_ids": [top["id"]]}
     intent, _, data = pre
+    if data.get("login_required"):                    # chưa đăng nhập: không trích nguồn, không kèm kiến thức chung
+        return {**render(intent, data), "intent": intent, "source": None}
     return {**render(intent, data), "intent": intent, "source": "Dữ liệu hệ thống"}

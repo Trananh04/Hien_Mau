@@ -61,7 +61,7 @@
         <td data-label="Tối thiểu" class="num">{{ s.min_stock_level }}</td>
         <td data-label="Cập nhật" class="nowrap small">{{ s.updated_at|vn_dt }}</td>
         {% if can_edit %}
-        <td data-label="Sửa nhanh"><form method="post" action="{% url 'bloodbank:stock_settings' s.pk %}" class="row u-gap-6 u-jc-flex-end u-fw-nowrap">
+        <td data-label="Sửa nhanh"><form method="post" action="{% url 'bloodbank:stock_settings' s.pk %}" class="table-actions stock-quick row u-gap-6 u-jc-flex-end">
           {% csrf_token %}<input type="hidden" name="version" value="{{ s.version }}">
           <input type="number" min="0" name="shareable_quantity" value="{{ s.shareable_quantity|default_if_none:'' }}" class="field-input u-w-84 u-minh-34" placeholder="Không" aria-label="Số chia sẻ">
           <input type="number" min="0" name="min_stock_level" value="{{ s.min_stock_level }}" class="field-input u-w-72 u-minh-34" aria-label="Mức tối thiểu">

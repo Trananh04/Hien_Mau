@@ -1,91 +1,106 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Tổng quan · {{ current_hospital.name }}{% endblock %}
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tổng quan</span>{% endblock %}
-{% block ws_title %}<span class="band-greeting u-d-block u-fs-30">Xin chào, {{ user.short_name }}</span>Tổng quan bệnh viện{% endblock %}
-{% block ws_sub %}<p class="ws-sub">{{ current_hospital.name }} · Nhân viên bệnh viện · Số liệu tính từ dữ liệu gốc tại thời điểm xem.</p>{% endblock %}
+{% block ws_title %}Tổng quan bệnh viện{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{{ current_hospital.name }} · Số liệu lúc {{ now|vn_dt:"%H:%M %d/%m/%Y" }} · <a class="link" href="{{ request.path }}">Tải lại</a></p>{% endblock %}
 {% block ws_actions %}
   <a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">{% icon "calendar-plus" %} Tạo đợt hiến</a>
   <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="btn secondary">{% icon "package-plus" %} Nhập kho</a>
 {% endblock %}
 {% block content %}
-<div class="grid grid-4 u-mb-20">
-  {% if pending_regs is not None %}
-  <a class="stat" href="{% url 'bloodbank:hospital_campaigns' %}?status=open"><div class="stat-label">{% icon "clipboard-list" %} Đơn chờ duyệt</div><div class="stat-value">{{ pending_regs }}</div><div class="stat-note">Trong các đợt đang mở</div></a>
-  {% endif %}
-  <a class="stat {% if lab_pending %}alert{% endif %}" href="{% url 'bloodbank:lab_queue' %}"><div class="stat-label">{% icon "flask-conical" %} Chờ xét nghiệm</div><div class="stat-value">{{ lab_pending }}</div><div class="stat-note">Lượt hiến chưa nhập kho</div></a>
-  <a class="stat" href="{% url 'bloodbank:stock' %}"><div class="stat-label">{% icon "warehouse" %} Tồn khả dụng</div><div class="stat-value">{{ stock_available }}<small>đơn vị</small></div><div class="stat-note">Hiện có {{ stock_total }}, phần còn lại đang giữ chỗ</div></a>
-  <a class="stat {% if low_stocks %}alert{% endif %}" href="{% url 'bloodbank:stock' %}"><div class="stat-label">{% icon "triangle-alert" %} Dưới mức tối thiểu</div><div class="stat-value">{{ low_stocks|length }}</div><div class="stat-note">Dòng tồn cần bổ sung</div></a>
-  {% if prq_waiting is not None %}
-  <a class="stat {% if prq_waiting %}alert{% endif %}" href="{% url 'bloodbank:hospital_patient_requests' %}"><div class="stat-label">{% icon "heart-pulse" %} Yêu cầu chờ xác minh</div><div class="stat-value">{{ prq_waiting }}</div><div class="stat-note">Từ người nhà bệnh nhân</div></a>
-  {% endif %}
-  {% if incoming_pending is not None %}
-  <a class="stat" href="{% url 'bloodbank:incoming_offers' %}?status=pending"><div class="stat-label">{% icon "inbox" %} Đề nghị chờ phản hồi</div><div class="stat-value">{{ incoming_pending }}</div><div class="stat-note">{{ to_dispatch }} đề nghị đã chấp thuận chờ xuất</div></a>
-  <a class="stat" href="{% url 'bloodbank:support_requests' %}?status=open"><div class="stat-label">{% icon "truck" %} Hàng đang tới</div><div class="stat-value">{{ to_receive }}</div><div class="stat-note">Cần xác nhận số thực nhận</div></a>
-  {% endif %}
-</div>
-
-<div class="grid grid-2">
-  {% if active_campaigns is not None %}
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "calendar-heart" %} Đợt hiến đang hoạt động</h2><a href="{% url 'bloodbank:hospital_campaigns' %}" class="btn ghost sm">Tất cả</a></div>
-    {% if active_campaigns %}
-    <div class="list-select">
-      {% for c in active_campaigns %}
-      <a href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}">
-        <div class="date-block u-w-50" aria-hidden="true"><b>TH {{ c.start_time|vn_dt:"%m" }}</b><span class="u-fs-18">{{ c.start_time|vn_dt:"%d" }}</span></div>
-        <div class="grow"><strong>{{ c.name }}</strong><span class="sub">{{ c.start_time|vn_dt }} · {{ c.location_name }}</span></div>
-        {% status_badge c %}
-      </a>
+<div class="dash">
+  <section class="panel" aria-labelledby="todo-title">
+    <div class="panel-head"><h2 class="panel-title" id="todo-title">Cần xử lý</h2></div>
+    {% if todo %}
+    <ul class="todo-list">
+      {% for t in todo %}
+      <li><a href="{{ t.url }}" class="{% if t.urgent %}is-urgent{% endif %}">
+        {% icon t.icon 18 %}
+        <span class="todo-label">{{ t.label }}<span class="todo-hint">{{ t.hint }}</span></span>
+        <span class="todo-count">{{ t.count }}{% if t.urgent %}<span class="sr-only"> (cần ưu tiên)</span>{% endif %}</span>{% icon "chevron-right" 16 %}
+      </a></li>
       {% endfor %}
-    </div>
-    {% for c in today_campaigns %}
-    <div class="panel-foot u-jc-space-between u-ai-center">
-      <span class="small"><strong>{{ c.name }}</strong> đang/ sắp diễn ra</span>
-      <a href="{% url 'bloodbank:checkin' c.pk %}" class="btn primary sm">{% icon "scan-line" %} Mở điểm hiến</a>
-    </div>
-    {% endfor %}
+    </ul>
     {% else %}
-    <div class="empty"><div class="empty-icon">{% icon "calendar-plus" %}</div><h3>Chưa có đợt hiến đang mở</h3><p>Tạo đợt hiến mới và bấm Công bố để người dân đăng ký.</p><a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary sm">Tạo đợt hiến</a></div>
+    <p class="dash-empty">{% icon "circle-check" 18 %} Không có việc tồn đọng.</p>
     {% endif %}
   </section>
-  {% endif %}
 
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "triangle-alert" %} Cảnh báo kho</h2><a href="{% url 'bloodbank:stock' %}" class="btn ghost sm">Xem tồn kho</a></div>
-    {% if low_stocks or shortages %}
-    <div class="table-wrap"><table class="table">
-      <thead><tr><th>Nhóm máu</th><th>Chế phẩm</th><th class="num">Khả dụng</th><th class="num">Ngưỡng / thiếu</th></tr></thead>
+  <section class="panel" aria-labelledby="prq-title">
+    <div class="panel-head">
+      <h2 class="panel-title" id="prq-title">Yêu cầu cần máu đang mở</h2>
+      <a href="{% url 'bloodbank:hospital_patient_requests' %}?status=" class="btn ghost sm">Tất cả</a>
+    </div>
+    {% if prqs %}
+    <ul class="dash-rows">
+      {% for p in prqs %}
+      <li>
+        {% blood p.blood_group "sm" %}
+        <a class="grow dash-link" href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{{ p.request_code }}
+          <span class="sub">{{ p.blood_product.name|default:"Chưa rõ chế phẩm" }} · {{ p.quantity_units }} đơn vị · {% if p.needed_by %}cần trước {{ p.needed_by|vn_dt }}{% else %}gửi {{ p.created_at|vn_dt }}{% endif %}</span></a>
+        {% status_badge p %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="dash-empty">{% icon "circle-check" 18 %} Không có yêu cầu đang mở.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel dash-wide" aria-labelledby="stock-title">
+    <div class="panel-head">
+      <h2 class="panel-title" id="stock-title">Kho cần chú ý</h2>
+      <span class="dash-meta">Hiện có <strong>{{ alerts.on_hand }}</strong> · đang giữ chỗ <strong>{{ alerts.reserved }}</strong> · khả dụng <strong>{{ alerts.available }}</strong> đơn vị</span>
+      <a href="{% url 'bloodbank:stock' %}" class="btn ghost sm">Tồn kho</a>
+    </div>
+    {% if alerts.rows %}
+    <div class="table-wrap"><table class="table stack-mobile">
+      <thead><tr><th>Nhóm máu</th><th>Chế phẩm / quy cách</th><th>Mức</th><th class="num">Thiếu</th><th class="num">Khả dụng</th><th class="num">Tối thiểu</th><th class="num">Nhu cầu</th><th class="num">Thao tác</th></tr></thead>
       <tbody>
-        {% for s in shortages %}<tr class="row-danger"><td>{% blood s.blood_group "sm" %}</td><td>{{ s.spec }}</td><td class="num">{{ s.available }}</td><td class="num"><span class="badge danger plain">Thiếu {{ s.shortage }}</span></td></tr>{% endfor %}
-        {% for s in low_stocks %}<tr class="row-warn"><td>{% blood s.blood_group "sm" %}</td><td>{{ s.product_spec }}</td><td class="num">{{ s.available }}</td><td class="num">Tối thiểu {{ s.min_stock_level }}</td></tr>{% endfor %}
+        {% for r in alerts.rows %}
+        <tr>
+          <td data-label="Nhóm máu">{% blood r.blood_group "sm" %}</td>
+          <td data-label="Chế phẩm"><span class="cell-title">{{ r.spec.product.name }}</span><span class="cell-sub">{{ r.spec.name }}</span></td>
+          <td data-label="Mức">{% if r.level == "danger" %}<span class="tag danger">{% icon "triangle-alert" 14 %} Thiếu theo nhu cầu</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Dưới tối thiểu</span>{% endif %}</td>
+          <td data-label="Thiếu" class="num"><strong>{{ r.shortage }}</strong></td>
+          <td data-label="Khả dụng" class="num">{{ r.available }}</td>
+          <td data-label="Tối thiểu" class="num">{{ r.min_level|default:"—" }}</td>
+          <td data-label="Nhu cầu" class="num">{{ r.required|default:"—" }}</td>
+          <td data-label="Thao tác"><div class="table-actions">
+            {% if r.level == "danger" %}<a href="{% url 'bloodbank:demands' %}" class="btn secondary sm">Xử lý thiếu hụt</a>
+            {% else %}<a href="{% url 'bloodbank:stock' %}?product={{ r.spec.product_id }}" class="btn ghost sm">Xem kho</a>{% endif %}
+          </div></td>
+        </tr>
+        {% endfor %}
       </tbody>
     </table></div>
-    {% if shortages %}<div class="panel-foot"><span class="small muted u-mr-auto">Xin hỗ trợ liên viện, tạo đợt hiến hoặc kêu gọi người hiến.</span><a href="{% url 'bloodbank:demands' %}" class="btn primary sm">{% icon "trending-down" %} Xử lý thiếu hụt</a></div>{% endif %}
+    {% if alerts.more %}<p class="dash-more"><a class="link" href="{% url 'bloodbank:stock' %}">Còn {{ alerts.more }} dòng khác trong tồn kho</a></p>{% endif %}
     {% else %}
-    <div class="empty"><div class="empty-icon">{% icon "shield-check" %}</div><h3>Không có cảnh báo</h3><p>Không dòng tồn nào dưới mức tối thiểu và không có nhu cầu đang thiếu.</p></div>
+    <p class="dash-empty">{% icon "circle-check" 18 %} Không có nhu cầu đang thiếu và không dòng tồn nào dưới mức tối thiểu.</p>
     {% endif %}
   </section>
 
-  {% if prq_recent is not None %}
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "heart-handshake" %} Yêu cầu cần máu đang mở</h2><a href="{% url 'bloodbank:hospital_patient_requests' %}" class="btn ghost sm">Tất cả</a></div>
-    {% if prq_recent %}
-    <div class="list-select">
-      {% for p in prq_recent %}
-      <a href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{% blood p.blood_group "sm" %}<div class="grow"><strong>{{ p.request_code }}</strong><span class="sub">{{ p.quantity_units }} đơn vị · {{ p.created_at|vn_dt }}</span></div>{% status_badge p %}</a>
-      {% endfor %}
+  <section class="panel dash-wide" aria-labelledby="camp-title">
+    <div class="panel-head">
+      <h2 class="panel-title" id="camp-title">Đợt hiến đang tiếp nhận</h2>
+      <a href="{% url 'bloodbank:hospital_campaigns' %}" class="btn ghost sm">Tất cả</a>
     </div>
-    {% else %}<div class="empty"><h3>Không có yêu cầu đang mở</h3></div>{% endif %}
-  </section>
-  {% endif %}
-
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "bell" %} Thông báo gần đây</h2><a href="{% url 'bloodbank:notifications' %}" class="btn ghost sm">Tất cả</a></div>
-    {% if notifications %}
-    <ul class="timeline u-p-18-20-4-42">
-      {% for n in notifications %}<li><div class="t-title">{{ n.title }}</div><div class="t-time">{{ n.created_at|vn_dt }}</div></li>{% endfor %}
+    {% if campaigns %}
+    <ul class="dash-rows">
+      {% for c in campaigns %}
+      <li>
+        <span class="dash-date">{{ c.start_time|vn_dt:"%d/%m" }}</span>
+        <a class="grow dash-link" href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}">{{ c.name }}
+          <span class="sub">{{ c.start_time|vn_dt:"%H:%M" }}–{{ c.end_time|vn_dt:"%H:%M %d/%m" }} · {{ c.location_name }}</span></a>
+        <span class="dash-regs">{{ c.reg_count }} đăng ký{% if c.pending_count %} · <a class="link" href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}?tab=registrations&amp;status=pending">{{ c.pending_count }} chờ duyệt</a>{% endif %}</span>
+        {% if c.live %}<span class="tag ok">{% icon "radio" 14 %} Đang diễn ra</span>{% else %}{% status_badge c %}{% endif %}
+        {% if c.checkin_ready %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn secondary sm">{% icon "scan-line" %} Mở điểm hiến</a>{% endif %}
+      </li>
+      {% endfor %}
     </ul>
-    {% else %}<div class="empty"><h3>Chưa có thông báo</h3></div>{% endif %}
+    {% else %}
+    <p class="dash-empty">Chưa có đợt hiến đang tiếp nhận. <a class="link" href="{% url 'bloodbank:hospital_campaign_create' %}">Tạo đợt hiến</a></p>
+    {% endif %}
   </section>
 </div>
 {% endblock %}

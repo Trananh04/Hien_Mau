@@ -21,9 +21,49 @@ class HomeAndAuthTests(TestCase):
         self.assertEqual(r.status_code, 200)
         html = r.content.decode()
         for needle in ["GIỌT HỒNG", "Be+Vietnam+Pro", "Dancing+Script", "btn-heart-theme",
-                       "btn-cross-theme", "Tôi cần xin máu", "TIN TỨC HOẠT ĐỘNG HIẾN MÁU", "lucide.min.js",
+                       "btn-cross-theme", "Tôi cần xin máu", 'id="ve-chung-toi"', "VỀ CHÚNG TÔI", "lucide.min.js",
                        "footer-section"]:
             self.assertIn(needle, html)
+        # Menu + chân trang có mục "Trang chủ" (đang ở trang chủ → được đánh dấu)
+        self.assertIn('<a href="/" class="nav-link-item active">Trang chủ</a>', html)
+        self.assertEqual(html.count(">Trang chủ<"), 3)
+        for gone in ("ĐỢT HIẾN MÁU SẮP DIỄN RA", "news-dialog", "info-about", ">Về chúng tôi<"):
+            self.assertNotIn(gone, html)
+
+    def test_guest_nav_single_login_button_and_login_offers_register(self):
+        html = self.client.get("/dot-hien/").content.decode()
+        # Menu máy tính + điện thoại: chỉ 1 nút Đăng nhập (giữ trang đang xem), không còn nút Đăng ký riêng
+        self.assertEqual(html.count('href="/dang-nhap/?next=/dot-hien/" class="nav-cta-btn'), 2)
+        self.assertNotIn('href="/dang-ky/" class="nav-cta-btn', html)
+        login = self.client.get("/dang-nhap/?next=/can-mau/gui-yeu-cau/").content.decode()
+        self.assertIn('href="/dang-ky/?next=/can-mau/gui-yeu-cau/" class="btn secondary lg block"', login)
+
+    def test_home_news_link_to_real_articles(self):
+        from bloodbank import content
+
+        html = self.client.get("/").content.decode()
+        self.assertIn("TIN TỨC HOẠT ĐỘNG HIẾN MÁU", html)
+        newest = max(content.NEWS, key=lambda n: n["date"])
+        # Mỗi bài xuất hiện ở nhóm thật + nhóm nhân đôi (aria-hidden) của dải chạy; mở trang báo ở thẻ mới
+        for n in content.NEWS:
+            self.assertEqual(html.count(f'href="{n["url"]}" target="_blank" rel="noopener noreferrer"'), 2)
+        self.assertLess(html.index(newest["title"]), html.index(content.NEWS[-1]["title"]))
+        self.assertTrue(all(n["url"].startswith("https://") for n in content.NEWS))
+
+    def test_process_page_public_with_settings_and_links(self):
+        from bloodbank.models import SystemSetting
+
+        SystemSetting.objects.update_or_create(setting_key="donation_interval_whole_blood_days",
+                                             defaults={"setting_value": 90})
+        r = self.client.get(reverse("bloodbank:process"))
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        for needle in ("Một buổi hiến máu", 'id="chang-1"', 'id="chang-4"', "Khám sức khỏe sàng lọc",
+                       "90 ngày", "18–60", "art-s3-t", "js/process.js"):
+            self.assertIn(needle, html)
+        # Menu + chân trang trỏ tới trang; mục menu được đánh dấu; hộp thoại cũ đã bỏ
+        self.assertIn('href="/quy-trinh-hien-mau/" class="nav-link-item active"', html)
+        self.assertNotIn("info-process", html)
 
     def test_register_login_logout(self):
         r = self.client.post(reverse("accounts:register"), {
@@ -56,9 +96,13 @@ class HomeAndAuthTests(TestCase):
         })
         self.assertEqual(r.status_code, 200)
         html = r.content.decode()
-        self.assertIn("ERR-AUTH-EMAIL-TAKEN", html)
-        self.assertIn("ERR-AUTH-PHONE-TAKEN", html)
+        # Lỗi hiện ngay dưới đúng trường (id khớp aria-describedby), không có khung tổng hợp, không lộ mã lỗi
+        self.assertIn('<div id="id_email_error"><p class="field-error">', html)
+        self.assertIn("Email này đã được đăng ký. Bạn có thể đăng nhập hoặc dùng email khác.", html)
+        self.assertIn('<div id="id_phone_error"><p class="field-error">', html)
         self.assertIn("Bạn cần đồng ý điều khoản", html)
+        self.assertNotIn("trường chưa hợp lệ", html)
+        self.assertNotIn("(ERR-", html)
 
     def test_login_lockout_after_failures(self):
         u = f.user(email="lock@test.vn")

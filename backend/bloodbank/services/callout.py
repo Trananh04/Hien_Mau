@@ -63,7 +63,7 @@ def donor_callout(staff, blood_group, request=None):
             where = (f"Đợt hiến \"{campaign.name}\" bắt đầu {timezone.localtime(campaign.start_time):%H:%M %d/%m} "
                      f"tại {campaign.location_name}. Bấm để đăng ký.")
         else:
-            where = f"Liên hệ {hospital.name}{(' — ' + hospital.phone) if hospital.phone else ''} để được hướng dẫn hiến máu."
+            where = f"Liên hệ {hospital.name}{(' (' + hospital.phone + ')') if hospital.phone else ''} để được hướng dẫn hiến máu."
         alert(users, "donor_callout", f"{hospital.name} đang cần máu nhóm {blood_group}",
               f"Bạn đã đủ thời gian nghỉ giữa 2 lần hiến. {where} Bác sĩ sẽ khám sàng lọc trước khi hiến.", entity=callout)
         audit(staff.user, callout, "donor_callout",

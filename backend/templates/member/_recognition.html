@@ -14,7 +14,7 @@
   <div class="panel-body">
     <div class="badge-row">
       {% for b in badges.all %}
-      <div class="medal {% if b.earned %}earned{% endif %}" title="{{ b.name }} — {{ b.count }} lần hiến">
+      <div class="medal {% if b.earned %}earned{% endif %}" title="{{ b.name }}: {{ b.count }} lần hiến">
         <span class="medal-icon">{% icon b.icon 22 %}</span>
         <strong>{{ b.name }}</strong><span>{{ b.count }} lần</span>
       </div>

@@ -59,6 +59,22 @@ def status_badge(obj_or_value, field="status", label=None):
 
 
 @register.filter
+def ago(value, now=None):
+    """Thời gian tương đối tiếng Việt, một đơn vị: "vừa xong", "5 phút trước", "3 giờ trước", "6 ngày trước",
+    "2 tuần trước"; quá 30 ngày → ngày cụ thể (dd/mm/yyyy)."""
+    if not value:
+        return ""
+    seconds = int(((now or timezone.now()) - value).total_seconds())
+    if seconds < 60:
+        return "vừa xong"
+    for limit, unit, size in ((3600, "phút", 60), (86400, "giờ", 3600), (7 * 86400, "ngày", 86400),
+                              (30 * 86400, "tuần", 7 * 86400)):
+        if seconds < limit:
+            return f"{seconds // size} {unit} trước"
+    return timezone.localtime(value).strftime("%d/%m/%Y")
+
+
+@register.filter
 def vn_dt(value, fmt="%H:%M %d/%m/%Y"):
     if not value:
         return "—"

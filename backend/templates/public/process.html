@@ -1,0 +1,220 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+{% block title %}Quy trình tham gia hiến máu{% endblock %}
+{% block description %}Một buổi hiến máu diễn ra thế nào: 4 chặng trong khoảng 30–60 phút, cần chuẩn bị gì trước ngày hiến và chăm sóc ra sao sau khi hiến.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/process.css' %}">{% endblock %}
+
+{% block content %}
+<section class="pq-intro" aria-labelledby="pq-title">
+  <img src="{% static 'assets/svg/dong-son-drum.svg' %}" alt="" aria-hidden="true" class="pq-intro-drum">
+  <div class="container pq-intro-grid">
+    <div class="pq-intro-text">
+      <h1 id="pq-title">Một buổi hiến máu <span class="pq-h1-accent">của bạn</span></h1>
+      <p class="pq-lead">Từ lúc bước vào điểm hiến đến khi ra về thường chỉ mất <strong>khoảng 30–60 phút</strong>, tùy số người tại điểm hiến. Bốn chặng dưới đây kể lại buổi hiến theo từng mốc thời gian: bạn làm gì, nhân viên y tế làm gì, và vài điều nên biết.</p>
+      <ol class="pq-overview">
+        <li><a href="#chang-1"><span class="pq-ov-time">00'</span>Đăng ký &amp; khai phiếu</a></li>
+        <li><a href="#chang-2"><span class="pq-ov-time">10'</span>Khám sàng lọc</a></li>
+        <li><a href="#chang-3"><span class="pq-ov-time">25'</span>Hiến máu</a></li>
+        <li><a href="#chang-4"><span class="pq-ov-time">35'</span>Nghỉ ngơi &amp; nhận chứng nhận</a></li>
+      </ol>
+      <div class="pq-intro-actions">
+        <a href="{% url 'bloodbank:campaigns' %}" class="btn primary">{% icon "calendar-heart" %} Tìm đợt hiến máu</a>
+        <a href="#truoc-ngay-hien" class="btn secondary">Cần chuẩn bị gì?</a>
+      </div>
+    </div>
+    <div class="pq-intro-art">{% include "public/process_art/clock.html" %}</div>
+  </div>
+</section>
+
+<section class="pq-session" aria-labelledby="pq-session-title" data-session>
+  <div class="container">
+    <h2 id="pq-session-title" class="sr-only">Bốn chặng của một buổi hiến máu</h2>
+
+    <div class="pq-clock" aria-hidden="true" data-clock>
+      {% icon "timer" 18 %}
+      <span class="pq-clock-time"><b data-clock-min>00</b>' <span class="pq-clock-of">/ ~60'</span></span>
+      <span class="pq-clock-step" data-clock-step>Đăng ký &amp; khai phiếu</span>
+      <span class="pq-clock-bar"><span data-clock-bar></span></span>
+    </div>
+
+    <div class="pq-timeline" data-timeline>
+      <div class="pq-rail" aria-hidden="true">
+        <span class="pq-rail-fill" data-rail-fill></span>
+        <svg class="pq-drop" data-drop viewBox="0 0 24 32" width="22" height="30" focusable="false"><path d="M12 1.5C12 1.5 3 12.6 3 19.5a9 9 0 0 0 18 0C21 12.6 12 1.5 12 1.5Z"/><path class="pq-drop-shine" d="M8.2 19.2a4.2 4.2 0 0 0 2.6 4.4"/></svg>
+      </div>
+
+      {# ---------------- Chặng 1 #}
+      <article class="pq-step" id="chang-1" data-step data-minute="0" data-label="Đăng ký &amp; khai phiếu">
+        <div class="pq-node" aria-hidden="true">{% icon "clipboard-pen" 18 %}</div>
+        <header class="pq-step-head">
+          <p class="pq-step-time"><time>Phút 00 – 10</time> · Chặng 1/4</p>
+          <h3>Đăng ký &amp; điền phiếu thông tin</h3>
+          <p class="pq-step-lede">Bạn đến bàn tiếp đón, xuất trình giấy tờ tùy thân và khai phiếu thông tin sức khỏe. Nếu đã đăng ký đợt hiến trên Giọt Hồng, chỉ cần đọc mã đơn (DK-…) để nhân viên tìm nhanh.</p>
+        </header>
+        <figure class="pq-photo" data-reveal>{% include "public/process_art/step1.html" %}</figure>
+        <div class="pq-roles">
+          <section>
+            <h4>{% icon "user-round-check" 18 %} Bạn làm</h4>
+            <ul>
+              <li>Xuất trình giấy tờ tùy thân có ảnh (CCCD hoặc hộ chiếu).</li>
+              <li>Khai phiếu thông tin cá nhân và tiền sử sức khỏe, trả lời trung thực từng câu.</li>
+              <li>Báo ngay nếu hôm nay bạn đang mệt, sốt, cảm cúm hoặc đang dùng thuốc.</li>
+            </ul>
+          </section>
+          <section>
+            <h4>{% icon "stethoscope" 18 %} Nhân viên y tế làm</h4>
+            <ul>
+              <li>Đối chiếu giấy tờ, tìm đơn đăng ký của bạn và ghi nhận bạn đã có mặt (check-in).</li>
+              <li>Hướng dẫn bạn sang khu khám sàng lọc theo thứ tự.</li>
+            </ul>
+          </section>
+        </div>
+        <p class="pq-tip">{% icon "lightbulb" 18 %}<span><strong>Mẹo:</strong> chưa kịp đăng ký đợt hiến? Nếu đã có tài khoản Giọt Hồng, nhân viên vẫn tạo được đơn tại chỗ cho bạn. Đăng ký trước giúp bạn được tiếp đón nhanh hơn.</span></p>
+      </article>
+
+      {# ---------------- Chặng 2 #}
+      <article class="pq-step" id="chang-2" data-step data-minute="10" data-label="Khám sàng lọc">
+        <div class="pq-node" aria-hidden="true">{% icon "heart-pulse" 18 %}</div>
+        <header class="pq-step-head">
+          <p class="pq-step-time"><time>Phút 10 – 25</time> · Chặng 2/4</p>
+          <h3>Khám sức khỏe sàng lọc</h3>
+          <p class="pq-step-lede">Bác sĩ kiểm tra để chắc chắn việc hiến máu an toàn cho chính bạn và cho người sẽ nhận máu. <strong>Bác sĩ là người quyết định</strong> bạn có hiến được trong ngày hay không, và hiến bao nhiêu.</p>
+        </header>
+        <figure class="pq-photo" data-reveal>{% include "public/process_art/step2.html" %}</figure>
+        <ul class="pq-checks" aria-label="Các mục khám sàng lọc">
+          <li>{% icon "activity" 18 %}<span><strong>Huyết áp &amp; mạch</strong>Đo ở tay khi bạn ngồi nghỉ.</span></li>
+          <li>{% icon "scale" 18 %}<span><strong>Cân nặng</strong>Dùng để quyết định thể tích máu được hiến.</span></li>
+          <li>{% icon "stethoscope" 18 %}<span><strong>Khám lâm sàng</strong>Hỏi thêm về tiền sử và tình trạng hôm nay.</span></li>
+          <li>{% icon "droplet" 18 %}<span><strong>Xét nghiệm nhanh</strong>Một giọt máu đầu ngón tay: nhóm máu và huyết sắc tố (Hb).</span></li>
+        </ul>
+        <p class="pq-tip">{% icon "info" 18 %}<span><strong>Chưa hiến được hôm nay?</strong> Đó không phải lỗi của bạn. Thường do huyết áp, Hb hoặc sức khỏe trong ngày — bác sĩ sẽ nói khi nào bạn có thể quay lại.</span></p>
+      </article>
+
+      {# ---------------- Chặng 3 #}
+      <article class="pq-step pq-step-key" id="chang-3" data-step data-minute="25" data-label="Hiến máu">
+        <div class="pq-node" aria-hidden="true">{% icon "droplet" 18 %}</div>
+        <header class="pq-step-head">
+          <p class="pq-step-time"><time>Phút 25 – 35</time> · Chặng 3/4</p>
+          <h3>Tiến hành hiến máu</h3>
+          <p class="pq-step-lede">Bạn ngồi hoặc nằm thoải mái trên ghế hiến. Phần lấy máu chỉ khoảng <strong>5–10 phút</strong>, thể tích thường <strong>250, 350 hoặc 450 ml</strong> tùy cân nặng và chỉ định của bác sĩ.</p>
+        </header>
+        <figure class="pq-photo pq-photo-wide" data-reveal>{% include "public/process_art/step3.html" %}</figure>
+        <div class="pq-roles">
+          <section>
+            <h4>{% icon "user-round-check" 18 %} Bạn làm</h4>
+            <ul>
+              <li>Thả lỏng, thở đều; có thể nắm – mở tay nhẹ theo hướng dẫn.</li>
+              <li>Báo ngay nếu thấy chóng mặt, buồn nôn hay khó chịu ở chỗ kim.</li>
+            </ul>
+          </section>
+          <section>
+            <h4>{% icon "stethoscope" 18 %} Nhân viên y tế làm</h4>
+            <ul>
+              <li>Sát khuẩn và lấy máu bằng <strong>dụng cụ vô trùng, dùng một lần</strong>, nên không lây bệnh cho người hiến.</li>
+              <li>Theo dõi bạn suốt quá trình, rút kim và băng ép chỗ lấy máu.</li>
+            </ul>
+          </section>
+        </div>
+        <p class="pq-tip">{% icon "shield-check" 18 %}<span><strong>Có an toàn không?</strong> 250–450 ml chỉ là một phần nhỏ lượng máu cơ thể: thể tích được bù lại trong vài ngày, hồng cầu trong vài tuần.</span></p>
+      </article>
+
+      {# ---------------- Chặng 4 #}
+      <article class="pq-step" id="chang-4" data-step data-minute="35" data-label="Nghỉ ngơi &amp; nhận chứng nhận">
+        <div class="pq-node" aria-hidden="true">{% icon "award" 18 %}</div>
+        <header class="pq-step-head">
+          <p class="pq-step-time"><time>Phút 35 – 55</time> · Chặng 4/4</p>
+          <h3>Nghỉ ngơi &amp; nhận giấy chứng nhận</h3>
+          <p class="pq-step-lede">Ngồi nghỉ tại chỗ <strong>15–20 phút</strong>, uống nước và ăn nhẹ cho cơ thể ổn định trước khi ra về. Bạn nhận giấy chứng nhận hiến máu tình nguyện.</p>
+        </header>
+        <figure class="pq-photo" data-reveal>{% include "public/process_art/step4.html" %}</figure>
+        <div class="pq-roles pq-roles-single">
+          <section>
+            <h4>{% icon "badge-check" 18 %} Sau buổi hiến, trên Giọt Hồng</h4>
+            <ul>
+              <li>Bệnh viện ghi nhận lượt hiến; lượt hiến hiện trong <strong>Lịch sử hiến máu</strong> của bạn.</li>
+              <li>Trang Lịch sử hiến máu cho biết khi nào bạn có thể hiến lại: khoảng <strong>{{ interval_whole }} ngày</strong> sau hiến máu toàn phần, <strong>{{ interval_component }} ngày</strong> sau hiến thành phần.</li>
+            </ul>
+          </section>
+        </div>
+      </article>
+
+      <div class="pq-finish" aria-hidden="true">{% icon "heart-pulse" 18 %} Xong, khoảng 60 phút</div>
+    </div>
+    <p class="pq-note muted small">Mốc thời gian là ước tính cho một buổi hiến thông thường; thực tế tùy số người tại điểm hiến.</p>
+  </div>
+</section>
+
+<section class="pq-prep" id="truoc-ngay-hien" aria-labelledby="pq-prep-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="pq-prep-title">Trước ngày hiến</h2>
+      <div class="news-title-underline" aria-hidden="true"></div>
+    </div>
+    <div class="pq-prep-grid">
+      <div>
+        <h3 class="pq-sub">Chuẩn bị</h3>
+        <ul class="pq-iconlist">
+          <li>{% icon "moon" 20 %}<span>Ngủ đủ giấc đêm trước, không thức khuya.</span></li>
+          <li>{% icon "utensils" 20 %}<span>Ăn sáng nhẹ (cháo, bánh mì, sữa…), <strong>không nhịn đói</strong>; tránh đồ nhiều dầu mỡ.</span></li>
+          <li>{% icon "glass-water" 20 %}<span>Uống nhiều nước trước khi đến.</span></li>
+          <li>{% icon "wine-off" 20 %}<span>Không uống rượu bia trong ngày trước khi hiến; hạn chế chất kích thích.</span></li>
+          <li>{% icon "id-card" 20 %}<span>Mang giấy tờ tùy thân có ảnh (CCCD / hộ chiếu).</span></li>
+        </ul>
+      </div>
+      <div class="pq-eligibility">
+        <h3 class="pq-sub">Điều kiện sơ bộ thường áp dụng</h3>
+        <dl>
+          <div><dt>Tuổi</dt><dd>{{ min_age }}–{{ max_age }}</dd></div>
+          <div><dt>Cân nặng</dt><dd>Nam từ {{ min_w_male }} kg · Nữ từ {{ min_w_female }} kg</dd></div>
+          <div><dt>Sức khỏe</dt><dd>Không đang sốt, cảm cúm hay mắc bệnh cấp tính; không đang mang thai hoặc cho con bú</dd></div>
+          <div><dt>Khoảng nghỉ</dt><dd>Đủ {{ interval_whole }} ngày sau lần hiến toàn phần gần nhất</dd></div>
+        </dl>
+        <p class="muted small">Đây chỉ là thông tin sơ bộ. Bạn có hiến được hay không do bác sĩ quyết định khi khám sàng lọc.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pq-after" aria-labelledby="pq-after-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="pq-after-title">Sau khi hiến</h2>
+      <div class="news-title-underline" aria-hidden="true"></div>
+    </div>
+    <ol class="pq-after-list">
+      <li><h3>{% icon "bandage" 20 %} Giữ băng ép</h3><p>Giữ băng chỗ kim 4–6 giờ; không mang vác nặng bằng tay vừa hiến trong ngày.</p></li>
+      <li><h3>{% icon "glass-water" 20 %} Uống nhiều nước</h3><p>Ăn uống bình thường, đủ chất; không cần kiêng khem đặc biệt.</p></li>
+      <li><h3>{% icon "car" 20 %} Tránh việc nặng</h3><p>Trong ngày hiến, tránh vận động mạnh, lái xe đường dài hay làm việc trên cao ngay sau khi hiến.</p></li>
+    </ol>
+    <p class="pq-tip pq-tip-warn">{% icon "hand" 18 %}<span><strong>Nếu thấy chóng mặt:</strong> ngồi hoặc nằm xuống, kê cao chân và báo nhân viên y tế. <strong>Nếu chỗ kim chảy máu:</strong> ép chặt và giơ cao tay.</span></p>
+  </div>
+</section>
+
+<section class="pq-faq" aria-labelledby="pq-faq-title">
+  <div class="container narrow">
+    <div class="section-head">
+      <h2 id="pq-faq-title">Câu hỏi thường gặp</h2>
+      <div class="news-title-underline" aria-hidden="true"></div>
+    </div>
+    <details>
+      <summary>Hiến máu có ảnh hưởng sức khỏe không?{% icon "chevron-down" 20 %}</summary>
+      <p>Với người đủ điều kiện qua khám sàng lọc, hiến máu đúng quy trình là an toàn. Có thể gặp phản ứng nhẹ và thường tự hết: chóng mặt, mệt nhẹ, bầm tím chỗ kim; hiếm khi ngất. Nhân viên y tế luôn theo dõi trong và sau khi hiến.</p>
+    </details>
+    <details>
+      <summary>Bao lâu thì được hiến lại?{% icon "chevron-down" 20 %}</summary>
+      <p>Hệ thống khuyến nghị tối thiểu {{ interval_whole }} ngày sau lần hiến máu toàn phần và {{ interval_component }} ngày sau lần hiến thành phần (ví dụ tiểu cầu). Khi đã đăng nhập, bạn có thể hỏi trợ lý "khi nào tôi được hiến lại" để được tính theo lần hiến gần nhất.</p>
+    </details>
+    <details>
+      <summary>Mỗi lần hiến lấy bao nhiêu máu?{% icon "chevron-down" 20 %}</summary>
+      <p>Thường 250, 350 hoặc 450 ml trong khoảng 5–10 phút. Thể tích cụ thể do bác sĩ quyết định dựa trên cân nặng và kết quả khám sàng lọc.</p>
+    </details>
+    <details>
+      <summary>Tôi đang dùng thuốc hoặc có bệnh lý thì sao?{% icon "chevron-down" 20 %}</summary>
+      <p>Hãy khai đầy đủ trong phiếu và báo bác sĩ khi khám sàng lọc. Người có bệnh lý hoặc đang dùng thuốc cần được bác sĩ đánh giá trực tiếp.</p>
+    </details>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/process.js' %}"></script>{% endblock %}

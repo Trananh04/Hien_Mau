@@ -44,6 +44,7 @@ SCREENS = [
     S("SCR-02", "Danh sách đợt hiến", "Công khai", (PUBLIC,), ("bloodbank:campaigns",)),
     S("SCR-03", "Chi tiết đợt hiến (đăng ký hiến: chỉ Người dùng)", "Công khai", (PUBLIC,), ("bloodbank:campaign_detail",)),
     S("SCR-04", "Bản đồ điểm hiến", "Công khai", (PUBLIC,), ("bloodbank:map", "bloodbank:map_data")),
+    S("SCR-05", "Quy trình tham gia hiến máu", "Công khai", (PUBLIC,), ("bloodbank:process",)),
     S("SCR-06", "Đăng nhập, đăng ký, khôi phục mật khẩu", "Công khai", (PUBLIC,), (
         "accounts:login", "accounts:hospital_login", "accounts:admin_login", "accounts:register",
         "accounts:forgot_password", "accounts:reset_password", "accounts:verify_email")),
@@ -100,6 +101,8 @@ SCREENS = [
 
     # ---------------------------------------------------------------- Quản trị hệ thống
     S("SCR-54", "Thống kê toàn hệ thống", "Quản trị", (ADMIN,), ("bloodbank:admin_stats",)),
+    S("SCR-57", "Cảnh báo toàn hệ thống", "Quản trị", (ADMIN,), ("bloodbank:admin_alerts",)),
+    S("SCR-58", "Theo dõi trợ lý hỏi đáp", "Quản trị", (ADMIN,), ("bloodbank:admin_assistant",)),
     S("SCR-50", "Người dùng", "Quản trị", (ADMIN,), ("bloodbank:admin_users",)),
     S("SCR-51", "Bệnh viện & tài khoản nhân viên", "Quản trị", (ADMIN,), (
         "bloodbank:admin_hospitals", "bloodbank:admin_hospital_create", "bloodbank:admin_hospital_edit")),
@@ -136,6 +139,10 @@ def login_url_for(roles):
         if code in LOGIN_URLS:
             return LOGIN_URLS[code]
     return LOGIN_URLS[MEMBER]
+
+
+def is_admin_only(roles):
+    return roles is not None and set(roles) == {ADMIN}
 
 
 def home_for(user):

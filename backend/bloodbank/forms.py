@@ -1,6 +1,7 @@
 from django import forms
 
-from accounts.forms import PROVINCES, BaseForm
+from accounts.forms import BaseForm
+from accounts.provinces import PROVINCES
 from accounts.models import BLOOD_GROUPS
 from bloodbank.models import DONATION_TYPES, PRIORITIES, Hospital, Product, ProductSpec
 
@@ -36,7 +37,7 @@ class CampaignForm(BaseForm):
     def clean(self):
         data = super().clean()
         if data.get("start_time") and data.get("end_time") and data["end_time"] <= data["start_time"]:
-            self.add_error("end_time", "Thời gian kết thúc phải sau thời gian bắt đầu (ERR-CMP-TIME-RANGE).")
+            self.add_error("end_time", "Thời gian kết thúc phải sau thời gian bắt đầu.")
         if (data.get("latitude") is None) != (data.get("longitude") is None):
             self.add_error("longitude", "Vĩ độ và kinh độ phải nhập cùng nhau.")
         return data
@@ -58,7 +59,7 @@ class PatientRequestForm(BaseForm):
                                     widget=forms.TextInput(attrs={"type": "tel", "inputmode": "tel", "autocomplete": "tel"}))
     hospital_id = forms.ChoiceField(label="Bệnh viện đang điều trị")
     blood_group = forms.ChoiceField(label="Nhóm máu bệnh nhân", required=False,
-                                    choices=[("", "Chưa rõ — bệnh viện sẽ xác minh")] + BLOOD_GROUPS)
+                                    choices=[("", "Chưa rõ, bệnh viện sẽ xác minh")] + BLOOD_GROUPS)
     blood_product_id = forms.ChoiceField(label="Loại chế phẩm cần (nếu biết)", required=False)
     quantity_units = forms.IntegerField(label="Số đơn vị cần", min_value=1, max_value=100,
                                         widget=forms.NumberInput(attrs={"inputmode": "numeric"}))

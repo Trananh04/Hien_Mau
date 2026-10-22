@@ -7,11 +7,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.forms import PROVINCES
-from bloodbank import content
+from accounts.provinces import PROVINCES
 from bloodbank.forms import RegistrationForm
+from bloodbank import content
 from bloodbank.assistant import service as assistant
-from bloodbank.models import Campaign, Hospital, Registration
+from bloodbank.models import Campaign, Hospital, Registration, SystemSetting
 from bloodbank.permissions import deny
 from bloodbank.services import campaigns as cmp
 from bloodbank.services.common import BusinessError
@@ -19,9 +19,8 @@ from bloodbank.services.common import BusinessError
 from .helpers import paginate
 
 def home(request):
-    now = timezone.now()
-    upcoming = Campaign.objects.public().filter(status="open", end_time__gt=now).order_by("start_time")[:3]
-    return render(request, "public/home.html", {"upcoming": upcoming, "news": content.NEWS})
+    news = sorted(content.NEWS, key=lambda n: n["date"], reverse=True)
+    return render(request, "public/home.html", {"news": news})
 
 
 def campaign_list(request):
@@ -72,6 +71,17 @@ def campaign_detail(request, pk):
                 messages.success(request, "Đã gửi đơn đăng ký, chờ bệnh viện xác nhận.")
                 return redirect("bloodbank:my_registrations")
     return render(request, "public/campaign_detail.html", {"c": campaign, "reg": reg, "state": state, "form": form})
+
+
+def process(request):
+    """SCR-05: quy trình tham gia hiến máu — điều kiện & khoảng nghỉ lấy từ cấu hình hệ thống."""
+    g = SystemSetting.get
+    return render(request, "public/process.html", {
+        "min_age": g("donor_min_age"), "max_age": g("donor_max_age"),
+        "min_w_male": g("donor_min_weight_male_kg"), "min_w_female": g("donor_min_weight_female_kg"),
+        "interval_whole": g("donation_interval_whole_blood_days"),
+        "interval_component": g("donation_interval_component_days"),
+    })
 
 
 def map_view(request):

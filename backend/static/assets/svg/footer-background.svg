@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1672 245" preserveAspectRatio="none" aria-hidden="true"><defs>
-<linearGradient id="f" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#c7001e"/><stop offset=".45" stop-color="#8b0014"/><stop offset="1" stop-color="#bf001d"/></linearGradient>
-<linearGradient id="low" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dc0027" stop-opacity=".7"/><stop offset="1" stop-color="#f5082b"/></linearGradient></defs>
-<path d="M0 0 H1672 V245 H0Z" fill="url(#f)"/>
-<path d="M0 2 C110 22 182 25 259 21 C387 14 535 -7 727 -1 C875 4 990 30 1129 20 C1227 13 1284 14 1376 27 C1510 43 1590 17 1672 0 L1672 21 C1555 35 1456 51 1357 36 C1240 17 1174 32 1118 37 C991 43 896 24 731 24 C549 20 389 42 277 41 C168 41 85 29 0 21Z" fill="#fff8f7"/>
-<path d="M0 129 C124 92 277 176 474 199 C636 219 739 226 908 228 C1122 229 1304 196 1480 166 C1573 149 1624 135 1672 141 L1672 245 H0Z" fill="url(#low)"/>
-<path d="M0 150 C165 130 268 212 488 224 C675 238 794 233 916 240 L0 245Z" fill="#fa0b2f" opacity=".6"/>
-<path d="M1315 245 C1431 225 1549 198 1672 190 L1672 245Z" fill="#fc0a2b" opacity=".55"/>
-</svg>

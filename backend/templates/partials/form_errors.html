@@ -1,12 +1,5 @@
-{# Tóm tắt lỗi ở đầu form khi có từ 2 lỗi (Ch.7 mục 7.6) #}
+{% comment %} Lỗi KHÔNG gắn với trường nào (vd. sai mật khẩu cũ, xung đột dữ liệu). Lỗi của từng trường hiện ngay dưới trường đó
+   (partials/field.html); khi tải lại, con trỏ tự chuyển tới trường sai đầu tiên (app.js). {% endcomment %}
 {% if form.non_field_errors %}
 <div class="notice danger" role="alert">{% icon "circle-alert" %}<div>{% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}</div></div>
-{% endif %}
-{% if form.errors|length >= 2 %}
-<div class="notice danger" role="alert">
-  {% icon "circle-alert" %}
-  <div><strong>Vui lòng kiểm tra {{ form.errors|length }} trường chưa hợp lệ:</strong>
-    <ul>{% for field in form %}{% if field.errors %}<li>{{ field.label }}: {{ field.errors.0 }}</li>{% endif %}{% endfor %}</ul>
-  </div>
-</div>
 {% endif %}

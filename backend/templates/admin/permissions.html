@@ -24,7 +24,7 @@
         <td class="nowrap small muted">{{ r.screen.code }}</td>
         <td><strong class="u-fs-14">{{ r.screen.title }}</strong></td>
         {% for allowed in r.cells %}
-        <td class="center">{% if allowed %}<span class="perm-yes" title="Được mở" aria-label="Được mở">{% icon "check" 16 %}</span>{% else %}<span class="perm-no" title="Bị chặn" aria-label="Bị chặn">{% icon "minus" 16 %}</span>{% endif %}</td>
+        <td class="center">{% if allowed %}<span class="perm-yes" title="Được mở" role="img" aria-label="Được mở">{% icon "check" 16 %}</span>{% else %}<span class="perm-no" title="Bị chặn" role="img" aria-label="Bị chặn">{% icon "minus" 16 %}</span>{% endif %}</td>
         {% endfor %}
       </tr>
     {% endfor %}</tbody>

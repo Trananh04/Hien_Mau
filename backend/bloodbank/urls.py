@@ -11,6 +11,7 @@ urlpatterns = [
     path("dot-hien/", public.campaign_list, name="campaigns"),
     path("dot-hien/<int:pk>/", public.campaign_detail, name="campaign_detail"),
     path("ban-do/", public.map_view, name="map"),
+    path("quy-trinh-hien-mau/", public.process, name="process"),
     path("ban-do/du-lieu/", public.map_data, name="map_data"),
     path("api/chatbot/", public.chatbot, name="chatbot"),
     # API trợ lý & dữ liệu cá nhân (JSON)
@@ -87,6 +88,8 @@ urlpatterns = [
 
     # Quản trị (SCR-50..54)
     path("quan-tri/thong-ke/", admin.stats, name="admin_stats"),
+    path("quan-tri/canh-bao/", admin.alerts, name="admin_alerts"),
+    path("quan-tri/tro-ly/", admin.assistant_monitor, name="admin_assistant"),
     path("quan-tri/nguoi-dung/", admin.users, name="admin_users"),
     path("quan-tri/benh-vien/", admin.hospitals, name="admin_hospitals"),
     path("quan-tri/benh-vien/tao/", admin.hospital_form, name="admin_hospital_create"),

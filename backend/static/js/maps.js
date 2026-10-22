@@ -43,7 +43,7 @@
   var listEl = document.querySelector('[data-map-list]');
   var provinceSel = document.querySelector('[data-map-province]');
   var typeSel = document.querySelector('[data-map-type]');
-  var map = L.map(mapEl).setView([16.0544, 108.2022], 11);
+  var map = L.map(mapEl).setView([16.0, 106.3], 5);   // toàn Việt Nam; có điểm thì tự thu phóng vừa
   tiles(map);
   var campaignIcon = L.divIcon({ className: '', html: '<span class="blood sm campaign-pin"><span></span></span>', iconSize: [30, 30], iconAnchor: [15, 28] });
   var all = []; var layer = L.layerGroup().addTo(map);

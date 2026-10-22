@@ -1,6 +1,6 @@
 {% extends "member/base.html" %}
 {% block title %}Chi tiết lượt hiến {{ d.code }}{% endblock %}
-{% block band %}{% url 'bloodbank:my_history' as hist %}{% include "partials/band.html" with title="Lượt hiến "|add:d.code parent_url=hist parent_label="Lịch sử hiến máu" crumb=d.code %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Lượt hiến "|add:d.code %}{% endblock %}
 {% block member %}
 <section class="panel u-maxw-820">
   <div class="panel-head"><h2 class="panel-title">{% icon "droplet" %} Thông tin lượt hiến</h2>{% status_badge d %}</div>

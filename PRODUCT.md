@@ -9,7 +9,7 @@ web
 ## Users
 
 - **Primary: người nhà bệnh nhân cần máu gấp.** Đang ở bệnh viện, căng thẳng, thường dùng điện thoại, có thể vào ban đêm. Việc cần làm: gửi yêu cầu máu (nhóm máu, số đơn vị, tiểu cầu, bệnh viện, khu vực, người liên hệ) nhanh nhất có thể và biết chắc yêu cầu đã được tiếp nhận.
-- **Secondary: người hiến máu tình nguyện.** Người dân Đà Nẵng – Quảng Nam muốn đăng ký vào mạng lưới sẵn sàng hiến khi có ca khẩn cấp phù hợp. Việc cần làm: khai báo thông tin, nhóm máu/Rh, khả năng hiến tiểu cầu, và các khu vực có thể đến hiến.
+- **Secondary: người hiến máu tình nguyện.** Người dân trên cả nước muốn đăng ký vào mạng lưới sẵn sàng hiến khi có ca khẩn cấp phù hợp. Việc cần làm: khai báo thông tin, nhóm máu/Rh, khả năng hiến tiểu cầu, và các khu vực có thể đến hiến.
 
 Khi hai nhóm tranh chấp ưu tiên trên trang chủ, người cần máu gấp được ưu tiên.
 
@@ -21,13 +21,13 @@ Khi hai nhóm tranh chấp ưu tiên trên trang chủ, người cần máu gấ
 
 ## Positioning
 
-Ghép trực tiếp yêu cầu máu với người hiến theo **nhóm máu + Rh + khu vực địa lý** (theo các cụm quận/huyện Đà Nẵng – Quảng Nam), thay vì kêu gọi chung chung trên mạng xã hội. Có hỗ trợ riêng cho nhóm máu hiếm (Rh-) và hiến tiểu cầu.
+Ghép trực tiếp yêu cầu máu với người hiến theo **nhóm máu + Rh + khu vực địa lý** (theo 34 tỉnh/thành hiện hành, sau sắp xếp 01/7/2025), thay vì kêu gọi chung chung trên mạng xã hội. Có hỗ trợ riêng cho nhóm máu hiếm (Rh-) và hiến tiểu cầu.
 
 ## Operating Context
 
 - Người cần máu thường gửi yêu cầu từ bệnh viện, trên điện thoại, trong tình huống khẩn cấp.
 - Liên lạc ở Việt Nam chủ yếu qua số điện thoại và Zalo (form người hiến thu cả hai).
-- Vùng phục vụ hiện tại: Đà Nẵng (Hải Châu, Thanh Khê, Sơn Trà, Ngũ Hành Sơn, Liên Chiểu, Cẩm Lệ, Hòa Vang) và Quảng Nam, chia theo 7 cụm khu vực trong form tình nguyện viên.
+- Vùng phục vụ: **toàn quốc**, theo 34 đơn vị hành chính cấp tỉnh (Nghị quyết 202/2025/QH15). Danh sách tỉnh, tên tỉnh cũ → mới và tọa độ trung tâm nằm ở `backend/accounts/provinces.py`. Dữ liệu mẫu (`seed_demo`) vẫn đặt ở Đà Nẵng chỉ để minh họa.
 - Quy trình hiến máu 4 bước được mô tả trên trang: đăng ký & khai phiếu → khám sàng lọc → hiến máu (5–10 phút, 250–450ml) → nghỉ ngơi & nhận giấy chứng nhận.
 
 ## Capabilities and Constraints

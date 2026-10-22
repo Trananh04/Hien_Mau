@@ -1,5 +1,5 @@
 """Phân quyền theo vai trò: 3 cổng đăng nhập, bảng màn hình (access.py) áp cho MỌI route."""
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, URLPattern, URLResolver, get_resolver, reverse
 
 from bloodbank import access
@@ -65,9 +65,12 @@ class RoleMatrixTests(TestCase):
             url = url_for(name)
             self.client.logout()
             r = self.client.get(url)
+            admin_only = access.is_admin_only(roles)
             if url.startswith("/api/"):   # API trả JSON 401 thay vì chuyển trang
                 self.assertEqual(r.status_code, 401, f"khách → {name}")
                 self.assertEqual(r.json()["error"]["code"], "ERR-AUTH-UNAUTHENTICATED")
+            elif admin_only:              # khu quản trị không xác nhận là mình tồn tại
+                self.assertEqual(r.status_code, 404, f"khách → {name}")
             else:
                 self.assertEqual(r.status_code, 302, f"khách → {name}")
                 self.assertTrue(r["Location"].startswith(reverse(access.login_url_for(roles))), f"{name} → {r['Location']}")
@@ -77,7 +80,7 @@ class RoleMatrixTests(TestCase):
                 if role in roles:
                     self.assertNotEqual(r.status_code, 403, f"{role} phải mở được {name}")
                 else:
-                    self.assertEqual(r.status_code, 403, f"{role} không được mở {name}")
+                    self.assertEqual(r.status_code, 404 if admin_only else 403, f"{role} không được mở {name}")
                 checked += 1
         self.assertGreater(checked, 150)
         self.assertTrue(AuditLog.objects.filter(action="access_denied", new_values__reason="screen_role").exists())
@@ -88,7 +91,8 @@ class RoleMatrixTests(TestCase):
         self.assertEqual(r.status_code, 403)
         self.client.force_login(self.users[access.HOSPITAL])
         r = self.client.post(reverse("bloodbank:admin_users"), {"action": "lock", "user_id": self.users[access.ADMIN].pk})
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(r.status_code, 404)
+        self.assertTrue(AuditLog.objects.filter(action="access_denied", new_values__reason="admin_only").exists())
         self.users[access.ADMIN].refresh_from_db()
         self.assertEqual(self.users[access.ADMIN].status, "active")
 
@@ -149,7 +153,10 @@ class LoginPortalTests(TestCase):
                 else:
                     self.assertEqual(r.status_code, 200, f"{user.email} @ {portal}")
                     self.assertContains(r, "không đăng nhập được tại cổng này")
-                    self.assertContains(r, reverse(access.LOGIN_URLS[user.role]))  # gợi ý đúng cổng
+                    if user.role == access.ADMIN:     # không bao giờ chỉ đường tới cổng quản trị
+                        self.assertNotContains(r, reverse("accounts:admin_login"))
+                    else:
+                        self.assertContains(r, reverse(access.LOGIN_URLS[user.role]))  # gợi ý đúng cổng
                     self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_wrong_portal_does_not_count_as_failed_attempt(self):
@@ -172,10 +179,36 @@ class LoginPortalTests(TestCase):
 
     def test_anonymous_redirected_to_matching_portal(self):
         for url, portal in [(reverse("bloodbank:stock"), "accounts:hospital_login"),
-                            (reverse("bloodbank:admin_users"), "accounts:admin_login"),
                             (reverse("bloodbank:my_history"), "accounts:login")]:
             r = self.client.get(url)
             self.assertTrue(r["Location"].startswith(reverse(portal) + "?next="), r["Location"])
+        # Khu quản trị: 404, không chuyển tới (và không để lộ) trang đăng nhập quản trị
+        r = self.client.get(reverse("bloodbank:admin_users"))
+        self.assertEqual(r.status_code, 404)
+        self.assertNotIn(reverse("accounts:admin_login"), r.content.decode())
+
+    def test_public_pages_never_link_admin_portal(self):
+        admin_url = reverse("accounts:admin_login")
+        for url in ("/", "/dot-hien/", "/dang-nhap/", reverse("accounts:hospital_login"), "/dang-ky/"):
+            self.assertNotIn(admin_url, self.client.get(url).content.decode(), url)
+        home = self.client.get("/").content.decode()
+        self.assertIn(f'href="{reverse("accounts:hospital_login")}"', home)   # lối vào nhỏ cho nhân viên
+        self.assertIn("Dành cho nhân viên bệnh viện", home)
+        # Cổng người dùng không liệt kê cổng nội bộ; cổng nội bộ không cho Google lập chỉ mục
+        self.assertNotContains(self.client.get("/dang-nhap/"), "portal-switch")
+        self.assertNotContains(self.client.get("/dang-nhap/"), 'name="robots"')
+        for portal in ("accounts:hospital_login", "accounts:admin_login"):
+            self.assertContains(self.client.get(reverse(portal)), '<meta name="robots" content="noindex, nofollow">')
+
+    @override_settings(ADMIN_ALLOWED_IPS=["10.9.8.7"])
+    def test_admin_ip_allowlist(self):
+        self.assertEqual(self.client.get(reverse("accounts:admin_login")).status_code, 404)
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get(reverse("bloodbank:admin_stats")).status_code, 404)   # đúng tài khoản, sai IP
+        self.assertTrue(AuditLog.objects.filter(action="access_denied", new_values__reason="admin_ip_not_allowed").exists())
+        self.assertEqual(self.client.get(reverse("bloodbank:admin_stats"), REMOTE_ADDR="10.9.8.7").status_code, 200)
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse("accounts:admin_login"), REMOTE_ADDR="10.9.8.7").status_code, 200)
 
     def test_logout_returns_to_own_portal(self):
         self.client.force_login(self.staff)

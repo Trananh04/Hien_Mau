@@ -295,7 +295,7 @@ def cancel_or_close_request(staff, req_id, action, reason=None, request=None):
         _release_open_offers(req, staff.user)
         if action == "cancel":
             require(req.status in (H.OPEN, H.IN_PROGRESS), "ERR-STATE-INVALID",
-                    "Yêu cầu đã nhận một phần — dùng Đóng yêu cầu.")
+                    "Yêu cầu đã nhận một phần. Hãy dùng Đóng yêu cầu.")
             req.status = H.CANCELLED
         elif action == "close":
             require(req.status == H.PARTIALLY_FULFILLED, "ERR-STATE-INVALID")

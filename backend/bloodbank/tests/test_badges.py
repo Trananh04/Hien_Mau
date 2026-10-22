@@ -48,7 +48,7 @@ class BadgeTests(TestCase):
         self.client.force_login(self.donor)
         r = self.client.get(reverse("bloodbank:my_history"))
         self.assertEqual([x["count"] for x in r.context["badges"]["earned"]], [1])  # 2 lượt confirmed
-        self.assertContains(r, "Giọt máu đầu tiên")
+        self.assertContains(r, "Lần hiến đầu tiên")
         e = r.context["eligible"]
         self.assertFalse(e["ready"])
         self.assertEqual(e["days_left"], 64)  # 84 − 20

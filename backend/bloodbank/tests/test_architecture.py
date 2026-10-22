@@ -32,6 +32,13 @@ class ArchitectureTests(SimpleTestCase):
                      for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1) if bad.search(line)]
         self.assertEqual(offenders, [])
 
+    def test_template_comments_are_single_line(self):
+        """{# … #} của Django chỉ có tác dụng trên 1 dòng; viết nhiều dòng sẽ in nguyên văn ra trang → dùng {% comment %}."""
+        offenders = [f"{p.relative_to(BACKEND)}:{i}" for p in TEMPLATES
+                     for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)
+                     if "{#" in line and "#}" not in line.split("{#", 1)[1]]
+        self.assertEqual(offenders, [])
+
     def test_csp_has_no_unsafe_directives(self):
         self.assertNotIn("unsafe-inline", SecurityHeadersMiddleware.CSP)
         self.assertNotIn("unsafe-eval", SecurityHeadersMiddleware.CSP)

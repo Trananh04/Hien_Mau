@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.provinces import normalize_province
 from bloodbank.content import _norm
 from bloodbank.models import Campaign, PatientRequest, Registration
 
@@ -30,9 +31,19 @@ class Ctx:
         return u is not None and u.is_authenticated and u.role == "member"
 
 
-def _login_needed(what):
-    return {"login_required": True, "message": f"Cần đăng nhập tài khoản Người dùng để xem {what}.",
-            "links": [{"label": "Đăng nhập", "url": reverse("accounts:login")}]}
+def _login_needed(ctx, what):
+    """Câu hỏi về dữ liệu của chính người hỏi nhưng chưa có tài khoản Người dùng → câu trả lời cố định, không tra cứu."""
+    user = ctx.user
+    if user is not None and user.is_authenticated:      # nhân viên bệnh viện / quản trị
+        return {"login_required": True, "links": [],
+                "message": f"Mục {what} chỉ dành cho tài khoản Người dùng (người hiến máu, người nhà bệnh nhân). "
+                           "Bạn đang đăng nhập bằng tài khoản công tác nên mình không tra cứu được."}
+    return {"login_required": True,
+            "message": f"Bạn chưa đăng nhập nên mình chưa xem được {what}. "
+                       "Hãy đăng nhập tài khoản Người dùng rồi hỏi lại, mình sẽ tra cứu ngay cho bạn. "
+                       "Chưa có tài khoản? Bạn có thể tạo mới trong khoảng 1 phút.",
+            "links": [{"label": "Đăng nhập", "url": reverse("accounts:login")},
+                      {"label": "Tạo tài khoản", "url": reverse("accounts:register")}]}
 
 
 def _km(lat1, lng1, lat2, lng2):
@@ -62,7 +73,7 @@ def campaign_card(c, distance=None):
 # ---------------------------------------------------------------- Ngày được hiến lại
 def my_eligibility(ctx):
     if not ctx.member:
-        return _login_needed("ngày bạn được hiến lại")
+        return _login_needed(ctx, "ngày bạn được hiến lại")
     from bloodbank.services.badges import next_eligible
 
     info = next_eligible(ctx.user, ctx.now)
@@ -119,6 +130,7 @@ def suggest_campaigns(ctx, area=None, date_from=None, date_to=None, time_of_day=
                 kept.append(c)
         campaigns = kept
 
+    area = normalize_province(area) or area    # tên tỉnh cũ (vd Bình Dương) → tên hiện hành
     area_n = _norm(area or "")
     def text_of(c):
         return _norm(" ".join(filter(None, [c.name, c.location_name, c.address, c.province, c.hospital.name,
@@ -157,7 +169,7 @@ def suggest_campaigns(ctx, area=None, date_from=None, date_to=None, time_of_day=
 # ---------------------------------------------------------------- Đơn đăng ký & yêu cầu cần máu của chính mình
 def my_registrations(ctx):
     if not ctx.member:
-        return _login_needed("đơn đăng ký hiến của bạn")
+        return _login_needed(ctx, "đơn đăng ký hiến của bạn")
     regs = (Registration.objects.filter(donor=ctx.user).select_related("campaign__hospital")
             .order_by("-campaign__start_time")[:6])
     return {
@@ -174,7 +186,7 @@ def my_registrations(ctx):
 
 def my_patient_requests(ctx):
     if not ctx.member:
-        return _login_needed("yêu cầu cần máu bạn đã gửi")
+        return _login_needed(ctx, "yêu cầu cần máu bạn đã gửi")
     prqs = PatientRequest.objects.filter(requester=ctx.user).select_related("hospital").order_by("-created_at")[:5]
     return {
         # Không trả tên bệnh nhân / SĐT / ghi chú — chỉ thông tin trạng thái
@@ -193,7 +205,7 @@ def my_patient_requests(ctx):
 def my_donation_history(ctx):
     """Chỉ tính lượt hiến đã được bệnh viện xác nhận (giống trang Lịch sử hiến máu)."""
     if not ctx.member:
-        return _login_needed("lịch sử hiến máu của bạn")
+        return _login_needed(ctx, "lịch sử hiến máu của bạn")
     from bloodbank.models import Donation
     from bloodbank.services.badges import badges_for
     from bloodbank.services.donations import summarize
@@ -303,7 +315,7 @@ TOOL_SPECS = [
             "type": "object",
             "properties": {
                 "area": {"type": ["string", "null"], "description": "Địa danh người dùng nêu: quận/huyện, tỉnh, "
-                         "trường, bệnh viện (vd 'Hải Châu', 'Đà Nẵng'). null nếu không nêu."},
+                         "trường, bệnh viện (vd 'Cầu Giấy', 'Hà Nội', 'Quận 1', 'Cần Thơ'). null nếu không nêu."},
                 "date_from": {"type": ["string", "null"], "description": "Ngày bắt đầu khoảng tìm, YYYY-MM-DD."},
                 "date_to": {"type": ["string", "null"], "description": "Ngày kết thúc khoảng tìm, YYYY-MM-DD."},
                 "time_of_day": {"type": ["string", "null"], "enum": ["morning", "afternoon", "evening", None]},

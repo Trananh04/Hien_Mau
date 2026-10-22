@@ -30,7 +30,7 @@ def check(question):
     """Trả về dict câu trả lời mẫu nếu cần chặn, None nếu cho đi tiếp."""
     q = _norm(question or "")
     if _has(q, EMERGENCY):
-        return {"answer": "Nếu đang có người nguy kịch, hãy gọi ngay 115 hoặc báo bác sĩ đang điều trị — đừng chờ "
+        return {"answer": "Nếu đang có người nguy kịch, hãy gọi ngay 115 hoặc báo bác sĩ đang điều trị, đừng chờ "
                           "trên ứng dụng. Khi bệnh nhân đã được điều trị tại bệnh viện, người nhà có thể gửi yêu cầu "
                           "cần máu để bệnh viện điều phối nguồn máu.",
                 "links": [{"label": "Gửi yêu cầu cần máu", "url": reverse("bloodbank:patient_request_new")}],

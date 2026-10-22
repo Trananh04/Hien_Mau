@@ -7,7 +7,7 @@ quản lý kho máu, điều phối máu giữa các bệnh viện và xử lý 
 - **Giao diện:** cùng phông chữ (Be Vietnam Pro, Dancing Script), màu và bộ icon Lucide với trang chủ React trong `frontend/`
 - **Đặc tả:** BLOOD-SRS-001 v1.1 (*Tài liệu thiết kế CSDL hiến máu*)
 
-> Dự án học tập. Mọi bệnh viện, người dùng, tin tức và số liệu đều là **dữ liệu mẫu**.
+> Dự án học tập. Mọi bệnh viện, người dùng và số liệu đều là **dữ liệu mẫu**.
 
 ---
 
@@ -63,7 +63,9 @@ Hệ thống có **3 vai trò tách biệt**. Mỗi vai trò đăng nhập ở *
 | **Quản trị hệ thống** | http://localhost:8080/quan-tri/dang-nhap/ | `admin@hienmau.vn` |
 
 - `benhvien1@hienmau.vn` làm việc ở 2 bệnh viện nên có bộ chọn bệnh viện trên thanh bên trái.
-- Đăng nhập sai cổng sẽ bị từ chối, kèm link sang đúng cổng.
+- Đăng nhập sai cổng sẽ bị từ chối, kèm link sang đúng cổng — trừ tài khoản quản trị (không bao giờ chỉ đường tới cổng quản trị).
+- **Cổng quản trị không có liên kết nào trên giao diện** và không được Google lập chỉ mục. Người chưa đăng nhập / không phải quản trị mở bất kỳ trang `/quan-tri/...` nào đều nhận **404** (như thể không tồn tại); lần dò của tài khoản đã đăng nhập được ghi nhật ký `access_denied`. Khi chạy thật nên đặt `ADMIN_LOGIN_PATH` (đường dẫn khó đoán) và `ADMIN_ALLOWED_IPS`.
+- Cổng bệnh viện chỉ có một liên kết nhỏ "Dành cho nhân viên bệnh viện" ở chân trang (nhân viên nên lưu dấu trang).
 - Người dùng tự đăng ký tại `/dang-ky/`. Tài khoản nhân viên bệnh viện do Quản trị hệ thống cấp tại **Quản trị → Bệnh viện → Cấp tài khoản**.
 - Email (xác thực, quên mật khẩu) không gửi thật mà được in ra log: `docker compose logs -f web`. Ở chế độ phát triển, link cũng hiện ngay trên trang.
 
@@ -162,6 +164,13 @@ hội thoại của người khác → 404):
 `claude-haiku-5-5`; dùng dịch vụ trung gian tương thích `/v1/messages` bằng `CHATBOT_BASE_URL`). Trợ lý chỉ đọc —
 không đăng ký/hủy thay người dùng; nếu sau này thêm, bắt buộc có bước xác nhận rõ ràng trước khi thực hiện.
 
+## 5c. Phạm vi toàn quốc (tỉnh/thành)
+
+- Danh sách **34 tỉnh/thành hiện hành** (Nghị quyết 202/2025/QH15, từ 01/7/2025) nằm ở một chỗ duy nhất: `backend/accounts/provinces.py`. Mọi ô chọn tỉnh/thành (đăng ký, hồ sơ, bệnh viện, đợt hiến, bộ lọc, bản đồ) và trợ lý đều đọc từ đây.
+- Tên tỉnh cũ được tự quy về tên mới: người dùng hỏi trợ lý "đợt hiến ở Bình Dương / Quảng Nam / Sóc Trăng" vẫn được hiểu là TP. Hồ Chí Minh / Đà Nẵng / Cần Thơ. Migration `bloodbank/0009_provinces_2025` chuyển dữ liệu cũ sang tên mới.
+- Bản đồ mặc định nhìn toàn quốc; form đợt hiến đặt điểm ban đầu theo vị trí bệnh viện, chưa có thì theo trung tâm tỉnh của bệnh viện.
+- Khi có thay đổi địa giới hành chính: sửa `PROVINCES`, `LEGACY`, `CENTERS` trong file trên và thêm một migration dữ liệu tương tự.
+
 ## 6. Kiểm thử
 
 ```bash
@@ -197,6 +206,8 @@ Bộ test (170 test) chạy trên PostgreSQL thật, gồm:
 | `CHATBOT_MAX_CONCURRENT` | `8` | Số câu gửi AI cùng lúc (khóa advisory PostgreSQL, áp cho mọi worker); vượt → trả lời ngay bằng chế độ từ khóa thay vì xếp hàng |
 | `CHATBOT_DAILY_LIMIT` | `2000` | Hạn mức gọi AI mỗi ngày (chặn chi phí bất thường); hết → chế độ từ khóa |
 | `DJANGO_HTTPS` | `0` | `1` khi chạy sau HTTPS: chuyển hướng HTTPS, HSTS, cookie Secure |
+| `ADMIN_LOGIN_PATH` | `quan-tri/dang-nhap` | Đường dẫn trang đăng nhập quản trị. Khi chạy thật đặt chuỗi khó đoán (vd `quan-tri-7f3k9/vao`) |
+| `ADMIN_ALLOWED_IPS` | (trống) | Danh sách IP được vào cổng quản trị, cách nhau dấu phẩy. Trống = không giới hạn; IP khác nhận 404 |
 | `TRUSTED_PROXY_COUNT` | `0` | Số reverse proxy tin cậy đứng trước ứng dụng. `0` = ghi IP nhật ký theo kết nối thật, không tin header `X-Forwarded-For` |
 
 > `.env` chứa mật khẩu nên không được đưa lên git. Chỉ `.env.example` được commit.

@@ -1,25 +1,38 @@
-{# Danh sách thông báo dùng chung: khu cá nhân (Người dùng) và khu làm việc (Bệnh viện / Quản trị). #}
+{# Trung tâm thông báo dùng chung: khu cá nhân (Người dùng) và khu làm việc (Bệnh viện / Quản trị). #}
 <section class="panel">
   <div class="panel-head">
     <div class="tabs u-m-0 u-bd-0">
-      <a href="?" class="tab {% if not unread_only %}active{% endif %}">Tất cả</a>
-      <a href="?unread=1" class="tab {% if unread_only %}active{% endif %}">Chưa đọc {% if unread_count %}<span class="count">{{ unread_count }}</span>{% endif %}</a>
+      <a href="?{% if cat %}cat={{ cat }}{% endif %}" class="tab {% if not unread_only %}active{% endif %}">Tất cả</a>
+      <a href="?unread=1{% if cat %}&amp;cat={{ cat }}{% endif %}" class="tab {% if unread_only %}active{% endif %}">Chưa đọc {% if unread_count %}<span class="count">{{ unread_count }}</span>{% endif %}</a>
     </div>
     {% if unread_count %}
     <form method="post" action="{% url 'bloodbank:notifications_read' %}">{% csrf_token %}<button type="submit" class="btn secondary sm">{% icon "check-check" %} Đánh dấu đã đọc tất cả</button></form>
     {% endif %}
   </div>
+  {% if categories|length > 1 %}
+  <nav class="notif-filters" aria-label="Lọc theo loại thông báo">
+    <a href="?{% if unread_only %}unread=1{% endif %}" class="chip-link {% if not cat %}is-active{% endif %}"{% if not cat %} aria-current="true"{% endif %}>Mọi loại</a>
+    {% for key, label in categories %}
+    <a href="?cat={{ key }}{% if unread_only %}&amp;unread=1{% endif %}" class="chip-link {% if cat == key %}is-active{% endif %}"{% if cat == key %} aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
   {% if page.object_list %}
-  <ul class="list-select u-lst-none">
+  <ul class="notif-list">
     {% for n in page %}
-    <li class="notif-item{% if not n.read_at %} is-unread{% endif %}">
-      <span class="empty-icon u-w-40 u-h-40 u-m-0 u-fsh-0">{% icon "bell-ring" 18 %}</span>
-      <div class="u-flex-1 u-minw-0">
-        <strong class="u-d-block u-c-ink u-fs-14_5">{{ n.title }}</strong>
-        {% if n.body %}<span class="muted small u-d-block u-mt-2">{{ n.body }}</span>{% endif %}
-        <span class="muted small">{{ n.created_at|vn_dt }}</span>
+    <li class="notif-item{% if not n.read_at %} is-unread{% endif %}{% if n.urgent %} is-urgent{% endif %}">
+      <span class="notif-icon" aria-hidden="true">{% icon n.cat_icon 18 %}</span>
+      <div class="notif-body">
+        <p class="notif-meta">
+          <span>{{ n.cat_label }}</span>
+          {% if n.urgent %}<span class="tag danger">Khẩn</span>{% endif %}
+          {% if not n.read_at %}<span class="notif-dot"><span class="sr-only">Chưa đọc</span></span>{% endif %}
+          <time datetime="{{ n.created_at|date:'c' }}" title="{{ n.created_at|vn_dt }}">{{ n.created_at|ago }}</time>
+        </p>
+        <strong class="notif-title">{{ n.title }}</strong>
+        {% if n.body %}<span class="notif-text">{{ n.body }}</span>{% endif %}
       </div>
-      <form method="post" action="{% url 'bloodbank:notifications_read' %}">
+      <form method="post" action="{% url 'bloodbank:notifications_read' %}" class="notif-action">
         {% csrf_token %}<input type="hidden" name="id" value="{{ n.pk }}">
         {% if n.link %}<input type="hidden" name="next" value="{{ n.link }}">{% endif %}
         {% if n.link %}<button type="submit" class="btn ghost sm">Xem {% icon "arrow-right" %}</button>
@@ -30,6 +43,6 @@
   </ul>
   {% include "partials/pagination.html" %}
   {% else %}
-  <div class="empty"><div class="empty-icon">{% icon "bell-off" %}</div><h3>{% if unread_only %}Không có thông báo chưa đọc{% else %}Chưa có thông báo{% endif %}</h3><p>Thông báo xuất hiện khi đơn, lượt hiến hay yêu cầu của bạn thay đổi trạng thái.</p></div>
+  <div class="empty"><div class="empty-icon">{% icon "bell-off" %}</div><h3>{% if unread_only %}Không có thông báo chưa đọc{% elif cat %}Không có thông báo loại này{% else %}Chưa có thông báo{% endif %}</h3><p>Thông báo xuất hiện khi đơn, lượt hiến hay yêu cầu thay đổi trạng thái.</p></div>
   {% endif %}
 </section>

@@ -4,16 +4,16 @@
 {% block content %}
 <section class="hero-section" aria-label="Giới thiệu Giọt Hồng">
   <img src="{% static 'assets/svg/dong-son-drum.svg' %}" alt="" aria-hidden="true" class="hero-drum-bg">
-  <img src="{% static 'assets/png/heart-blood-drop-vector.png' %}" alt="Trái tim và giọt máu nhân ái" class="hero-heart-vector">
+  <img src="{% static 'assets/png/heart-blood-drop-vector.png' %}" alt="Trái tim và giọt máu" class="hero-heart-vector">
   <img src="{% static 'assets/png/hero-waves.png' %}" alt="" aria-hidden="true" class="hero-waves-ribbon">
 
   <div class="hero-content-wrapper">
     <h1 class="hero-main-title">GIỌT HỒNG</h1>
     <div class="hero-greeting">Xin chào{% if user.is_authenticated %}, {{ user.short_name }}{% endif %}</div>
-    <p class="hero-description">Hãy đăng ký tham gia cùng chúng tôi để tạo ra nguồn máu vô tận, sẵn sàng giúp đỡ cộng đồng và lan tỏa những giá trị nhân văn cao đẹp.</p>
+    <p class="hero-description">Đăng ký một lần để biết các đợt hiến máu gần bạn và được báo khi bệnh viện trong khu vực cần đúng nhóm máu của bạn.</p>
 
     <div class="hero-action-buttons">
-      {# Nút 1: Trái Tim Yêu Thương (Đăng ký Tình nguyện viên → Hiến máu cứu người) #}
+      {# Nút 1: trái tim (Đăng ký Tình nguyện viên / Hiến máu cứu người) #}
       <a href="{% if user.is_authenticated %}{% url 'bloodbank:campaigns' %}{% else %}{% url 'accounts:register' %}{% endif %}"
          class="btn-heart-theme interactive-flip-btn" title="Đăng ký làm tình nguyện viên hiến máu" aria-label="Đăng ký Tình nguyện viên">
         <div class="flip-text-container">
@@ -22,7 +22,7 @@
         </div>
       </a>
 
-      {# Nút 2: Thập Đỏ Y Tế (Tôi cần xin máu → Chúng tôi sẽ giúp đỡ) #}
+      {# Nút 2: chữ thập đỏ (Tôi cần xin máu / Gửi yêu cầu ngay) #}
       <a href="{% url 'bloodbank:patient_request_new' %}" class="btn-cross-theme interactive-flip-btn" title="Gửi yêu cầu cần máu khẩn cấp" aria-label="Tôi cần xin máu">
         <svg viewBox="0 0 280 72" class="btn-crosses-svg" preserveAspectRatio="none" aria-hidden="true">
           <defs><filter id="stamp-glow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="0.4" flood-color="#d90429" flood-opacity="0.4"/></filter></defs>
@@ -45,79 +45,96 @@
         </svg>
         <div class="flip-text-container">
           <span class="btn-cross-text flip-text-default">Tôi cần xin máu</span>
-          <span class="btn-cross-text flip-text-hover" aria-hidden="true">Chúng tôi sẽ giúp đỡ</span>
+          <span class="btn-cross-text flip-text-hover" aria-hidden="true">Gửi yêu cầu ngay</span>
         </div>
       </a>
     </div>
   </div>
 </section>
 
-<section class="home-campaigns" aria-labelledby="dot-hien-title">
-  <div class="container">
-    <div class="section-head">
-      <h2 id="dot-hien-title">ĐỢT HIẾN MÁU SẮP DIỄN RA</h2>
-      <div class="news-title-underline" aria-hidden="true"></div>
-    </div>
-    {% if upcoming %}
-      <div class="campaign-list">
-        {% for c in upcoming %}{% include "public/_campaign_card.html" %}{% endfor %}
-      </div>
-      <div class="section-more"><a href="{% url 'bloodbank:campaigns' %}" class="btn secondary">Xem tất cả đợt hiến {% icon "arrow-right" %}</a></div>
-    {% else %}
-      <div class="panel"><div class="empty">
-        <div class="empty-icon">{% icon "calendar-heart" %}</div>
-        <h3>Hiện chưa có đợt hiến nào đang nhận đăng ký</h3>
-        <p>Các bệnh viện sẽ công bố đợt hiến mới tại đây. Bạn có thể tạo tài khoản trước để đăng ký nhanh khi có đợt phù hợp.</p>
-        <a href="{% url 'bloodbank:map' %}" class="btn secondary">{% icon "map-pin" %} Xem bệnh viện trên bản đồ</a>
-      </div></div>
-    {% endif %}
-  </div>
-</section>
-
-<section class="news-section" id="tin-tuc" aria-label="Tin tức hoạt động hiến máu">
-  <div class="news-section-header">
-    <h2 class="news-section-title">TIN TỨC HOẠT ĐỘNG HIẾN MÁU</h2>
+<section class="home-news" id="tin-tuc" aria-labelledby="tin-tuc-title" data-news>
+  <div class="section-head">
+    <h2 id="tin-tuc-title">TIN TỨC HOẠT ĐỘNG HIẾN MÁU</h2>
     <div class="news-title-underline" aria-hidden="true"></div>
   </div>
-  <div class="news-marquee-container">
-    <div class="news-marquee-track">
-      {% for group in "1234" %}
-      <div class="news-marquee-group"{% if not forloop.first %} aria-hidden="true"{% endif %}>
-        {% for item in news %}
-        <article class="news-card" data-news-id="{{ item.id }}" role="button" tabindex="{% if forloop.parentloop.first %}0{% else %}-1{% endif %}">
-          <div class="news-card-img-wrapper"><img src="{{ item.image }}" alt="{{ item.title }}" class="news-card-img" loading="lazy"></div>
-          <div class="news-card-body">
-            <h3 class="news-card-title">{{ item.title }}</h3>
-            <p class="news-card-excerpt">{{ item.excerpt }}</p>
-          </div>
-        </article>
+  <div class="news-marquee">
+    <div class="news-track">
+      {% for group in "12" %}
+      <ul class="news-group"{% if not forloop.first %} aria-hidden="true"{% endif %}>
+        {% for n in news %}
+        <li>
+          <a class="news-card" href="{{ n.url }}" target="_blank" rel="noopener noreferrer"{% if not forloop.parentloop.first %} tabindex="-1"{% endif %}>
+            <img src="{% static n.image %}" alt="" width="640" height="400" loading="lazy" class="news-card-img">
+            <span class="news-card-meta"><b>{{ n.source }}</b> · <time datetime="{{ n.date|date:'Y-m-d' }}">{{ n.date|date:"d/m/Y" }}</time></span>
+            <h3 class="news-card-title">{{ n.title }}</h3>
+            <p class="news-card-excerpt">{{ n.excerpt }}</p>
+            <span class="news-card-more">Đọc bài gốc {% icon "external-link" 14 %}<span class="sr-only"> (mở trang báo trong thẻ mới)</span></span>
+          </a>
+        </li>
         {% endfor %}
-      </div>
+      </ul>
       {% endfor %}
     </div>
   </div>
+  <p class="news-note">Tin tổng hợp từ các báo, bấm vào để đọc bài gốc. Ảnh thuộc bản quyền của tòa soạn.</p>
 </section>
 
-{{ news|json_script:"news-data" }}
-<dialog class="modal-dialog u-maxw-680" id="news-dialog" aria-label="Chi tiết tin tức">
-  <div class="u-d-flex u-fd-column u-w-100pct u-maxh-90vh">
-    <div class="modal-header">
-      <div class="modal-title-row">
-        <span class="u-d-inline-flex u-ai-center u-gap-6 u-c-x2563eb u-fs-13 u-fwt-600">{% icon "calendar" 16 %} <span data-news-date></span></span>
-      </div>
-      <button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button>
+<section class="home-about" id="ve-chung-toi" aria-labelledby="ve-chung-toi-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="ve-chung-toi-title">VỀ CHÚNG TÔI</h2>
+      <div class="news-title-underline" aria-hidden="true"></div>
     </div>
-    <div class="modal-body">
-      <div class="u-w-100pct u-h-240 u-br-10 u-ov-hidden u-mb-18"><img class="u-w-100pct u-h-100pct u-of-cover" data-news-img src="{{ news.0.image }}" alt="{{ news.0.title }}"></div>
-      <h2 class="u-fs-20 u-fwt-800 u-c-x0f172a u-lh-1_35 u-mb-12" data-news-title></h2>
-      <p class="u-fs-15 u-fwt-500 u-c-x1e3a8a u-mb-16 u-lh-1_6 u-fst-italic" data-news-excerpt></p>
-      <div class="u-fs-14_5 u-c-x334155 u-lh-1_75"><p data-news-content></p></div>
-      <p class="muted small u-mt-16">Nội dung tin tức là dữ liệu mẫu của dự án học tập.</p>
+    <p class="about-lead"><strong>Giọt Hồng</strong> kết nối người hiến máu tình nguyện, người nhà bệnh nhân và bệnh viện trên cả nước. Khi một bệnh viện thiếu máu, thay vì đăng lời kêu gọi chung chung, bệnh viện tìm được đúng người hiến theo nhóm máu và tỉnh/thành.</p>
+
+    <h3 class="about-sub">Mỗi người dùng làm được gì</h3>
+    <div class="about-roles">
+      <section class="about-role">
+        <span class="about-role-icon">{% icon "heart-handshake" 22 %}</span>
+        <h4>Người hiến máu</h4>
+        <ul>
+          <li>Tìm và đăng ký đợt hiến gần nơi ở</li>
+          <li>Biết chính xác ngày được hiến lại sau mỗi lần hiến</li>
+          <li>Xem lại các lần đã hiến và huy hiệu đạt được</li>
+          <li>Được báo khi bệnh viện cùng tỉnh cần đúng nhóm máu của mình</li>
+        </ul>
+      </section>
+      <section class="about-role">
+        <span class="about-role-icon">{% icon "hand-heart" 22 %}</span>
+        <h4>Người nhà bệnh nhân</h4>
+        <ul>
+          <li>Gửi yêu cầu cần máu trong vài phút, ngay trên điện thoại</li>
+          <li>Nhận mã yêu cầu để theo dõi từng bước xử lý</li>
+          <li>Bệnh viện điều trị xác minh và liên hệ trực tiếp</li>
+        </ul>
+      </section>
+      <section class="about-role">
+        <span class="about-role-icon">{% icon "hospital" 22 %}</span>
+        <h4>Bệnh viện</h4>
+        <ul>
+          <li>Tổ chức đợt hiến, tiếp nhận người hiến tại điểm hiến</li>
+          <li>Theo dõi tồn kho theo nhóm máu và chế phẩm</li>
+          <li>Xin hỗ trợ máu từ bệnh viện khác khi thiếu</li>
+          <li>Gửi lời kêu gọi tới người hiến phù hợp</li>
+        </ul>
+      </section>
     </div>
-    <div class="modal-footer u-jc-space-between">
-      <button type="button" class="btn-secondary u-d-inline-flex u-ai-center u-gap-8" data-news-share>{% icon "share-2" 16 %} <span>Chia sẻ tin tức</span></button>
-      <button type="button" class="btn-primary" data-close-dialog>Đóng bài viết</button>
+
+    <h3 class="about-sub">Khi bệnh viện thiếu máu</h3>
+    <ol class="about-flow">
+      <li><span class="about-step">1</span><h4>Ghi nhận thiếu hụt</h4><p>Bệnh viện khai nhu cầu, hệ thống tính phần còn thiếu theo nhóm máu và chế phẩm.</p></li>
+      <li><span class="about-step">2</span><h4>Dùng nguồn sẵn có</h4><p>Lấy từ kho, hoặc tìm bệnh viện khác đang có máu chia sẻ được.</p></li>
+      <li><span class="about-step">3</span><h4>Kêu gọi người hiến</h4><p>Báo cho người hiến cùng nhóm máu, cùng tỉnh/thành và đã đủ thời gian nghỉ.</p></li>
+      <li><span class="about-step">4</span><h4>Tiếp nhận máu</h4><p>Người hiến đăng ký đợt hiến; bệnh viện ghi nhận, xét nghiệm rồi nhập kho.</p></li>
+    </ol>
+
+    <div class="about-principles">
+      <p>{% icon "shield-check" 20 %}<span><strong>Thông tin được bảo vệ.</strong> Nhóm máu và số điện thoại chỉ người có quyền mới xem được, mỗi lần xem đều được ghi lại.</span></p>
+      <p>{% icon "ban" 20 %}<span><strong>Không mua bán máu.</strong> Hiến máu là tình nguyện; nền tảng không hỗ trợ trao đổi máu lấy tiền.</span></p>
+      <p>{% icon "stethoscope" 20 %}<span><strong>Bác sĩ quyết định.</strong> Trang web và trợ lý chỉ đưa thông tin sơ bộ; khám sàng lọc mới quyết định ai được hiến.</span></p>
     </div>
+    <p class="about-note">Giọt Hồng là đồ án học tập, chưa vận hành thật. Số liệu trên trang là dữ liệu mẫu.</p>
   </div>
-</dialog>
+</section>
+
 {% endblock %}

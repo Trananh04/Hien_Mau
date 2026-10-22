@@ -17,7 +17,7 @@ C = Campaign.Status
 def urgent_campaign_initial(hospital, blood_group):
     """Nội dung gợi sẵn khi tạo nhanh đợt hiến từ dòng thiếu hụt nhóm máu."""
     return {
-        "name": f"Hiến máu khẩn — cần nhóm {blood_group}", "location_name": hospital.name, "address": hospital.address,
+        "name": f"Hiến máu khẩn: cần nhóm {blood_group}", "location_name": hospital.name, "address": hospital.address,
         "description": f"{hospital.name} đang thiếu máu nhóm {blood_group}. Mời người hiến đã đủ thời gian "
                        "nghỉ đến đăng ký; mọi nhóm máu vẫn được tiếp nhận.",
     }

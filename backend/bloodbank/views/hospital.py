@@ -2,13 +2,15 @@
 from datetime import timedelta
 
 from django.contrib import messages
+from django.db.models import Count, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from bloodbank.forms import HospitalForm, ProductForm, SpecForm
 from bloodbank.models import (
-    AuditLog, Campaign, Notification, PatientRequest, Product, ProductSpec, Registration, RequestOffer, Staff, Stock,
+    AuditLog, Campaign, PatientRequest, Product, ProductSpec, Registration, RequestOffer, Staff,
 )
 from bloodbank.permissions import current_staff, staff_required
 from bloodbank.services import admin as admin_service
@@ -22,29 +24,54 @@ from .helpers import attempt, audit_filters, int_or_none, paginate
 
 @staff_required
 def dashboard(request):
+    """Tổng quan bệnh viện: việc cần xử lý, kho cần chú ý, yêu cầu cần máu, đợt hiến. Chỉ đọc."""
     h = request.hospital
     now = timezone.now()
     trf.expire_overdue(h)
-    ctx = {"now": now}
-    ctx["active_campaigns"] = Campaign.objects.filter(hospital=h, status__in=Campaign.RUNNING_STATUSES).order_by("start_time")[:5]
-    ctx["pending_regs"] = Registration.objects.filter(campaign__hospital=h, status="pending",
-                                                      campaign__status__in=Campaign.RUNNING_STATUSES).count()
-    ctx["today_campaigns"] = Campaign.objects.filter(hospital=h, status__in=Campaign.RUNNING_STATUSES,
-                                                     start_time__lte=now + timedelta(hours=12), end_time__gte=now)
-    stocks = list(Stock.objects.filter(hospital=h).select_related("product_spec__product"))
-    ctx["low_stocks"] = [s for s in stocks if s.below_min][:8]
-    ctx["stock_total"] = sum(s.quantity_on_hand for s in stocks)
-    ctx["stock_available"] = sum(s.available for s in stocks)
-    ctx["shortages"] = [s for s in inv.shortages(h) if s["shortage"] > 0][:6]
-    ctx["incoming_pending"] = RequestOffer.objects.filter(supplier_hospital=h, status="pending").count()
-    ctx["to_receive"] = RequestOffer.objects.filter(request__requesting_hospital=h, status="in_transit").count()
-    ctx["to_dispatch"] = RequestOffer.objects.filter(supplier_hospital=h, status="accepted").count()
-    ctx["prq_waiting"] = PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.WAITING_STATUSES).count()
-    ctx["prq_recent"] = PatientRequest.objects.filter(hospital=h).exclude(
-        status__in=PatientRequest.FINAL_STATUSES).order_by("-created_at")[:5]
-    ctx["lab_pending"] = lab.lab_queue(h).count()
-    ctx["notifications"] = Notification.objects.filter(user=request.user, channel="in_app").order_by("-created_at")[:6]
-    return render(request, "hospital/dashboard.html", ctx)
+    alerts = inv.stock_alerts(h)
+    counts = {
+        "prq_waiting": PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.WAITING_STATUSES).count(),
+        "pending_regs": Registration.objects.filter(campaign__hospital=h, status="pending",
+                                                    campaign__status__in=Campaign.RUNNING_STATUSES).count(),
+        "lab_pending": lab.lab_queue(h).count(),
+        "incoming_pending": RequestOffer.objects.filter(supplier_hospital=h, status="pending").count(),
+        "to_dispatch": RequestOffer.objects.filter(supplier_hospital=h, status="accepted").count(),
+        "to_receive": RequestOffer.objects.filter(request__requesting_hospital=h, status="in_transit").count(),
+    }
+    # Việc cần xử lý: chỉ mục có số > 0, xếp theo mức ảnh hưởng tới người bệnh rồi tới vận hành
+    todo = [
+        (counts["prq_waiting"], "Yêu cầu cần máu chờ xác minh", "Người nhà bệnh nhân gửi, chưa xác minh", "heart-pulse",
+         reverse("bloodbank:hospital_patient_requests"), True),
+        (alerts["danger"], "Nhu cầu đang thiếu máu", "Nhu cầu đang mở vượt tồn khả dụng", "trending-down",
+         reverse("bloodbank:demands"), True),
+        (counts["to_receive"], "Hàng liên viện đang tới", "Cần xác nhận số thực nhận khi tới nơi", "truck",
+         reverse("bloodbank:support_requests") + "?status=open", False),
+        (counts["incoming_pending"], "Đề nghị cấp máu chờ phản hồi", "Bệnh viện khác xin hỗ trợ", "inbox",
+         reverse("bloodbank:incoming_offers") + "?status=pending", False),
+        (counts["to_dispatch"], "Đề nghị đã chấp thuận, chờ xuất kho", "Đã giữ chỗ trong kho", "package-check",
+         reverse("bloodbank:incoming_offers") + "?status=accepted", False),
+        (counts["lab_pending"], "Lượt hiến chờ kết quả xét nghiệm", "Chưa nhập kho", "flask-conical",
+         reverse("bloodbank:lab_queue"), False),
+        (counts["pending_regs"], "Đơn đăng ký hiến chờ duyệt", "Trong các đợt đang tiếp nhận", "clipboard-list",
+         reverse("bloodbank:hospital_campaigns") + "?status=open", False),
+    ]
+    # Yêu cầu cần máu đang mở: chờ xác minh trước, rồi hạn cần sớm nhất
+    open_statuses = PatientRequest.WAITING_STATUSES + PatientRequest.ACTIVE_STATUSES
+    prqs = sorted(PatientRequest.objects.filter(hospital=h, status__in=open_statuses).select_related("blood_product"),
+                  key=lambda p: (p.status not in PatientRequest.WAITING_STATUSES, p.needed_by or p.created_at))[:5]
+    campaigns = (Campaign.objects.filter(hospital=h, status__in=Campaign.RUNNING_STATUSES)
+                 .annotate(reg_count=Count("registrations",
+                                           filter=Q(registrations__status__in=Registration.ACTIVE_STATUSES)),
+                           pending_count=Count("registrations", filter=Q(registrations__status="pending")))
+                 .order_by("start_time")[:5])
+    for c in campaigns:   # "đang diễn ra" theo thời gian thật; mở điểm hiến từ 12 giờ trước giờ bắt đầu
+        c.live = c.start_time <= now <= c.end_time
+        c.checkin_ready = c.start_time - timedelta(hours=12) <= now <= c.end_time
+    return render(request, "hospital/dashboard.html", {
+        "now": now, "alerts": alerts, "prqs": prqs, "campaigns": campaigns,
+        "todo": [{"count": n, "label": label, "hint": hint, "icon": icon, "url": url, "urgent": urgent}
+                 for n, label, hint, icon, url, urgent in todo if n],
+    })
 
 
 def offer_open(request, pk):

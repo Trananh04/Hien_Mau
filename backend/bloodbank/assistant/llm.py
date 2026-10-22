@@ -42,6 +42,8 @@ AN TOÀN — không bao giờ vi phạm:
 
 CÁCH TRẢ LỜI:
 - Ngắn gọn (thường 2–5 câu), văn bản thường, không dùng tiêu đề markdown hay bảng; liệt kê dùng "•".
+- Viết giản dị như nhân viên tư vấn: không emoji, không dấu chấm than liên tiếp, không dùng gạch ngang dài (—) để nối câu.
+- Tránh lời sáo rỗng ("lan tỏa yêu thương", "giá trị nhân văn cao đẹp", "hành trình", "trọn vẹn", "nghĩa cử cao đẹp"...); nói việc cụ thể.
 - Có số liệu thì nêu cụ thể (ngày dd/mm/yyyy, giờ, tên đợt, khoảng cách nếu có).
 - Không gợi ý tính năng, dịch vụ, thông báo hay chương trình nào không có trong NỘI DUNG ĐÃ DUYỆT hoặc kết quả công cụ.
 - Không nhắc tên công cụ, "kết quả công cụ", hệ thống hay cách bạn tra cứu — trả lời tự nhiên như nhân viên hỗ trợ.
@@ -51,6 +53,9 @@ CÁCH TRẢ LỜI:
 """
 
 
+EMOJI = re.compile("[\U0001F300-\U0001FAFF\U0001F000-\U0001F2FF\u2600-\u27BF\u2B50\u2B55\uFE0F\u200D]")
+
+
 def plain_text(text):
     """Khung chat hiển thị văn bản thuần: bỏ ký hiệu markdown mô hình đôi khi vẫn dùng (**đậm**, # tiêu đề, - gạch đầu dòng)."""
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
@@ -58,6 +63,7 @@ def plain_text(text):
     text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"(?m)^[ \t]{0,3}#{1,6}[ \t]+", "", text)
     text = re.sub(r"(?m)^[ \t]*[-*+][ \t]+", "• ", text)
+    text = EMOJI.sub("", text)
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
@@ -65,8 +71,16 @@ class LLMUnavailable(Exception):
     pass
 
 
-def enabled():
+def configured():
+    """Đã có khóa API và cho phép dùng AI trong cấu hình máy chủ (.env)."""
     return bool(getattr(settings, "CHATBOT_USE_LLM", False) and settings.ANTHROPIC_API_KEY)
+
+
+def enabled():
+    """Đã cấu hình và Quản trị hệ thống đang bật AI (cấu hình `chatbot_ai_enabled`)."""
+    from bloodbank.models import SystemSetting
+
+    return configured() and bool(SystemSetting.get("chatbot_ai_enabled"))
 
 
 _client = None

@@ -25,7 +25,7 @@
         <td data-label="Cần trước" class="nowrap">{{ p.needed_by|vn_dt }}</td>
         <td data-label="Bệnh nhân">{{ p.patient_name|mask_name }}</td>
         <td data-label="Trạng thái">{% status_badge p %}</td>
-        <td><a href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}" class="btn {% if p.status == 'submitted' or p.status == 'verifying' %}primary{% else %}ghost{% endif %} sm">{% if p.status == "submitted" or p.status == "verifying" %}Xác minh{% else %}Chi tiết{% endif %}</a></td>
+        <td data-label="Thao tác"><div class="table-actions"><a href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}" class="btn {% if p.status == 'submitted' or p.status == 'verifying' %}primary{% else %}ghost{% endif %} sm">{% if p.status == "submitted" or p.status == "verifying" %}Xác minh{% else %}Chi tiết{% endif %}</a></div></td>
       </tr>
     {% endfor %}</tbody>
   </table></div>

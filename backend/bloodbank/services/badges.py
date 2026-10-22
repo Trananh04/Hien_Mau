@@ -13,12 +13,12 @@ from .common import notify
 
 # (số lần hiến, tên, icon lucide, lời ghi nhận)
 BADGES = [
-    (1, "Giọt máu đầu tiên", "droplet", "Cảm ơn bạn đã hiến máu lần đầu."),
-    (3, "Người hiến quay lại", "repeat", "Bạn đã quay lại hiến máu 3 lần."),
-    (5, "Trái tim bền bỉ", "heart-pulse", "5 lần hiến — một nguồn máu đáng tin cậy."),
-    (10, "Mạch máu cộng đồng", "heart-handshake", "10 lần hiến, cộng đồng biết ơn bạn."),
-    (20, "Ngọn lửa đỏ", "flame", "20 lần hiến — tấm gương cho mọi người."),
-    (30, "Huyền thoại hiến máu", "award", "30 lần hiến máu tình nguyện."),
+    (1, "Lần hiến đầu tiên", "droplet", "Cảm ơn bạn đã hiến máu lần đầu."),
+    (3, "Quay lại lần ba", "repeat", "Bạn đã hiến máu 3 lần."),
+    (5, "Người hiến thường xuyên", "heart-pulse", "Bạn đã hiến máu 5 lần."),
+    (10, "Mười lần hiến", "heart-handshake", "Bạn đã hiến máu 10 lần."),
+    (20, "Hai mươi lần hiến", "flame", "Bạn đã hiến máu 20 lần."),
+    (30, "Ba mươi lần hiến", "award", "Bạn đã hiến máu 30 lần."),
 ]
 
 

@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}{{ c.name }}{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
-{% block band %}{% url 'bloodbank:campaigns' as list_url %}{% include "partials/band.html" with title=c.name crumb="Chi tiết đợt hiến" parent_url=list_url parent_label="Đợt hiến máu" lead=c.hospital.name %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title=c.name lead=c.hospital.name %}{% endblock %}
 {% block content %}
 <div class="container page-body">
   <div class="grid grid-main-side">
@@ -74,7 +74,7 @@
           <a href="{% url 'bloodbank:campaigns' %}" class="btn secondary block">Xem đợt hiến khác</a>
         {% endif %}
         <hr class="u-bd-0 u-bdt-1-solid-line u-m-20-0-14">
-        <button type="button" class="link small" data-open-dialog="info-process">{% icon "circle-help" 15 %} Quy trình hiến máu gồm những bước nào?</button>
+        <a href="{% url 'bloodbank:process' %}" class="link small">{% icon "circle-help" 15 %} Quy trình hiến máu gồm những bước nào?</a>
       </div>
     </aside>
   </div>

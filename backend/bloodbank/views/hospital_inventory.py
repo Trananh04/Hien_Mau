@@ -71,7 +71,7 @@ def stock_txn_form(request, kind):
         except BusinessError as exc:
             messages.error(request, exc.message)
         else:
-            msg = "Phiếu đã được ghi trước đó (gửi lại cùng mã) — không ghi trùng." if txn.replayed else "Đã ghi phiếu."
+            msg = "Phiếu này đã được ghi trước đó (gửi lại cùng mã), không ghi trùng." if txn.replayed else "Đã ghi phiếu."
             messages.success(request, f"{msg} Tồn sau: {txn.quantity_after} đơn vị.")
             return redirect("bloodbank:stock_ledger")
     stocks = Stock.objects.filter(hospital=h).select_related("product_spec__product").order_by(
@@ -143,7 +143,7 @@ def donor_callout(request):
     bg = request.POST.get("blood_group")
     attempt(request, lambda: callout.donor_callout(request.staff, bg, request),
             lambda res: f"Đã gửi lời kêu gọi nhóm {bg} tới {res[0]} người hiến phù hợp"
-                        + (f", kèm đợt hiến \"{res[1].name}\"." if res[1] else ". Chưa có đợt hiến đang mở — cân nhắc tạo đợt."))
+                        + (f", kèm đợt hiến \"{res[1].name}\"." if res[1] else ". Chưa có đợt hiến đang mở, nên tạo một đợt để người hiến đăng ký."))
     return safe_next(request, "bloodbank:demands")
 
 
@@ -178,6 +178,6 @@ def lab_result(request, pk):
     result = request.POST.get("result")
     attempt(request, lambda: lab.record_lab_result(request.staff, pk, result, request.POST,
                                                    request.POST.get("idempotency_key"), request),
-            lambda d: (f"Đã nhập kho từ lượt hiến {d.code} — nhóm {d.get_lab_blood_group_display()}."
+            lambda d: (f"Đã nhập kho từ lượt hiến {d.code}, nhóm {d.get_lab_blood_group_display()}."
                        if d.lab_status == "passed" else f"Đã ghi nhận lượt hiến {d.code} không đạt xét nghiệm."))
     return safe_next(request, "bloodbank:lab_queue")

@@ -192,7 +192,7 @@ def edit_donation(staff, donation_id, data, reason, request=None):
             # Đã nhập kho theo loại/chế phẩm hiện tại → không đổi loại nữa (kho sẽ lệch)
             require(clean["donation_type"] == d.donation_type
                     and clean["component_product_id"] == d.component_product_id, "ERR-STATE-INVALID",
-                    "Lượt hiến đã nhập kho sau xét nghiệm — không đổi được hình thức hiến / chế phẩm.")
+                    "Lượt hiến đã nhập kho sau xét nghiệm nên không đổi được hình thức hiến hay chế phẩm.")
         if d.registration_id:
             _check_time(d.registration.campaign, clean["donated_at"], now, check_grace=False)
         old = snapshot(d, EDITABLE)

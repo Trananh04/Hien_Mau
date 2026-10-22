@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.forms import PROVINCES
+from accounts.provinces import PROVINCES, center_of
 from accounts.models import BLOOD_GROUP_VALUES, User, normalize_phone
 from bloodbank.forms import CampaignForm
 from bloodbank.models import AuditLog, Campaign, Donation, Product, Registration
@@ -20,6 +20,14 @@ from bloodbank.services.common import BusinessError
 
 from .helpers import apply_field_errors, attempt, date_or_none, int_or_none, paginate, parse_local_dt, safe_next
 
+
+
+def _default_point(hospital):
+    """Điểm bản đồ ban đầu của form đợt hiến: vị trí bệnh viện, nếu chưa có thì trung tâm tỉnh của bệnh viện."""
+    if hospital.latitude is not None and hospital.longitude is not None:
+        return {"default_lat": hospital.latitude, "default_lng": hospital.longitude}
+    lat, lng = center_of(hospital.province)
+    return {"default_lat": lat, "default_lng": lng}
 
 
 def _campaign(request, pk):
@@ -73,7 +81,7 @@ def campaign_form(request, pk=None):
             return redirect("bloodbank:hospital_campaign_detail", pk=campaign.pk)
     return render(request, "hospital/campaign_form.html", {
         "form": form, "campaign": campaign, "provinces": PROVINCES,
-        "default_lat": request.hospital.latitude or 16.0544, "default_lng": request.hospital.longitude or 108.2022,
+        **_default_point(request.hospital),
     })
 
 

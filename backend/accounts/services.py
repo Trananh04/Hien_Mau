@@ -49,7 +49,7 @@ def send_email_verification(user, request=None):
                           ip=request.META.get("REMOTE_ADDR") if request else None)
     link = _absolute(request, reverse("accounts:verify_email", args=[raw]))
     send_mail(
-        "Xác thực email — Giọt Hồng",
+        "Xác thực email Giọt Hồng",
         f"Chào {user.full_name},\n\nBấm vào liên kết sau để xác thực email (hết hạn sau {hours} giờ):\n{link}\n",
         settings.DEFAULT_FROM_EMAIL,
         [user.email],
@@ -133,7 +133,7 @@ def request_password_reset(email, request=None):
                           ip=request.META.get("REMOTE_ADDR") if request else None)
     link = _absolute(request, reverse("accounts:reset_password", args=[raw]))
     send_mail(
-        "Đặt lại mật khẩu — Giọt Hồng",
+        "Đặt lại mật khẩu Giọt Hồng",
         f"Chào {user.full_name},\n\nBấm vào liên kết sau để đặt lại mật khẩu (hết hạn sau {minutes} phút):\n{link}\n\n"
         "Nếu bạn không yêu cầu, hãy bỏ qua email này.",
         settings.DEFAULT_FROM_EMAIL,

@@ -30,6 +30,23 @@ class CampaignAndDonationFlowTests(TestCase):
         cls.im = f.staff(cls.h)
         cls.donor = f.user(full_name="Người Hiến Một")
 
+    def test_dashboard_lists_only_pending_work(self):
+        from django.utils import timezone
+
+        from bloodbank.models import PatientRequest
+
+        self.client.force_login(self.ha)
+        r = self.client.get(reverse("bloodbank:hospital_dashboard"))
+        self.assertEqual(r.context["todo"], [])
+        self.assertContains(r, "Không có việc tồn đọng.")
+        PatientRequest.objects.create(requester=self.donor, contact_name="A", contact_phone="0905000999",
+                                      hospital=self.h, quantity_units=1, consent_at=timezone.now(),
+                                      request_code="PR-DASH-0001")
+        r = self.client.get(reverse("bloodbank:hospital_dashboard"))
+        self.assertEqual([(t["label"], t["count"], t["urgent"]) for t in r.context["todo"]],
+                         [("Yêu cầu cần máu chờ xác minh", 1, True)])
+        self.assertNotContains(r, "Thông báo gần đây")   # đã có chuông trên thanh trên cùng
+
     def test_campaign_lifecycle_publish_close_cancel(self):
         self.client.force_login(self.dc)
         start = timezone.now() + timedelta(days=2)
@@ -63,7 +80,8 @@ class CampaignAndDonationFlowTests(TestCase):
             "name": "Sai giờ", "start_time": local(start), "end_time": local(start - timedelta(hours=1)),
             "location_name": "S", "address": "A",
         })
-        self.assertContains(r, "ERR-CMP-TIME-RANGE")
+        self.assertContains(r, "Thời gian kết thúc phải sau thời gian bắt đầu.")
+        self.assertNotContains(r, "(ERR-")
 
     def test_checkin_record_void_and_history(self):
         c = f.campaign(self.h, start_offset_h=-2)
@@ -134,7 +152,7 @@ class CampaignAndDonationFlowTests(TestCase):
                 self.assertEqual(self.client.get(url).status_code, 200, url)
         self.client.force_login(self.donor)
         self.assertEqual(self.client.get(reverse("bloodbank:hospital_dashboard")).status_code, 403)
-        self.assertEqual(self.client.get(reverse("bloodbank:admin_users")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("bloodbank:admin_users")).status_code, 404)
         self.assertTrue(AuditLog.objects.filter(action="access_denied").exists())
 
 

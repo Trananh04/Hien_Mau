@@ -1,6 +1,6 @@
 {% extends "member/base.html" %}
 {% block title %}Yêu cầu {{ prq.request_code }}{% endblock %}
-{% block band %}{% url 'bloodbank:my_patient_requests' as lst %}{% include "partials/band.html" with title="Yêu cầu "|add:prq.request_code parent_url=lst parent_label="Yêu cầu cần máu" crumb=prq.request_code %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Yêu cầu "|add:prq.request_code %}{% endblock %}
 {% block member %}
 {% if just_created %}
 <div class="notice ok" role="status">{% icon "circle-check" %}
@@ -47,7 +47,7 @@
         </li>
         {% endfor %}
       </ol>
-      <p class="field-help">Bạn sẽ không thấy nguồn cấp hay tồn kho của bệnh viện — bệnh viện liên hệ trực tiếp khi có kết quả.</p>
+      <p class="field-help">Bạn sẽ không thấy nguồn cấp hay tồn kho của bệnh viện. Bệnh viện liên hệ trực tiếp khi có kết quả.</p>
     </div>
   </aside>
 </div>

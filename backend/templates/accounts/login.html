@@ -1,5 +1,6 @@
 {% extends "accounts/auth_base.html" %}
 {% block title %}{{ portal.title }}{% endblock %}
+{% block robots %}{% if role != "member" %}<meta name="robots" content="noindex, nofollow">{% endif %}{% endblock %}
 {% block art_greeting %}{{ portal.greeting }}{% endblock %}
 {% block art_title %}{{ portal.art_title }}{% endblock %}
 {% block art_text %}{{ portal.art_text }}{% endblock %}
@@ -26,11 +27,14 @@
   <button type="submit" class="btn primary lg block u-mt-18">{% icon "log-in" %} Đăng nhập</button>
 </form>
 {% if role == "member" %}
-<p class="auth-switch">Chưa có tài khoản? <a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link">Đăng ký ngay</a></p>
+<div class="auth-or" role="presentation"><span>Chưa có tài khoản?</span></div>
+<a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="btn secondary lg block">{% icon "user-plus" %} Tạo tài khoản mới</a>
 {% else %}
 <p class="auth-switch">Chưa có tài khoản? Liên hệ Quản trị hệ thống để được cấp.</p>
 {% endif %}
+{% if portals %}
 <nav class="portal-switch" aria-label="Cổng đăng nhập khác">
-  {% for p in portals %}{% if not p.current %}<a href="{{ p.url }}">{% icon p.icon 14 %} {{ p.label }}</a>{% endif %}{% endfor %}
+  {% for p in portals %}<a href="{{ p.url }}">{% icon p.icon 14 %} Đăng nhập {{ p.label|lower }}</a>{% endfor %}
 </nav>
+{% endif %}
 {% endblock %}

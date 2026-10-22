@@ -104,6 +104,7 @@ class SystemSetting(models.Model):
         "donor_min_weight_male_kg": (45, "Kiểm tra sơ bộ (trợ lý): cân nặng tối thiểu của nam (kg)"),
         "donor_min_weight_female_kg": (42, "Kiểm tra sơ bộ (trợ lý): cân nặng tối thiểu của nữ (kg)"),
         "chat_retention_days": (30, "Lịch sử trò chuyện với trợ lý được tự xóa sau số ngày này"),
+        "chatbot_ai_enabled": (True, "Trợ lý dùng AI (true) hay chỉ chế độ từ khóa (false, không tốn phí)"),
         "lab_max_units_per_donation":(3, "Số đơn vị tối đa được nhập kho từ một lượt hiến khi xét nghiệm đạt"),
         "donor_callout_cooldown_hours":(24, "Khoảng cách tối thiểu giữa 2 lần kêu gọi người hiến cùng nhóm máu của một bệnh viện (giờ)"),
     }

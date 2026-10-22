@@ -10,6 +10,7 @@
       {{ field }}
     {% endif %}
   {% endif %}
-  {% for error in field.errors %}<p class="field-error">{% icon "circle-alert" 14 %} {{ error }}</p>{% endfor %}
-  {% if field.help_text and not field.errors %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+  {# id khớp aria-describedby Django tự gắn vào ô nhập → trình đọc màn hình đọc lỗi / gợi ý cùng với ô #}
+  {% if field.errors %}<div id="{{ field.auto_id }}_error">{% for error in field.errors %}<p class="field-error">{% icon "circle-alert" 14 %} {{ error }}</p>{% endfor %}</div>{% endif %}
+  {% if field.help_text %}<p class="field-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
 </div>

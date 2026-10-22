@@ -57,7 +57,7 @@ def record_lab_result(staff, donation_id, result, data, key, request=None):
             qty = positive_int(data.get("quantity") or 1)
             max_units = SystemSetting.get("lab_max_units_per_donation")
             require(qty <= max_units, "ERR-VALIDATION",
-                    f"Một lượt hiến nhập tối đa {max_units} đơn vị (chỉnh ở Quản trị → Cấu hình).")
+                    f"Một lượt hiến nhập tối đa {max_units} đơn vị (chỉnh ở Quản trị, mục Cấu hình).")
             stock = get_or_create_stock_locked(staff.hospital, blood_group, spec)
             txn = apply_txn(stock, StockTxn.Type.RECEIVE, qty, staff.user, key, donation=d,
                             note=f"Nhập từ lượt hiến {d.code} (xét nghiệm đạt)")

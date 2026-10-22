@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 
 from .models import BLOOD_GROUPS, User, normalize_phone
 
-PROVINCES = ["Đà Nẵng", "Quảng Nam", "Thừa Thiên Huế", "Quảng Ngãi", "Khác"]
+from .provinces import PROVINCES  # noqa: F401 — giữ đường import cũ cho các module khác
 
 
 class BaseForm(forms.Form):
@@ -24,7 +24,7 @@ def check_password_strength(password, user=None):
     try:
         password_validation.validate_password(password, user)
     except ValidationError as exc:
-        raise ValidationError(["Mật khẩu chưa đủ mạnh (ERR-AUTH-WEAK-PASSWORD)."] + list(exc.messages))
+        raise ValidationError(["Mật khẩu chưa đủ mạnh."] + list(exc.messages))
 
 
 class RegisterForm(BaseForm):
@@ -46,7 +46,7 @@ class RegisterForm(BaseForm):
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email=email).exists():
-            raise ValidationError("Email này đã được đăng ký (ERR-AUTH-EMAIL-TAKEN).")
+            raise ValidationError("Email này đã được đăng ký. Bạn có thể đăng nhập hoặc dùng email khác.")
         return email
 
     def clean_phone(self):
@@ -56,7 +56,7 @@ class RegisterForm(BaseForm):
         if phone and len(phone) < 11:
             raise ValidationError("Số điện thoại không hợp lệ.")
         if phone and User.objects.filter(phone=phone).exists():
-            raise ValidationError("Số điện thoại này đã được đăng ký (ERR-AUTH-PHONE-TAKEN).")
+            raise ValidationError("Số điện thoại này đã được đăng ký.")
         return phone
 
     def clean(self):
@@ -137,7 +137,7 @@ class ProfileForm(forms.ModelForm):
     def clean_phone(self):
         phone = normalize_phone(self.cleaned_data.get("phone"))
         if phone and User.objects.filter(phone=phone).exclude(pk=self.instance.pk).exists():
-            raise ValidationError("Số điện thoại này đã được đăng ký (ERR-AUTH-PHONE-TAKEN).")
+            raise ValidationError("Số điện thoại này đã được đăng ký.")
         return phone
 
 

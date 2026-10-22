@@ -328,7 +328,7 @@ class ShortageActionTests(TestCase):
         self.assertContains(r, reverse("bloodbank:hospital_campaign_create") + "?blood_group=O-")
         self.assertContains(r, "Kêu gọi (2)")
         r = self.client.get(reverse("bloodbank:hospital_campaign_create") + "?blood_group=O-")
-        self.assertEqual(r.context["form"].initial["name"], "Hiến máu khẩn — cần nhóm O-")
+        self.assertEqual(r.context["form"].initial["name"], "Hiến máu khẩn: cần nhóm O-")
 
     def test_callout_notifies_and_has_cooldown(self):
         from django.core import mail

@@ -30,7 +30,7 @@ PORTALS = {
     access.MEMBER: {
         "title": "Đăng nhập", "lead": "Dành cho người hiến máu và người nhà bệnh nhân.", "icon": "log-in",
         "greeting": "Xin chào", "art_title": "GIỌT HỒNG",
-        "art_text": "Hãy đăng ký tham gia cùng chúng tôi để tạo ra nguồn máu vô tận, sẵn sàng giúp đỡ cộng đồng và lan tỏa những giá trị nhân văn cao đẹp.",
+        "art_text": "Một tài khoản cho cả hai việc: đăng ký hiến máu và gửi yêu cầu khi người nhà cần máu.",
     },
     access.HOSPITAL: {
         "title": "Đăng nhập bệnh viện", "lead": "Dành cho nhân viên bệnh viện đã được Quản trị hệ thống cấp tài khoản.",
@@ -64,8 +64,12 @@ def _login(request, role):
             error = exc.message
             if exc.code == "ERR-AUTH-PORTAL":
                 own = getattr(exc, "user_role", access.MEMBER)
-                hint = {"label": access.ROLE_LABELS.get(own), "url": reverse(access.LOGIN_URLS.get(own, "accounts:login"))}
-                error = f"Đây là tài khoản {hint['label']}, không đăng nhập được tại cổng này."
+                if own == access.ADMIN:   # không tiết lộ đường dẫn cổng quản trị
+                    error = "Tài khoản này không đăng nhập được tại cổng này."
+                else:
+                    hint = {"label": access.ROLE_LABELS.get(own),
+                            "url": reverse(access.LOGIN_URLS.get(own, "accounts:login"))}
+                    error = f"Đây là tài khoản {hint['label']}, không đăng nhập được tại cổng này."
         else:
             if request.user.is_authenticated:
                 logout(request)  # đang đăng nhập vai trò khác → thay phiên
@@ -75,8 +79,9 @@ def _login(request, role):
             if nxt and not access.can_open(user, _route_of(nxt)):
                 nxt = None
             return redirect(nxt or reverse(_home_for(user)))
-    portals = [{"code": c, "label": l, "url": reverse(u), "icon": i, "current": c == role}
-               for c, l, u, _, i in access.ROLES]
+    # Cổng nội bộ chỉ chỉ ngược về cổng người dùng; không bao giờ liệt kê cổng quản trị
+    portals = [{"code": c, "label": l, "url": reverse(u), "icon": i}
+               for c, l, u, _, i in access.ROLES if c == access.MEMBER and role != access.MEMBER]
     return render(request, "accounts/login.html", {
         "form": form, "error": error, "hint": hint, "next": request.GET.get("next", ""), "portal": portal,
         "role": role, "portals": portals,

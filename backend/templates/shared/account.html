@@ -11,7 +11,7 @@
       {% csrf_token %}<input type="hidden" name="form" value="profile">
       <div class="panel-body stack u-gap-14">
         {% include "partials/form_errors.html" %}
-        <div class="field"><label>Email đăng nhập</label><input class="field-input" value="{{ user.email }}" disabled></div>
+        <div class="field"><label for="acc-email">Email đăng nhập</label><input id="acc-email" class="field-input" value="{{ user.email }}" disabled></div>
         {% include "partials/field.html" with field=form.full_name %}
         {% include "partials/field.html" with field=form.phone %}
         {% if current_hospital %}

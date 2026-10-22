@@ -4,6 +4,7 @@ from functools import wraps
 
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.urls import reverse
 
 from bloodbank import access
@@ -24,7 +25,8 @@ def current_staff(request):
     return staff
 
 
-def deny(request, reason="forbidden"):
+def deny(request, reason="forbidden", hide=False):
+    """Ghi nhật ký access_denied rồi chặn: 403, hoặc 404 khi `hide` (khu quản trị không xác nhận là mình tồn tại)."""
     from bloodbank.services.common import audit
 
     try:
@@ -37,8 +39,10 @@ def deny(request, reason="forbidden"):
             entity_id=0,
             request=request,
         )
-    except Exception:  # nhật ký không được làm hỏng phản hồi 403
+    except Exception:  # nhật ký không được làm hỏng phản hồi
         pass
+    if hide:
+        raise Http404
     raise PermissionDenied
 
 

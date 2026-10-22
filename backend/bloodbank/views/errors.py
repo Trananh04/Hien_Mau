@@ -33,5 +33,5 @@ def page_not_found(request, exception=None):
 def server_error(request):
     return render(request, "errors/error.html", {
         "code": 500, "title": "Chưa xác định được kết quả",
-        "text": "Hệ thống gặp sự cố. Thao tác có thể chưa được ghi nhận — vui lòng thử lại; hệ thống sẽ không ghi trùng.",
+        "text": "Hệ thống gặp sự cố. Thao tác có thể chưa được ghi nhận. Bạn thử lại được, hệ thống sẽ không ghi trùng.",
     }, status=500)

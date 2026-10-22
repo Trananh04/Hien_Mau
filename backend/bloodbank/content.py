@@ -1,56 +1,77 @@
-"""Nội dung tĩnh: tin tức (nội dung mockup chuyển từ frontend/src/data/newsData.ts) và kho câu trả lời chatbot đã duyệt."""
+"""Nội dung tĩnh: tin tức hiến máu (bài báo thật, dẫn link nguồn), kho câu trả lời chatbot đã duyệt
+và hàm chuẩn hóa tiếng Việt dùng chung cho trợ lý."""
 import re
 import unicodedata
+from datetime import date
 
+# --------------------------------------------------------------------------
+# Tin tức trang chủ: bài báo thật về hiến máu (ưu tiên Đà Nẵng – Quảng Nam), mới nhất trước.
+# Ảnh đại diện lấy từ bài gốc, lưu tại static/assets/news/ (CSP chỉ cho ảnh cùng máy chủ); bản quyền thuộc tòa soạn.
+# Bấm vào thẻ → mở bài gốc trên trang báo.
+# --------------------------------------------------------------------------
 NEWS = [
     {
-        "id": 1, "date": "22/06/2026", "category": "su-kien",
-        "title": "Đà Nẵng ngày càng có nhiều người tham gia hiến máu tình nguyện",
-        "excerpt": "Chiều 22/6, tại Đà Nẵng, Ban Chỉ đạo vận động hiến máu tình nguyện thành phố Đà Nẵng tổ chức Lễ tôn vinh, khen thưởng phong trào hiến máu tình nguyện thành phố Đà Nẵng năm 2024.",
-        "image": "/static/assets/news/01-hospital-blood-donation.png",
-        "fullContent": "Chiều 22/6, tại Đà Nẵng, Ban Chỉ đạo vận động hiến máu tình nguyện thành phố Đà Nẵng đã trang trọng tổ chức Lễ tôn vinh, khen thưởng các tập thể, cá nhân và gia đình tiêu biểu trong phong trào hiến máu tình nguyện thành phố Đà Nẵng. Phong trào ngày càng lan tỏa mạnh mẽ, thu hút đông đảo các tầng lớp nhân dân nhiệt tình hưởng ứng tham gia, góp phần quan trọng vào sự nghiệp chăm sóc và bảo vệ sức khỏe nhân dân.",
+        "title": "Gần 300 tình nguyện viên 4 xã tham gia ngày hội hiến máu",
+        "excerpt": "Sáng 18/10, tại xã Tiên Phước, 4 xã Tiên Phước, Thạnh Bình, Sơn Cẩm Hà và Lãnh Ngọc phối hợp tổ chức "
+                   "Ngày hội hiến máu tình nguyện tháng 10 năm 2026.",
+        "source": "Báo Đà Nẵng", "date": date(2026, 10, 18), "image": "assets/news/2026-10-tien-phuoc.jpg",
+        "url": "https://baodanang.vn/gan-300-tinh-nguyen-vien-4-xa-tham-gia-ngay-hoi-hien-mau-3355697.html",
     },
     {
-        "id": 2, "date": "29/12/2025", "category": "su-kien",
-        "title": "Công an TP Đà Nẵng tổ chức hiến máu tình nguyện đợt 3, thu hơn 400 đơn vị máu",
-        "excerpt": "Sáng 29/12, Công an TP Đà Nẵng phối hợp Khoa Huyết học Bệnh viện Đà Nẵng tổ chức Chương trình Hiến máu tình nguyện đợt 3 năm 2023 với chủ đề 'Giọt máu hồng người chiến sĩ'.",
-        "image": "/static/assets/news/02-volunteers-in-red.png",
-        "fullContent": "Sáng 29/12, Công an TP Đà Nẵng phối hợp cùng Khoa Huyết học - Truyền máu Bệnh viện Đà Nẵng tổ chức Chương trình Hiến máu tình nguyện đợt 3 với chủ đề 'Giọt máu hồng người chiến sĩ'. Đông đảo cán bộ, chiến sĩ công an từ các đơn vị nghiệp vụ đã hăng hái tham gia, đóng góp hơn 400 đơn vị máu an toàn vào ngân hàng máu dự trữ của thành phố.",
+        "title": "Hành trình Đỏ 2026 tiếp nhận hơn 168.770 đơn vị máu, vượt xa mục tiêu ban đầu",
+        "excerpt": "Sau 2 tháng tại 32 tỉnh, thành phố, chương trình lần thứ XIV đã tiếp nhận hơn 168.770 đơn vị máu, "
+                   "vượt mục tiêu 120.000 đơn vị; sau 14 kỳ, tổng cộng hơn 1,23 triệu đơn vị.",
+        "source": "VietnamPlus", "date": date(2026, 8, 15), "image": "assets/news/2026-08-hanh-trinh-do.jpg",
+        "url": "https://www.vietnamplus.vn/hanh-trinh-do-2026-tiep-nhan-hon-168770-don-vi-mau-vuot-xa-muc-tieu-ban-dau-post1130314.vnp",
     },
     {
-        "id": 3, "date": "15/10/2026", "category": "khan-cap",
-        "title": "03 CBCS Phòng Cảnh sát PCCC và CNCH Công an TP Đà Nẵng đến tận bệnh viện hiến máu cứu người",
-        "excerpt": "Ngay sau khi nhận được tin báo có bệnh nhân đang điều trị tại Bệnh viện đa khoa khu vực Quảng Nam đang cần gấp 03 đơn vị máu nhóm O, 03 CBCS Phòng Cảnh sát PCCC và CNCH Công an TP Đà Nẵng đã xung phong đến tận bệnh viện để hiến máu cứu bệnh nhân vượt qua cơn nguy kịch...",
-        "image": "/static/assets/news/03-donation-close-up.png",
-        "fullContent": "Ngay sau khi nhận được tin báo có bệnh nhân nặng đang điều trị tại Bệnh viện đa khoa khu vực Quảng Nam cần truyền gấp 03 đơn vị máu nhóm O để phẫu thuật khẩn cấp, 03 cán bộ chiến sĩ thuộc Phòng Cảnh sát PCCC và CNCH Công an TP Đà Nẵng đã lập tức xung phong đến tận bệnh viện, trực tiếp hiến máu giúp bệnh nhân qua cơn nguy kịch. Nghĩa cử cao đẹp này đã nhận được sự cảm phục sâu sắc từ gia đình bệnh nhân và y bác sĩ.",
+        "title": "Đà Nẵng: UBND thành phố tôn vinh, khen thưởng phong trào hiến máu tình nguyện năm 2026",
+        "excerpt": "Ngày 14-8, UBND TP.Đà Nẵng, Ban Chỉ đạo vận động hiến máu tình nguyện tổ chức chương trình tôn vinh, "
+                   "khen thưởng phong trào hiến máu tình nguyện năm 2026.",
+        "source": "Giác Ngộ", "date": date(2026, 8, 16), "image": "assets/news/2026-08-ton-vinh.jpg",
+        "url": "https://giacngo.vn/da-nang-ubnd-thanh-pho-ton-vinh-khen-thuong-phong-trao-hien-mau-tinh-nguyen-nam-2026-post80625.html",
     },
     {
-        "id": 4, "date": "18/01/2026", "category": "su-kien",
-        "title": "Hơn 1.000 thanh niên Đà Nẵng hiến máu tình nguyện trong ngày 'Chủ Nhật Đỏ'",
-        "excerpt": "Sự kiện hiến máu tình nguyện 'Chủ Nhật Đỏ' đã thu hút hơn 2.000 sinh viên và cán bộ giảng viên tham gia, tiếp nhận gần 1.500 đơn vị máu an toàn.",
-        "image": "/static/assets/news/04-blood-storage-bags.png",
-        "fullContent": "Chương trình 'Chủ Nhật Đỏ' lần thứ XVI với thông điệp 'Hiến máu cứu người - Sinh mệnh của bạn và tôi' đã diễn ra sôi nổi tại Đà Nẵng. Sự kiện thu hút hơn 2.000 đoàn viên, thanh niên, sinh viên và cán bộ giảng viên các trường đại học tham gia, tiếp nhận gần 1.500 đơn vị máu quý giá phục vụ cấp cứu dịp đầu năm mới.",
+        "title": "Đà Nẵng: Gần 700 đơn vị máu thu được tại Hành trình Đỏ",
+        "excerpt": "Ngày 5/7, Ban Chỉ đạo vận động hiến máu tình nguyện thành phố phối hợp phường Thanh Khê tổ chức "
+                   "ngày hội hiến máu \"Giọt hồng Đà Nẵng\" trong khuôn khổ Hành trình Đỏ.",
+        "source": "Báo Nhân Dân", "date": date(2026, 7, 5), "image": "assets/news/2026-07-giot-hong-da-nang.jpg",
+        "url": "https://nhandan.vn/da-nang-gan-700-don-vi-mau-thu-duoc-tai-hanh-trinh-do-post973678.html",
     },
     {
-        "id": 5, "date": "10/09/2026", "category": "khan-cap",
-        "title": "Bệnh viện Đa khoa Tam Kỳ kêu gọi khẩn cấp nhóm máu A và O cho các ca mổ tim",
-        "excerpt": "Do nhu cầu phẫu thuật tim mạch tăng đột biến, lượng máu dự trữ nhóm A và O tại Bệnh viện Đa khoa Quảng Nam (Tam Kỳ) đang ở mức báo động. Rất cần sự chung tay của cộng đồng.",
-        "image": "/static/assets/news/05-hands-red-heart.png",
-        "fullContent": "Do nhu cầu phẫu thuật tim mạch và điều trị hồi sức cấp cứu tăng cao đột biến, lượng máu dự trữ nhóm A và nhóm O tại Bệnh viện Đa khoa Quảng Nam (Tam Kỳ) đang ở mức báo động đỏ. Ban giám đốc bệnh viện tha thiết kêu gọi các tình nguyện viên, người dân có đủ điều kiện sức khỏe đến tham gia hiến máu để hỗ trợ kịp thời cho các bệnh nhân hiểm nghèo.",
+        "title": "Hơn 300 người tham gia hiến máu hưởng ứng \"Ngày toàn dân hiến máu tình nguyện 7-4\"",
+        "excerpt": "Ban Chỉ đạo vận động hiến máu tình nguyện TP Đà Nẵng tổ chức lễ phát động và tiếp nhận máu tại "
+                   "Phân hiệu Học viện Hành chính và Quản trị công.",
+        "source": "Công an Đà Nẵng", "date": date(2026, 4, 6), "image": "assets/news/2026-04-cong-an-7-4.jpg",
+        "url": "https://cadn.com.vn/hon-300-nguoi-tham-gia-hien-mau-huong-ung-ngay-toan-dan-hien-mau-tinh-nguyen-7-4-post339280.html",
     },
     {
-        "id": 6, "date": "12/08/2026", "category": "su-kien",
-        "title": "Công an Đà Nẵng tổ chức ngày hội 'Giọt hồng người chiến sĩ'",
-        "excerpt": "Sáng 12/8, Công an thành phố Đà Nẵng tổ chức Ngày hội hiến máu tình nguyện 'Giọt hồng người chiến sĩ' năm 2025. Chương trình đã tiếp nhận khoảng 500 đơn vị máu từ cán bộ, chiến sĩ, đoàn viên thanh niên công an các đơn vị trực thuộc Công an thành phố và công an các xã, phường.",
-        "image": "/static/assets/news/06-volunteer-event.png",
-        "fullContent": "Sáng 12/8, Công an thành phố Đà Nẵng tổ chức Ngày hội hiến máu tình nguyện 'Giọt hồng người chiến sĩ' năm 2025. Chương trình tiếp nhận khoảng 500 đơn vị máu từ cán bộ, chiến sĩ, đoàn viên thanh niên công an các đơn vị trực thuộc Công an thành phố và công an các xã, phường, thể hiện tinh thần xung kích vì cộng đồng.",
+        "title": "Đà Nẵng dự kiến tiếp nhận hơn 56.000 đơn vị máu trong năm 2026",
+        "excerpt": "Sáng 4/4, Ban Chỉ đạo vận động hiến máu tình nguyện TP. Đà Nẵng phát động hưởng ứng \"Ngày toàn dân "
+                   "hiến máu tình nguyện 7/4\"; năm 2026 thành phố dự kiến khoảng 200 đợt hiến máu.",
+        "source": "Dân Việt", "date": date(2026, 4, 4), "image": "assets/news/2026-04-56000-don-vi.jpg",
+        "url": "https://etime.danviet.vn/da-nang-du-kien-tiep-nhan-hon-56000-don-vi-mau-trong-nam-2026-d1415774.html",
     },
     {
-        "id": 7, "date": "05/08/2026", "category": "chia-se",
-        "title": "Hiến máu an toàn và sức khỏe cộng đồng",
-        "excerpt": "Tuân thủ quy trình, đảm bảo an toàn cho người hiến máu và người nhận máu. Những quy định và hướng dẫn y tế cần ghi nhớ trước khi tham gia hiến máu.",
-        "image": "/static/assets/news/07-safe-donation.png",
-        "fullContent": "Các chuyên gia y tế khuyến cáo người tham gia hiến máu cần tuân thủ đầy đủ các nguyên tắc sức khỏe: ngủ đủ giấc đêm trước ngày hiến máu, ăn nhẹ trước khi hiến (không ăn đồ nhiều dầu mỡ), uống nhiều nước, và tránh sử dụng chất kích thích. Quy trình lấy máu hoàn toàn khép kín, sử dụng dụng cụ vô trùng một lần, tuyệt đối an toàn cho sức khỏe người hiến.",
+        "title": "Lan tỏa nghĩa cử hiến máu tình nguyện đầu năm 2026",
+        "excerpt": "Với thông điệp \"Mỗi giọt máu cho đi - một cuộc đời ở lại\", phong trào hiến máu tình nguyện đầu năm 2026 "
+                   "thu hút đông đảo cán bộ, đoàn viên, thanh niên và nhân dân thành phố.",
+        "source": "Báo Đà Nẵng", "date": date(2026, 1, 11), "image": "assets/news/2026-01-dau-nam.jpg",
+        "url": "https://baodanang.vn/lan-toa-nghia-cu-hien-mau-tinh-nguyen-dau-nam-2026-3319460.html",
+    },
+    {
+        "title": "Báo động cạn kiệt nguồn máu dự trữ: Hãy chung tay hiến máu cứu người",
+        "excerpt": "Nhiều địa phương báo động cạn kiệt nguồn máu dự trữ; các bệnh viện và trung tâm hiến máu cả nước "
+                   "kêu gọi người dân tham gia hiến máu nhân đạo.",
+        "source": "Tuổi Trẻ", "date": date(2025, 7, 12), "image": "assets/news/2025-07-can-kiet.jpg",
+        "url": "https://tuoitre.vn/bao-dong-can-kiet-nguon-mau-du-tru-hay-chung-tay-hien-mau-cuu-nguoi-20250712082854084.htm",
+    },
+    {
+        "title": "Hơn 700 sinh viên hiến máu tình nguyện, sẻ chia yêu thương",
+        "excerpt": "Ngày hội hiến máu đợt 1 năm 2025 tại Đại học Đông Á (Đà Nẵng) thu hút hơn 700 lượt đăng ký và "
+                   "tiếp nhận 354 đơn vị máu.",
+        "source": "Báo Văn hóa", "date": date(2025, 5, 14), "image": "assets/news/2025-05-dong-a.jpg",
+        "url": "https://baovanhoa.vn/doi-song/hon-700-sinh-vien-hien-mau-tinh-nguyen-se-chia-yeu-thuong-134580.html",
     },
 ]
 

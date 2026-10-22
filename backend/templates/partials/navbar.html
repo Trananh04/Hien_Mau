@@ -10,11 +10,10 @@
     </a>
 
     <nav class="nav-menu" aria-label="Menu chính">
-      <button type="button" class="nav-link-item" data-open-dialog="info-about">Về chúng tôi</button>
-      <button type="button" class="nav-link-item" data-open-dialog="info-process">Quy trình tham gia</button>
+      <a href="{% url 'bloodbank:home' %}" class="nav-link-item {% active '/' exact=True %}">Trang chủ</a>
+      <a href="{% url 'bloodbank:process' %}" class="nav-link-item {% active '/quy-trinh-hien-mau/' %}">Quy trình tham gia</a>
       <a href="{% url 'bloodbank:campaigns' %}" class="nav-link-item {% active '/dot-hien/' %}">Đợt hiến máu</a>
       <a href="{% url 'bloodbank:map' %}" class="nav-link-item {% active '/ban-do/' %}">Bản đồ</a>
-      <a href="{% url 'bloodbank:home' %}#tin-tuc" class="nav-link-item">Tin tức &amp; sự kiện</a>
 
       <div class="nav-actions">
         {% if user.is_authenticated %}
@@ -33,8 +32,7 @@
             </div>
           </div>
         {% else %}
-          <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="nav-login-link">Đăng nhập</a>
-          <a href="{% url 'accounts:register' %}" class="nav-cta-btn">Đăng ký ngay</a>
+          <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="nav-cta-btn">{% icon "log-in" 18 %} Đăng nhập</a>
         {% endif %}
       </div>
     </nav>
@@ -46,11 +44,10 @@
   </div>
 
   <div class="mobile-nav-drawer" id="mobile-nav-drawer" hidden>
-    <button type="button" class="nav-link-item" data-open-dialog="info-about">Về chúng tôi</button>
-    <button type="button" class="nav-link-item" data-open-dialog="info-process">Quy trình tham gia</button>
+    <a href="{% url 'bloodbank:home' %}" class="nav-link-item">Trang chủ</a>
+    <a href="{% url 'bloodbank:process' %}" class="nav-link-item">Quy trình tham gia</a>
     <a href="{% url 'bloodbank:campaigns' %}" class="nav-link-item">Đợt hiến máu</a>
     <a href="{% url 'bloodbank:map' %}" class="nav-link-item">Bản đồ</a>
-    <a href="{% url 'bloodbank:home' %}#tin-tuc" class="nav-link-item">Tin tức &amp; sự kiện</a>
     {% if user.is_authenticated %}
       <div class="user-block">
         <div class="person-card u-p-4-0-8">
@@ -61,8 +58,7 @@
         {% include "partials/user_menu_items.html" with mobile=True %}
       </div>
     {% else %}
-      <a href="{% url 'accounts:login' %}" class="btn secondary block">Đăng nhập</a>
-      <a href="{% url 'accounts:register' %}" class="nav-cta-btn u-w-100pct u-jc-center">Đăng ký ngay</a>
+      <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="nav-cta-btn u-w-100pct u-jc-center">{% icon "log-in" 18 %} Đăng nhập</a>
     {% endif %}
   </div>
 </header>

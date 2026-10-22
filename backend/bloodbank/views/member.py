@@ -1,6 +1,7 @@
 """SCR-07..13: khu vực cá nhân (chỉ dữ liệu của chính mình — BR-13)."""
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -186,18 +187,53 @@ def notification_link(n):
         return None
 
 
+# Loại thông báo theo nghiệp vụ: (nhãn, icon, tiền tố mã loại)
+NOTIF_CATEGORIES = {
+    "nguoi-can-mau": ("Người cần máu", "heart-pulse", ("patient_request_", "prq_")),
+    "lien-vien": ("Liên viện", "truck", ("offer_", "request_")),
+    "hien-mau": ("Hiến máu", "calendar-heart", ("registration_", "donation_", "campaign_", "eligible_", "donor_callout")),
+    "tai-khoan": ("Tài khoản", "user-cog", ("staff_",)),
+}
+# Cần phản ứng ngay: yêu cầu cần máu mới / bị nhắc lại, bệnh viện khác xin cấp máu, lời kêu gọi hiến, đợt hiến bị hủy
+URGENT_TYPES = {"patient_request_new", "prq_escalated_staff", "prq_escalated_admin", "offer_received",
+                "donor_callout", "campaign_cancelled"}
+
+
+def notification_category(n):
+    for key, (label, icon, prefixes) in NOTIF_CATEGORIES.items():
+        if n.type.startswith(prefixes):
+            return key, label, icon
+    return "khac", "Khác", "bell"
+
+
 @signed_in_required
 def notifications(request):
-    qs = Notification.objects.filter(user=request.user, channel="in_app")
-    if request.GET.get("unread") == "1":
+    base = Notification.objects.filter(user=request.user, channel="in_app")
+    qs = base
+    unread_only = request.GET.get("unread") == "1"
+    if unread_only:
         qs = qs.filter(read_at__isnull=True)
+    cat = request.GET.get("cat") or ""
+    if cat in NOTIF_CATEGORIES:
+        cond = Q()
+        for prefix in NOTIF_CATEGORIES[cat][2]:
+            cond |= Q(type__startswith=prefix)
+        qs = qs.filter(cond)
+    else:
+        cat = ""
     page = paginate(request, qs, 20)
     for n in page:
         n.link = notification_link(n)
+        n.cat_key, n.cat_label, n.cat_icon = notification_category(n)
+        n.urgent = n.type in URGENT_TYPES
+    # Chỉ hiện bộ lọc loại có thông báo, để không có nút lọc trống
+    present = set(base.values_list("type", flat=True).distinct())
+    categories = [(k, label) for k, (label, _, prefixes) in NOTIF_CATEGORIES.items()
+                  if any(t.startswith(prefixes) for t in present)]
     # Người dùng xem trong khu cá nhân; Nhân viên bệnh viện / Quản trị xem trong khu làm việc
     template = "member/notifications.html" if request.user.role == "member" else "shared/notifications.html"
-    return render(request, template, {"page": page, "unread_only": request.GET.get("unread") == "1",
-                                      "tab": "notifications"})
+    return render(request, template, {"page": page, "unread_only": unread_only, "cat": cat,
+                                      "categories": categories, "tab": "notifications"})
 
 
 @signed_in_required

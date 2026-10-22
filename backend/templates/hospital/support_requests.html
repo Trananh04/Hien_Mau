@@ -23,7 +23,7 @@
         </td>
         <td data-label="Cần trước" class="nowrap">{{ r.needed_by|vn_dt }}</td>
         <td data-label="Trạng thái">{% status_badge r %}{% if r.closed_at and r.status == "partially_fulfilled" %}<span class="cell-sub">Đã đóng</span>{% endif %}</td>
-        <td><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="btn ghost sm">Chi tiết</a></td>
+        <td data-label="Thao tác"><div class="table-actions"><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="btn ghost sm">Chi tiết</a></div></td>
       </tr>
     {% endfor %}</tbody>
   </table></div>

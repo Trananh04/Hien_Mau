@@ -81,7 +81,7 @@ def hospitals(request):
 @admin_required
 def hospital_form(request, pk=None):
     hospital = get_object_or_404(Hospital, pk=pk) if pk else None
-    initial = {k: getattr(hospital, k) for k in admin_service.HOSPITAL_FIELDS} if hospital else {"province": "Đà Nẵng"}
+    initial = {k: getattr(hospital, k) for k in admin_service.HOSPITAL_FIELDS} if hospital else {}
     form = HospitalForm(request.POST if request.POST.get("form") == "hospital" else None, initial=initial)
     if request.method == "POST":
         action = request.POST.get("form")
@@ -146,3 +146,22 @@ def permissions_view(request):
         "columns": columns, "rows": rows, "portals": portals, "route_count": len(access.ROUTE_ROLES),
         "user_counts": dict(User.objects.exclude(status="deleted").values_list("role").annotate(n=Count("id"))),
     })
+
+
+@admin_required
+def alerts(request):
+    """SCR-57: cảnh báo toàn hệ thống — việc cần đôn đốc bệnh viện (chỉ đọc)."""
+    return render(request, "admin/alerts.html", {"a": admin_service.system_alerts()})
+
+
+@admin_required
+def assistant_monitor(request):
+    """SCR-58: theo dõi trợ lý hỏi đáp; bật/tắt AI (ghi qua cấu hình hệ thống, có nhật ký)."""
+    if request.method == "POST":
+        on = request.POST.get("ai") == "on"
+        attempt(request, lambda: admin_service.save_setting(request.user, "chatbot_ai_enabled",
+                                                            "true" if on else "false", request),
+                "Đã bật AI cho trợ lý." if on else "Đã tắt AI: trợ lý trả lời bằng chế độ từ khóa.")
+        return redirect("bloodbank:admin_assistant")
+    return render(request, "admin/assistant.html", {"s": admin_service.assistant_stats()})
+

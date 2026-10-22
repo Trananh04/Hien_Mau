@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 {% block body %}
-<div class="ws-shell" data-ws-shell>
+<div class="ws-shell{% if ws_collapsed %} is-collapsed{% endif %}" data-ws-shell>
   <aside class="ws-rail" aria-label="Điều hướng khu làm việc">
     <a href="{% url 'bloodbank:home' %}" class="ws-brand" title="Về trang chủ">
-      <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="Logo Giọt Hồng">
+      <img src="{% static 'assets/png/logo-mark-red.png' %}" alt="Logo Giọt Hồng">
       <div><strong>GIỌT HỒNG</strong><span>Trọn tình người Việt</span></div>
     </a>
 
@@ -14,31 +14,46 @@
         <strong>Quản trị hệ thống</strong>
         <span class="ws-role">{% icon "shield-check" 14 %} Quản trị hệ thống</span>
       </div>
-      <nav class="ws-nav">
-        {% for group in admin_nav %}
-          {% if group.name %}<div class="ws-group">{{ group.name }}</div>{% endif %}
+{% with nav=admin_nav nav_label="quản trị" %}
+      <nav class="ws-nav" aria-label="Menu {{ nav_label }}">
+        {% for group in nav %}
+          {% if group.name %}
+          <details class="ws-sec" data-ws-sec="{{ group.key }}"{% if group.open %} open{% endif %}>
+            <summary class="ws-group"><span>{{ group.name }}</span>{% if group.count %}<span class="ws-group-count" aria-label="{{ group.count }} việc chờ">{{ group.count }}</span>{% endif %}{% icon "chevron-down" 14 "ws-group-chev" %}</summary>
+          {% endif %}
           {% for item in group.items %}
-            <a href="{{ item.href }}" class="ws-link {% active item.href %}">{% icon item.icon %} <span>{{ item.label }}</span></a>
+            <a href="{{ item.href }}" title="{{ item.label }}" class="ws-link {% if not group.name %}{% active item.href exact=True %}{% else %}{% active item.href %}{% endif %}">
+              {% icon item.icon %} <span class="ws-link-label">{{ item.label }}</span>
+              {% if item.count %}<span class="count" aria-label="{{ item.count }} chờ xử lý">{{ item.count }}</span>{% endif %}
+            </a>
           {% endfor %}
+          {% if group.name %}</details>{% endif %}
         {% endfor %}
       </nav>
+      {% endwith %}
     {% else %}
       <div class="ws-context">
         <small>Bệnh viện đang làm việc</small>
         <strong>{{ current_hospital.name }}</strong>
         <span class="ws-role">{% icon "badge-check" 14 %} Nhân viên bệnh viện</span>
       </div>
-      <nav class="ws-nav">
-        {% for group in hospital_nav %}
-          {% if group.name %}<div class="ws-group">{{ group.name }}</div>{% endif %}
+{% with nav=hospital_nav nav_label="bệnh viện" %}
+      <nav class="ws-nav" aria-label="Menu {{ nav_label }}">
+        {% for group in nav %}
+          {% if group.name %}
+          <details class="ws-sec" data-ws-sec="{{ group.key }}"{% if group.open %} open{% endif %}>
+            <summary class="ws-group"><span>{{ group.name }}</span>{% if group.count %}<span class="ws-group-count" aria-label="{{ group.count }} việc chờ">{{ group.count }}</span>{% endif %}{% icon "chevron-down" 14 "ws-group-chev" %}</summary>
+          {% endif %}
           {% for item in group.items %}
-            <a href="{{ item.href }}" class="ws-link {% if forloop.parentloop.first %}{% active item.href exact=True %}{% else %}{% active item.href %}{% endif %}">
-              {% icon item.icon %} <span>{{ item.label }}</span>
-              {% if item.count %}<span class="count">{{ item.count }}</span>{% endif %}
+            <a href="{{ item.href }}" title="{{ item.label }}" class="ws-link {% if not group.name %}{% active item.href exact=True %}{% else %}{% active item.href %}{% endif %}">
+              {% icon item.icon %} <span class="ws-link-label">{{ item.label }}</span>
+              {% if item.count %}<span class="count" aria-label="{{ item.count }} chờ xử lý">{{ item.count }}</span>{% endif %}
             </a>
           {% endfor %}
+          {% if group.name %}</details>{% endif %}
         {% endfor %}
       </nav>
+      {% endwith %}
     {% endif %}
   </aside>
   <div class="ws-overlay" data-ws-close></div>
@@ -46,6 +61,7 @@
   <div class="ws-main">
     <header class="ws-top">
       <button type="button" class="nav-icon-btn ws-menu-btn" data-ws-toggle aria-label="Mở menu">{% icon "menu" 22 %}</button>
+      <button type="button" class="nav-icon-btn ws-collapse-btn" data-ws-collapse aria-label="{% if ws_collapsed %}Mở rộng menu{% else %}Thu gọn menu{% endif %}" aria-pressed="{% if ws_collapsed %}true{% else %}false{% endif %}" title="Thu gọn / mở rộng menu">{% icon "panel-left" 20 %}</button>
       <div class="ws-top-title">{% block crumbs %}{% endblock %}</div>
       <div class="ws-top-actions">
         <a href="{% url 'bloodbank:home' %}" class="nav-icon-btn" title="Trang chủ" aria-label="Trang chủ">{% icon "house" %}</a>

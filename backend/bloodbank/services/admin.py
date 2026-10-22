@@ -68,7 +68,7 @@ def assign_staff(actor, hospital, data, request=None):
         if user is None:
             full_name = (data.get("full_name") or "").strip()
             password = data.get("password") or ""
-            require(full_name, "ERR-VALIDATION", "Email chưa có tài khoản — nhập họ tên để tạo tài khoản nhân viên mới.")
+            require(full_name, "ERR-VALIDATION", "Email này chưa có tài khoản. Nhập họ tên để tạo tài khoản nhân viên mới.")
             try:
                 validate_password(password, User(email=email, full_name=full_name))
             except ValidationError as exc:
@@ -152,7 +152,7 @@ def set_hospital_status(actor, hospital_id, status, request=None):
             ).exists()
             if busy_offers or Campaign.objects.filter(hospital=h, status="open").exists():
                 raise BusinessError("ERR-STATE-INVALID",
-                                    "Còn đề nghị đang giữ chỗ/vận chuyển hoặc đợt hiến đang mở — chưa thể ngừng hoạt động.")
+                                    "Còn đề nghị đang giữ chỗ/vận chuyển hoặc đợt hiến đang mở, chưa thể ngừng hoạt động.")
         old = h.status
         h.status = status
         h.save(update_fields=["status", "updated_at"])
@@ -232,8 +232,11 @@ def save_setting(actor, key, raw, request=None):
     except (TypeError, ValueError):
         raise BusinessError("ERR-VALIDATION", "Giá trị phải là JSON hợp lệ (ví dụ: 5, \"abc\", true).")
     default = SystemSetting.DEFAULTS[key][0]
-    if isinstance(default, int):
-        require(isinstance(value, int) and value > 0, "ERR-VALIDATION", "Giá trị phải là số nguyên dương.")
+    if isinstance(default, bool):
+        require(isinstance(value, bool), "ERR-VALIDATION", "Giá trị phải là true hoặc false.")
+    elif isinstance(default, int):
+        require(isinstance(value, int) and not isinstance(value, bool) and value > 0, "ERR-VALIDATION",
+                "Giá trị phải là số nguyên dương.")
     with business_transaction():
         row, _ = SystemSetting.objects.get_or_create(
             setting_key=key, defaults={"setting_value": value, "description": SystemSetting.DEFAULTS[key][1]})
@@ -243,3 +246,113 @@ def save_setting(actor, key, raw, request=None):
         audit(actor, row, "update", old={"value": old}, new={"value": value}, entity_type="system_settings",
               entity_id=0, request=request)
     return row
+
+
+# ---------------------------------------------------------------- Giám sát (chỉ đọc)
+def system_alerts(now=None):
+    """Việc cần Quản trị đôn đốc trên toàn hệ thống. Không làm thay bệnh viện, không lộ tên bệnh nhân."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from bloodbank.models import PatientRequest
+    from bloodbank.services import inventory as inv
+
+    now = now or timezone.now()
+    late_minutes = SystemSetting.get("prq_escalate_admin_minutes")
+    ttl_hours = SystemSetting.get("offer_response_ttl_hours")
+    late_prq = list(PatientRequest.objects.filter(
+        status__in=PatientRequest.WAITING_STATUSES, created_at__lte=now - timedelta(minutes=late_minutes),
+        hospital__status="active").select_related("hospital", "blood_product").order_by("created_at"))
+    overdue_support = list(HospitalRequest.objects.filter(
+        status__in=HospitalRequest.OPEN_STATUSES, closed_at__isnull=True, needed_by__lt=now)
+        .select_related("requesting_hospital", "product_spec__product").order_by("needed_by"))
+    stale_offers = list(RequestOffer.objects.filter(
+        status=RequestOffer.Status.PENDING, created_at__lte=now - timedelta(hours=ttl_hours / 2))
+        .select_related("supplier_hospital", "request__requesting_hospital").order_by("created_at"))
+    shortages = []
+    for h in Hospital.objects.filter(status="active").order_by("name"):
+        rows = [r for r in inv.shortages(h) if r["shortage"] > 0]
+        if rows:
+            shortages.append({"hospital": h, "rows": rows, "total": sum(r["shortage"] for r in rows)})
+    shortages.sort(key=lambda x: -x["total"])
+    return {"late_prq": late_prq, "late_minutes": late_minutes, "overdue_support": overdue_support,
+            "stale_offers": stale_offers, "ttl_hours": ttl_hours, "stale_after_hours": ttl_hours // 2 if ttl_hours % 2 == 0 else ttl_hours / 2,
+            "shortages": shortages,
+            "urgent_count": len(late_prq) + len(overdue_support)}
+
+
+def urgent_alert_count(now=None):
+    """Số việc khẩn để hiện trên menu Quản trị (2 truy vấn đếm, không tính thiếu hụt theo từng bệnh viện)."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from bloodbank.models import PatientRequest
+
+    now = now or timezone.now()
+    late = now - timedelta(minutes=SystemSetting.get("prq_escalate_admin_minutes"))
+    return (PatientRequest.objects.filter(status__in=PatientRequest.WAITING_STATUSES, created_at__lte=late,
+                                          hospital__status="active").count()
+            + HospitalRequest.objects.filter(status__in=HospitalRequest.OPEN_STATUSES, closed_at__isnull=True,
+                                             needed_by__lt=now).count())
+
+
+ASSISTANT_MODES = {"llm": "AI trả lời", "rules": "Chế độ từ khóa", "guard": "Chặn an toàn", "limit": "Quá giới hạn"}
+ASSISTANT_INTENTS = {
+    "faq": "Hỏi đáp kiến thức", "chat": "Hỏi đáp kiến thức", "campaigns": "Tìm đợt hiến",
+    "suggest_campaigns": "Tìm đợt hiến", "eligibility": "Ngày được hiến lại", "my_eligibility": "Ngày được hiến lại",
+    "history": "Lịch sử hiến", "my_donation_history": "Lịch sử hiến", "precheck": "Kiểm tra điều kiện sơ bộ",
+    "preliminary_check": "Kiểm tra điều kiện sơ bộ", "my_registrations": "Đơn đăng ký của tôi",
+    "my_patient_requests": "Yêu cầu cần máu của tôi", "emergency": "Tình huống khẩn cấp",
+    "privacy": "Hỏi dữ liệu người khác", "trade": "Mua bán máu", "injection": "Cố vượt quyền",
+    "clinical": "Câu hỏi y khoa", "unknown": "Không hiểu câu hỏi",
+}
+
+
+def assistant_stats(days=7, now=None):
+    """Theo dõi trợ lý từ nhật ký `assistant_query` (không có nội dung câu hỏi) + bộ đếm lượt gọi AI hôm nay."""
+    from datetime import timedelta
+
+    from django.conf import settings
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
+    from django.utils import timezone
+
+    from bloodbank.assistant import llm
+    from bloodbank.assistant.service import llm_calls_today
+    from bloodbank.models import AuditLog
+
+    now = now or timezone.now()
+    today = timezone.localdate(now)
+    start_day = today - timedelta(days=days - 1)
+    tz = timezone.get_current_timezone()
+    qs = AuditLog.objects.filter(action="assistant_query",
+                                 created_at__date__gte=start_day)
+    per_day = {start_day + timedelta(days=i): {"total": 0, **{m: 0 for m in ASSISTANT_MODES}} for i in range(days)}
+    for row in (qs.annotate(d=TruncDate("created_at", tzinfo=tz)).values("d", "new_values__mode")
+                .annotate(n=Count("id"))):
+        day = per_day.get(row["d"])
+        if day is not None:
+            day["total"] += row["n"]
+            mode = row["new_values__mode"]
+            if mode in ASSISTANT_MODES:
+                day[mode] += row["n"]
+    totals = {m: sum(d[m] for d in per_day.values()) for m in ASSISTANT_MODES}
+    total = sum(d["total"] for d in per_day.values())
+    intents = {}
+    for row in qs.values("new_values__intent").annotate(n=Count("id")).order_by("-n"):
+        for part in str(row["new_values__intent"] or "unknown").split(","):
+            label = ASSISTANT_INTENTS.get(part.split(":")[0].strip(), "Khác")
+            intents[label] = intents.get(label, 0) + row["n"]
+    peak = max([d["total"] for d in per_day.values()] or [0])
+    return {
+        "days": [{"date": d, **v} for d, v in sorted(per_day.items())], "peak": peak, "total": total,
+        "modes": [{"key": k, "label": label, "count": totals[k]} for k, label in ASSISTANT_MODES.items()],
+        "intents": sorted(intents.items(), key=lambda kv: -kv[1])[:8],
+        "ai_calls_today": llm_calls_today(),
+        "daily_limit": settings.CHATBOT_DAILY_LIMIT, "max_concurrent": settings.CHATBOT_MAX_CONCURRENT,
+        "configured": llm.configured(), "enabled": llm.enabled(),
+        "switch_on": bool(SystemSetting.get("chatbot_ai_enabled")), "model": settings.CHATBOT_MODEL,
+    }
+

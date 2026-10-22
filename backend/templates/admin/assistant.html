@@ -1,0 +1,68 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Trợ lý hỏi đáp{% endblock %}
+{% block crumbs %}<span>Hệ thống</span>{% icon "chevron-right" 14 %}<span>Trợ lý hỏi đáp</span>{% endblock %}
+{% block ws_title %}Trợ lý hỏi đáp{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Số liệu 7 ngày gần nhất, lấy từ nhật ký hệ thống. Nhật ký không lưu nội dung câu hỏi.</p>{% endblock %}
+{% block content %}
+<div class="dash">
+  <section class="panel" aria-labelledby="ai-title">
+    <div class="panel-head"><h2 class="panel-title" id="ai-title">Trạng thái AI</h2></div>
+    <dl class="dl dash-dl">
+      <dt>Hiện tại</dt><dd>{% if s.enabled %}<span class="tag ok">{% icon "circle-check" 14 %} AI đang trả lời</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Chỉ chế độ từ khóa</span>{% endif %}</dd>
+      <dt>Lượt gọi AI hôm nay</dt><dd><strong>{{ s.ai_calls_today }}</strong> / {{ s.daily_limit }} (hạn mức ngày)
+        <div class="progress u-h-8 u-mt-6"><span class="u-bg-primary" data-pct="{{ s.ai_calls_today|pct:s.daily_limit }}"></span></div></dd>
+      <dt>Gọi AI cùng lúc tối đa</dt><dd>{{ s.max_concurrent }} câu; vượt thì trả lời ngay bằng chế độ từ khóa</dd>
+      <dt>Mô hình</dt><dd>{{ s.model }}</dd>
+    </dl>
+    {% if s.configured %}
+    <form method="post" class="panel-foot u-jc-space-between u-ai-center"{% if s.switch_on %} data-confirm="Tắt AI? Trợ lý sẽ trả lời bằng chế độ từ khóa cho tới khi bật lại."{% endif %}>
+      {% csrf_token %}
+      {% if s.switch_on %}
+        <span class="small muted">Tắt AI khi cần tiết kiệm chi phí hoặc dịch vụ AI gặp sự cố.</span>
+        <input type="hidden" name="ai" value="off">
+        <button type="submit" class="btn secondary sm">{% icon "power" %} Tắt AI</button>
+      {% else %}
+        <span class="small muted">Trợ lý đang chỉ dùng chế độ từ khóa.</span>
+        <input type="hidden" name="ai" value="on">
+        <button type="submit" class="btn primary sm">{% icon "power" %} Bật AI</button>
+      {% endif %}
+    </form>
+    {% else %}
+    <p class="dash-empty">{% icon "info" 18 %} Máy chủ chưa cấu hình khóa AI (ANTHROPIC_API_KEY trong .env), trợ lý chỉ dùng chế độ từ khóa.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="mode-title">
+    <div class="panel-head"><h2 class="panel-title" id="mode-title">Cách trợ lý trả lời</h2><span class="dash-meta">{{ s.total }} câu hỏi</span></div>
+    <ul class="dash-rows">
+      {% for m in s.modes %}
+      <li><span class="grow">{{ m.label }}</span>
+        <span class="mode-bar progress u-h-8" aria-hidden="true"><span class="u-bg-primary" data-pct="{{ m.count|pct:s.total }}"></span></span>
+        <strong class="num">{{ m.count }}</strong></li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel" aria-labelledby="day-title">
+    <div class="panel-head"><h2 class="panel-title" id="day-title">Số câu hỏi theo ngày</h2></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Ngày</th><th class="num">Tổng</th><th class="num">AI</th><th class="num">Từ khóa</th><th class="u-w-40pct"><span class="sr-only">Biểu đồ</span></th></tr></thead>
+      <tbody>{% for d in s.days %}
+        <tr><td>{{ d.date|date:"d/m" }}</td><td class="num"><strong>{{ d.total }}</strong></td><td class="num">{{ d.llm }}</td><td class="num">{{ d.rules }}</td>
+          <td><div class="progress u-h-8" title="{{ d.total }} câu hỏi"><span class="u-bg-primary" data-pct="{{ d.total|pct:s.peak }}"></span></div></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="intent-title">
+    <div class="panel-head"><h2 class="panel-title" id="intent-title">Chủ đề được hỏi nhiều</h2></div>
+    {% if s.intents %}
+    <ul class="dash-rows">
+      {% for label, n in s.intents %}<li><span class="grow">{{ label }}</span><strong class="num">{{ n }}</strong></li>{% endfor %}
+    </ul>
+    {% else %}
+    <p class="dash-empty">Chưa có câu hỏi nào trong 7 ngày qua.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

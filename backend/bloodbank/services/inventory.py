@@ -137,7 +137,7 @@ def adjust(staff, stock_id, direction, quantity, reason, note, key, counted=None
                 raise BusinessError("ERR-INV-QTY-POSITIVE", "Nhập số đếm thực tế (số nguyên ≥ 0).")
             require(counted >= 0, "ERR-INV-QTY-POSITIVE")
             change = counted - stock.quantity_on_hand
-            require(change != 0, "ERR-VALIDATION", "Số đếm thực tế bằng tồn hiện có — không cần điều chỉnh.")
+            require(change != 0, "ERR-VALIDATION", "Số đếm thực tế bằng tồn hiện có, không cần điều chỉnh.")
         else:
             qty = positive_int(quantity)
             change = qty if direction == "increase" else -qty
@@ -169,7 +169,7 @@ def update_stock_settings(staff, stock_id, shareable, min_level, version, reques
         if stock is None:
             raise BusinessError("ERR-NOT-FOUND")
         version = as_id(version)
-        require(version is not None, "ERR-VALIDATION", "Thiếu phiên bản dữ liệu — vui lòng tải lại trang.")
+        require(version is not None, "ERR-VALIDATION", "Thiếu phiên bản dữ liệu. Vui lòng tải lại trang.")
         old = {"shareable_quantity": stock.shareable_quantity, "min_stock_level": stock.min_stock_level}
         updated = Stock.objects.filter(pk=stock.pk, version=version).update(
             shareable_quantity=shareable, min_stock_level=min_level, version=F("version") + 1, updated_at=timezone.now()
@@ -247,6 +247,38 @@ def stock_overview(hospital, product_id=None):
               "reserved": sum(s.quantity_reserved for s in rows.values()),
               "low": sum(1 for s in rows.values() if s.below_min), "short": sum(1 for v in short.values() if v > 0)}
     return {"matrix": matrix, "specs": shown_specs, "detail": detail, "totals": totals, "all_specs": specs}
+
+
+def stock_alerts(hospital, limit=8):
+    """Tổng quan: các dòng kho cần chú ý, gộp theo (nhóm máu, quy cách).
+
+    level "danger" = nhu cầu đang mở vượt tồn khả dụng (thiếu); "warn" = khả dụng dưới mức tối thiểu đã khai.
+    Khả dụng = hiện có − đang giữ chỗ (không dùng tổng tồn). Chỉ đọc, không ghi gì.
+    """
+    stocks = {(s.blood_group, s.product_spec_id): s
+              for s in Stock.objects.filter(hospital=hospital).select_related("product_spec__product")}
+    rows = {}
+    for r in shortages(hospital):
+        if r["shortage"] <= 0:
+            continue
+        st = stocks.get((r["blood_group"], r["spec"].pk))
+        rows[(r["blood_group"], r["spec"].pk)] = {
+            "blood_group": r["blood_group"], "spec": r["spec"], "available": r["available"],
+            "min_level": st.min_stock_level if st else 0, "required": r["required"], "shortage": r["shortage"],
+            "level": "danger", "stock": st,
+        }
+    for key, st in stocks.items():
+        if st.below_min and key not in rows:
+            rows[key] = {"blood_group": st.blood_group, "spec": st.product_spec, "available": st.available,
+                         "min_level": st.min_stock_level, "required": None,
+                         "shortage": st.min_stock_level - st.available, "level": "warn", "stock": st}
+    ordered = sorted(rows.values(), key=lambda r: (r["level"] != "danger", -r["shortage"], r["blood_group"]))
+    on_hand = sum(s.quantity_on_hand for s in stocks.values())
+    reserved = sum(s.quantity_reserved for s in stocks.values())
+    return {"rows": ordered[:limit], "more": max(0, len(ordered) - limit),
+            "danger": sum(1 for r in ordered if r["level"] == "danger"),
+            "warn": sum(1 for r in ordered if r["level"] == "warn"),
+            "on_hand": on_hand, "reserved": reserved, "available": on_hand - reserved}
 
 
 def shortages(hospital):
