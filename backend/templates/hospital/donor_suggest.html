@@ -1,0 +1,52 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Gợi ý người hiến nhóm {{ blood_group }}{% endblock %}
+{% block crumbs %}<a href="{% url 'bloodbank:demands' %}">Dự báo thiếu hụt</a>{% icon "chevron-right" 14 %}<span>Gợi ý người hiến</span>{% endblock %}
+{% block ws_title %}{% if mode == "urgent" %}Kêu gọi khẩn nhóm{% else %}Gợi ý người hiến nhóm{% endif %} {% blood blood_group "sm" %}{% endblock %}
+{% block content %}
+{% if mode == "urgent" %}
+<div class="notice danger">{% icon "siren" %}<div><strong>Kêu gọi khẩn chỉ để bù lại kho</strong> — máu hiến mới phải xét nghiệm mới dùng được. Ca cần ngay: xuất kho và xin liên viện trước (trừ nhóm máu hiếm). Người ở gần được ưu tiên, lời mời hẹn đến bệnh viện trong hôm nay.</div></div>
+{% endif %}
+<p class="summary-line">Đang thiếu <b class="{% if shortage %}t-danger{% endif %}">{{ shortage }}</b> đơn vị nhóm {{ blood_group }} · <b>{{ rows|length }}</b> người hiến phù hợp {% if radius %}trong {{ radius }} km{% else %}trong tỉnh/thành{% endif %} · hưởng ứng {% if stats.rate is not None %}<b>{% widthratio stats.responded stats.sent 100 %}%</b> ({{ stats.responded }}/{{ stats.sent }} người được mời){% else %}tạm tính <b>{{ rate_pct }}%</b> (chưa đủ dữ liệu){% endif %}</p>
+
+
+{% if can_radius %}<form id="radius-form" method="get" hidden><input type="hidden" name="blood_group" value="{{ blood_group }}">{% if mode == "urgent" %}<input type="hidden" name="mode" value="urgent">{% endif %}</form>{% endif %}
+{% if rows %}
+<form method="post" action="{% url 'bloodbank:donor_callout' %}" novalidate
+      data-confirm="Gửi lời mời {% if mode == 'urgent' %}khẩn {% endif %}hiến máu nhóm {{ blood_group }} tới những người đã chọn?"
+      data-confirm-detail="Mỗi người nhận một thông báo và email. Người đã nhận lời mời sẽ không được gợi ý lại trong thời gian chờ."
+      data-confirm-label="Gửi lời mời">
+  {% csrf_token %}
+  <input type="hidden" name="blood_group" value="{{ blood_group }}">
+  <input type="hidden" name="mode" value="{{ mode }}">
+  {% if radius %}<input type="hidden" name="radius" value="{{ radius }}">{% endif %}
+  <input type="hidden" name="next" value="{{ back_url|default:request.get_full_path }}">
+  {% if n_suggest %}
+  <div class="notice info">{% icon "sparkles" %}<div><strong>Đã chọn sẵn {{ n_suggest }} người điểm cao nhất</strong> để bù {{ shortage }} đơn vị thiếu (thiếu {{ shortage }} ÷ hưởng ứng {{ rate_pct }}%, tối đa {{ max_send }} người). Bạn có thể bỏ chọn hoặc chọn thêm trước khi gửi.</div></div>
+  {% endif %}
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">{% icon "list-ordered" %} Danh sách xếp hạng <span class="muted small">{{ rows|length }} người</span></h2>{% include "partials/radius_filter.html" %}</div>
+    <div class="table-wrap"><table class="table stack-mobile">
+      <thead><tr><th></th><th>Mã</th><th>Mức phù hợp</th><th>Điểm</th><th>Lý do</th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr>
+          <td><input class="u-accent-color-primary u-w-18 u-h-18" type="checkbox" name="code" value="{{ r.code }}" {% if r.preselected %}checked{% endif %} aria-label="Chọn người hiến {{ r.code }}"></td>
+          <td data-label="Mã"><span class="cell-title donor-code">{{ r.code }}</span>{% if r.first_time %}<span class="cell-sub">lần đầu hiến</span>{% endif %}</td>
+          <td data-label="Mức phù hợp">{% if r.level == "high" %}<span class="badge ok">Cao</span>{% elif r.level == "medium" %}<span class="badge warn">Vừa</span>{% else %}<span class="badge neutral">Thấp</span>{% endif %}</td>
+          <td data-label="Điểm" class="score-cell">
+            <strong>{{ r.score }}</strong><span class="muted small">/100</span>
+            <div class="progress u-h-8 u-mt-6" aria-hidden="true"><span class="u-bg-primary" data-pct="{{ r.score }}"></span></div>
+            <details class="score-detail"><summary class="link small">Chi tiết điểm</summary>
+              <ul>{% for p in r.parts %}<li><span>{{ p.label }}</span><strong class="num">{{ p.points }}/{{ p.max }}</strong></li>{% endfor %}</ul>
+            </details>
+          </td>
+          <td data-label="Lý do">{{ r.reasons|join:" · " }}</td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <div class="panel-foot sticky-foot"><a href="{% url 'bloodbank:demands' %}" class="btn secondary">Quay lại</a><button class="btn primary">{% icon "send" %} Gửi lời mời cho người đã chọn</button></div>
+  </section>
+</form>
+{% else %}
+<div class="panel">{% if can_radius %}<div class="panel-head"><h2 class="panel-title">{% icon "list-ordered" %} Danh sách xếp hạng</h2>{% include "partials/radius_filter.html" %}</div>{% endif %}<div class="empty"><div class="empty-icon">{% icon "user-search" %}</div><h3>Chưa có người hiến phù hợp</h3><p>{% if radius %}Thử mở rộng bán kính hoặc chọn cả tỉnh/thành. {% endif %}Có thể mọi người cùng nhóm máu đều chưa đủ thời gian nghỉ hoặc vừa được kêu gọi. Cân nhắc xin hỗ trợ liên viện hoặc tạo đợt hiến.</p></div></div>
+{% endif %}
+{% endblock %}

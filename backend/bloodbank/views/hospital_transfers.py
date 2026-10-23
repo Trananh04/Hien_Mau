@@ -1,5 +1,7 @@
 """SCR-34..37: tìm nguồn liên viện, yêu cầu đã gửi, đề nghị đến bệnh viện tôi, yêu cầu người cần máu."""
 from django.contrib import messages
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -27,8 +29,12 @@ def source_search(request):
                                   g.get("province") or None)
     prefill = {
         "blood_group": g.get("blood_group"), "product_spec_id": spec_id or "",
-        "quantity_needed": g.get("qty") or g.get("min_qty") or "", "priority": "normal",
+        "quantity_needed": g.get("qty") or g.get("min_qty") or "",
+        "priority": g.get("priority") if g.get("priority") in ("low", "normal", "high", "urgent") else "normal",
     }
+    needed_by = parse_datetime(g.get("needed_by") or "")
+    if needed_by:
+        prefill["needed_by"] = timezone.localtime(needed_by).strftime("%Y-%m-%dT%H:%M")
     if not prefill["product_spec_id"] and product_id:
         d = ProductSpec.objects.filter(product_id=product_id, is_default=True).first()
         prefill["product_spec_id"] = d.pk if d else ""
@@ -139,11 +145,21 @@ def incoming_offers(request):
     trf.expire_overdue(request.hospital)
     qs = RequestOffer.objects.filter(supplier_hospital=request.hospital).select_related(
         "request__requesting_hospital", "request__product_spec__product")
+    # Gom trạng thái theo việc cần làm (mặc định: cần xử lý); ?status=<mã> cũ (từ thông báo, tổng quan) vẫn dùng được
+    groups = {"can-xu-ly": ("pending", "accepted"), "dang-chuyen": ("in_transit",),
+              "da-xong": ("completed", "rejected", "cancelled", "failed")}
     status = request.GET.get("status") or ""
+    group = request.GET.get("nhom") or ("" if status else "can-xu-ly")
+    counts = {k: qs.filter(status__in=v).count() for k, v in groups.items()}
     if status:
         qs = qs.filter(status=status)
-    return render(request, "hospital/incoming_offers.html", {"page": paginate(request, qs, 20), "status": status,
-                                                             "statuses": RequestOffer.Status.choices})
+        group = next((k for k, v in groups.items() if status in v), "")
+    elif group in groups:
+        qs = qs.filter(status__in=groups[group])
+    tabs = [("can-xu-ly", "Cần xử lý"), ("dang-chuyen", "Đang vận chuyển"), ("da-xong", "Đã xong"), ("tat-ca", "Tất cả")]
+    return render(request, "hospital/incoming_offers.html", {
+        "page": paginate(request, qs, 20), "group": group or "tat-ca", "status": status,
+        "tabs": [(k, label, counts.get(k)) for k, label in tabs]})
 
 
 @staff_required

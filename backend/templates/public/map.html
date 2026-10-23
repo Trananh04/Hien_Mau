@@ -2,21 +2,32 @@
 {% load static %}
 {% block title %}Bản đồ điểm hiến máu{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
-{% block band %}{% include "partials/band.html" with title="Bản đồ bệnh viện & điểm hiến" lead="Bệnh viện tham gia nền tảng và địa điểm các đợt hiến đang nhận đăng ký. Trang không lưu vị trí của bạn." %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Bản đồ bệnh viện & điểm hiến" lead="Tìm bệnh viện và đợt hiến gần bạn. Vị trí của bạn chỉ dùng trên trình duyệt, không gửi lên hệ thống." %}{% endblock %}
 {% block content %}
 <div class="container page-body">
-  <div class="map-layout">
+  <div class="map-toggle" role="tablist" aria-label="Chế độ xem">
+    <button type="button" class="chip-link is-active" data-map-view="list" role="tab" aria-selected="true">{% icon "list" 14 %} Danh sách</button>
+    <button type="button" class="chip-link" data-map-view="map" role="tab" aria-selected="false">{% icon "map" 14 %} Bản đồ</button>
+  </div>
+  <div class="map-layout" data-map-layout data-view="list">
     <div class="map-side">
       <div class="map-filter">
-        <select class="field-select u-flex-1" data-map-province aria-label="Lọc theo tỉnh/thành">
+        <button type="button" class="btn secondary sm u-w-100pct" data-map-near>{% icon "locate-fixed" 16 %} Tìm nơi gần tôi</button>
+        <select class="field-select map-province" data-map-province aria-label="Lọc theo tỉnh/thành">
           <option value="">Tất cả tỉnh/thành</option>
           {% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
         </select>
         <select class="field-select u-flex-1" data-map-type aria-label="Loại điểm">
-          <option value="">Bệnh viện &amp; đợt hiến</option>
+          <option value="">Mọi loại điểm</option>
           <option value="hospital">Chỉ bệnh viện</option>
           <option value="campaign">Chỉ đợt hiến</option>
         </select>
+        <select class="field-select u-flex-1" data-map-when aria-label="Thời gian đợt hiến">
+          <option value="">Mọi thời gian</option>
+          <option value="today">Hôm nay</option>
+          <option value="week">7 ngày tới</option>
+        </select>
+        <p class="map-status muted small" data-map-status hidden></p>
       </div>
       <div class="map-list" data-map-list aria-live="polite">
         <div class="empty"><span class="skeleton u-w-60pct"></span><span class="skeleton u-w-40pct"></span></div>

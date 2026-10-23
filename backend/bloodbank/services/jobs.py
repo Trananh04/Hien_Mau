@@ -9,6 +9,7 @@ Không phụ thuộc việc có người mở trang:
 """
 from datetime import timedelta
 
+from django.db.models import Q
 from django.utils import timezone
 
 from accounts.models import User
@@ -25,8 +26,10 @@ ESCALATE_STAFF, ESCALATE_ADMIN = "prq_escalated_staff", "prq_escalated_admin"
 def cancel_stale_offers(now=None):
     now = now or timezone.now()
     cutoff = now - timedelta(hours=SystemSetting.get("offer_response_ttl_hours"))
-    ids = list(RequestOffer.objects.filter(status=O.PENDING, created_at__lt=cutoff,
-                                           request__status__in=[H.OPEN, H.IN_PROGRESS, H.PARTIALLY_FULFILLED])
+    urgent_cutoff = now - timedelta(minutes=SystemSetting.get("offer_response_ttl_urgent_minutes"))
+    open_reqs = [H.OPEN, H.IN_PROGRESS, H.PARTIALLY_FULFILLED]
+    ids = list(RequestOffer.objects.filter(status=O.PENDING, request__status__in=open_reqs)
+               .filter(Q(created_at__lt=cutoff) | Q(request__priority="urgent", created_at__lt=urgent_cutoff))
                .values_list("pk", flat=True))
     done = 0
     for offer_id in ids:

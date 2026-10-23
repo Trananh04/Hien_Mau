@@ -89,7 +89,10 @@ def map_view(request):
 
 
 def map_data(request):
-    """MAP-01: chỉ dữ liệu công khai; không lưu vị trí người dùng."""
+    """MAP-01: chỉ dữ liệu công khai; không lưu vị trí người dùng (khoảng cách "gần tôi" tính trên trình duyệt).
+
+    Đợt hiến kèm thời gian bắt đầu / kết thúc để lọc hôm nay / 7 ngày tới.
+    """
     now = timezone.now()
     hospitals = [
         {"type": "hospital", "id": h.pk, "name": h.name, "address": h.address, "area": h.area, "province": h.province,
@@ -101,6 +104,7 @@ def map_data(request):
          "area": c.hospital.name, "province": c.province or c.hospital.province,
          "time": f"{timezone.localtime(c.start_time):%H:%M %d/%m} – {timezone.localtime(c.end_time):%H:%M %d/%m}",
          "url": reverse("bloodbank:campaign_detail", args=[c.pk]),
+         "start": c.start_time.isoformat(), "end": c.end_time.isoformat(), "live": c.start_time <= now,
          "lat": float(c.latitude if c.latitude is not None else c.hospital.latitude),
          "lng": float(c.longitude if c.longitude is not None else c.hospital.longitude)}
         for c in Campaign.objects.public().filter(status="open", end_time__gt=now)

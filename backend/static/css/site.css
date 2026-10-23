@@ -1,4 +1,4 @@
-/* Port nguyên văn từ frontend/src/index.css + App.css (trang chủ React) — giữ đồng nhất font, màu, nút */
+/* Giao diện trang công khai: phông, màu, nút, đầu trang / chân trang, trang chủ (ban đầu chuyển từ bản thiết kế React). */
 :root {
   --primary: #d90429;
   --primary-hover: #b9001f;
@@ -18,8 +18,8 @@
   --bg-card: #ffffff;
   --border-card: #e2e8f0;
   
-  --font-main: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-script: 'Dancing Script', 'Caveat', cursive;
+  --font-main: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-script: var(--font-main);   /* lời chào / khẩu hiệu: cùng phông Roboto */
   
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -381,65 +381,6 @@ input, textarea, select {
   flex-wrap: wrap;
 }
 
-.btn-volunteer-action {
-  background-color: var(--primary);
-  color: #ffffff;
-  border: 2px solid var(--primary);
-  padding: 12px 28px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: var(--transition);
-  box-shadow: 0 4px 14px rgba(217, 4, 41, 0.25);
-}
-
-.btn-volunteer-action:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(217, 4, 41, 0.35);
-}
-
-.btn-need-blood-action {
-  background-color: #ffffff;
-  color: var(--primary);
-  border: 2px solid var(--primary);
-  padding: 12px 28px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: var(--transition);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.btn-need-blood-action:hover {
-  background-color: var(--primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(217, 4, 41, 0.15);
-}
-
-.btn-icon-svg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-arrow {
-  font-size: 17px;
-  transition: transform 0.2s ease;
-}
-
-.btn-volunteer-action:hover .btn-arrow,
-.btn-need-blood-action:hover .btn-arrow {
-  transform: translateX(4px);
-}
-
 /* Gạch chân dưới tiêu đề mục trên trang chủ */
 .news-title-underline {
   width: 48px;
@@ -620,19 +561,6 @@ input, textarea, select {
 /* --------------------------------------------------------------------------
    MODALS & OVERLAYS
    -------------------------------------------------------------------------- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: overlayFadeIn 0.2s ease;
-}
 
 .modal-dialog {
   background: #ffffff;
@@ -680,11 +608,6 @@ input, textarea, select {
   font-weight: 700;
 }
 
-.modal-subtitle {
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
 .modal-close-btn {
   color: #94a3b8;
   padding: 6px;
@@ -702,51 +625,6 @@ input, textarea, select {
   overflow-y: auto;
 }
 
-.form-group-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.form-label {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.form-label span.req {
-  color: var(--primary);
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  color: #1e293b;
-  background: #ffffff;
-  transition: var(--transition);
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(217, 4, 41, 0.12);
-}
-
 .modal-footer {
   padding: 16px 24px;
   background: #f8fafc;
@@ -755,22 +633,6 @@ input, textarea, select {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-}
-
-.btn-secondary {
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 500;
-  color: #475569;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  transition: var(--transition);
-}
-
-.btn-secondary:hover {
-  background: #f1f5f9;
-  color: #0f172a;
 }
 
 .btn-primary {
@@ -862,15 +724,8 @@ input, textarea, select {
 }
 
 @media (max-width: 640px) {
-  .form-group-grid {
-    grid-template-columns: 1fr;
-  }
   .hero-action-buttons {
     flex-direction: column;
-    width: 100%;
-  }
-  .btn-volunteer-action,
-  .btn-need-blood-action {
     width: 100%;
   }
 }
@@ -878,42 +733,6 @@ input, textarea, select {
 /* ==========================================================================
    CUSTOM REGISTRATION & BLOOD REQUEST FORMS (MATCHING SCREENSHOTS)
    ========================================================================== */
-.custom-form-wrapper {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 10px 4px;
-}
-
-.form-header-center {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.form-main-heading {
-  color: #c7001e;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
-  text-transform: uppercase;
-}
-
-.form-sub-heading {
-  color: #c7001e;
-  font-size: 16.5px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.form-desc {
-  font-size: 13.5px;
-  color: #475569;
-  line-height: 1.5;
-  max-width: 580px;
-  margin: 0 auto;
-}
 
 .custom-form-body {
   display: flex;
@@ -934,24 +753,6 @@ input, textarea, select {
   font-size: 14.5px;
   padding: 0 8px;
   margin-left: 10px;
-}
-
-.form-row-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.form-row-3col {
-  display: grid;
-  grid-template-columns: 1.2fr 1.2fr 1fr;
-  gap: 14px;
-}
-
-.form-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
 }
 
 .field-label {
@@ -996,79 +797,6 @@ input, textarea, select {
 
 .field-textarea {
   resize: vertical;
-}
-
-.radio-group-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding-top: 4px;
-  flex-wrap: wrap;
-}
-
-.radio-group-row.compact {
-  gap: 12px;
-}
-
-.radio-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
-  color: #1e293b;
-  cursor: pointer;
-}
-
-.radio-label input[type="radio"] {
-  accent-color: #c7001e;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.area-instruction-note {
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.55;
-  margin-bottom: 14px;
-}
-
-.checkboxes-list-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.checkbox-item-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13.5px;
-  color: #1e293b;
-  cursor: pointer;
-}
-
-.checkbox-item-label.inline {
-  display: inline-flex;
-  align-items: center;
-}
-
-.checkbox-item-label input[type="checkbox"] {
-  accent-color: #c7001e;
-  width: 17px;
-  height: 17px;
-  cursor: pointer;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.checkbox-item-label.highlight-all .checkbox-title {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.checkbox-title {
-  line-height: 1.45;
 }
 
 .form-actions-row {
@@ -1117,14 +845,6 @@ input, textarea, select {
   color: #0f172a;
 }
 
-@media (max-width: 640px) {
-  .form-row-2col,
-  .form-row-3col {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-}
-
 /* ==========================================================================
    CROSS BUTTON THEME (MATCHING USER SCREENSHOT)
    ========================================================================== */
@@ -1148,8 +868,7 @@ input, textarea, select {
   white-space: nowrap;
 }
 
-.btn-cross-theme:hover,
-.btn-cross-theme.hovered {
+.btn-cross-theme:hover {
   transform: translateY(-2px);
   border-color: #64748b;
   border-bottom: 4.5px solid #475569;
@@ -1206,8 +925,7 @@ input, textarea, select {
   white-space: nowrap;
 }
 
-.btn-heart-theme:hover,
-.btn-heart-theme.hovered {
+.btn-heart-theme:hover {
   transform: translateY(-2px);
   background: #c7001e;
   border-color: #880816;
@@ -1219,14 +937,6 @@ input, textarea, select {
   transform: translateY(1px);
   border-bottom: 2px solid #7f1d1d;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.btn-hearts-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
 }
 
 .btn-heart-text {
@@ -1290,14 +1000,12 @@ input, textarea, select {
   transform: translateY(24px);
 }
 
-.interactive-flip-btn:hover .flip-text-default,
-.interactive-flip-btn.hovered .flip-text-default {
+.interactive-flip-btn:hover .flip-text-default {
   opacity: 0;
   transform: translateY(-24px);
 }
 
-.interactive-flip-btn:hover .flip-text-hover,
-.interactive-flip-btn.hovered .flip-text-hover {
+.interactive-flip-btn:hover .flip-text-hover {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1365,14 +1073,7 @@ input, textarea, select {
   animation: crossFloat4 3.6s ease-in-out infinite 0.2s;
 }
 
-.interactive-flip-btn:hover .cross-elem,
-.interactive-flip-btn.hovered .cross-elem {
+.interactive-flip-btn:hover .cross-elem {
   animation-duration: 1.3s;
 }
-
-
-
-
-
-
 

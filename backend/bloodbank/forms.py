@@ -140,3 +140,19 @@ class SpecForm(BaseForm):
     unit_volume_ml = forms.IntegerField(label="Thể tích/đơn vị (ml)", required=False, min_value=1)
     is_default = forms.BooleanField(label="Quy cách mặc định", required=False)
 
+
+
+class EmergencyForm(BaseForm):
+    """Báo ca khẩn cấp: chỉ những gì cần để bắt đầu tìm máu ngay."""
+    blood_group = forms.ChoiceField(label="Nhóm máu", choices=[("", "-- Chọn --")] + list(BLOOD_GROUPS))
+    product_spec_id = forms.ChoiceField(label="Chế phẩm / quy cách", choices=())
+    quantity = forms.IntegerField(label="Số đơn vị cần", min_value=1, max_value=100)
+    needed_by = dt_field("Cần trước", required=False, help_text="Bỏ trống: trong 6 giờ tới.")
+    note = forms.CharField(label="Ghi chú", required=False, max_length=500,
+                           widget=forms.TextInput(attrs={"placeholder": "VD: mổ cấp cứu, khoa Hồi sức"}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["product_spec_id"].choices = [("", "-- Chọn --")] + [
+            (s.pk, f"{s.product.name} — {s.name}") for s in ProductSpec.objects.select_related("product")
+            .filter(is_active=True, product__is_active=True).order_by("product__name", "-is_default", "name")]

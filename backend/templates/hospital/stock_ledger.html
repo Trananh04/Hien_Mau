@@ -2,7 +2,6 @@
 {% block title %}Lịch sử biến động kho{% endblock %}
 {% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>Lịch sử biến động</span>{% endblock %}
 {% block ws_title %}Lịch sử biến động kho{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Sổ kho chỉ thêm, sắp xếp theo thời điểm phát sinh. Mỗi dòng có tồn trước/sau và người thực hiện.</p>{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="panel-head">
@@ -13,7 +12,7 @@
       <div class="field grow"><label for="ls">Quy cách</label><select id="ls" name="spec" class="field-select"><option value="">Tất cả</option>{% for s in specs %}<option value="{{ s.pk }}" {% if f.spec == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.product.name }} — {{ s.name }}</option>{% endfor %}</select></div>
       <div class="field"><label for="lf">Từ ngày</label><input id="lf" type="date" name="from" value="{{ f.from }}" class="field-input"></div>
       <div class="field"><label for="lto">Đến ngày</label><input id="lto" type="date" name="to" value="{{ f.to }}" class="field-input"></div>
-      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+      <button class="btn secondary filter-submit" type="submit">{% icon "filter" %} Lọc</button>
       {% if f.type or f.blood_group or f.spec or f.from or f.to or f.stock %}<a href="?" class="btn ghost">Xóa lọc</a>{% endif %}
     </form>
   </div>

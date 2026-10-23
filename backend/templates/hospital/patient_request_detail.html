@@ -2,7 +2,7 @@
 {% block title %}Yêu cầu {{ prq.request_code }}{% endblock %}
 {% block crumbs %}<a href="{% url 'bloodbank:hospital_patient_requests' %}">Yêu cầu cần máu</a>{% icon "chevron-right" 14 %}<span>{{ prq.request_code }}</span>{% endblock %}
 {% block ws_title %}Yêu cầu {{ prq.request_code }}{% endblock %}
-{% block ws_sub %}<p class="ws-sub">{% status_badge prq %} &nbsp;Gửi lúc {{ prq.created_at|vn_dt }} · Lần xem này đã được ghi nhật ký (dữ liệu nhạy cảm).</p>{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{% status_badge prq %} &nbsp;Gửi lúc {{ prq.created_at|vn_dt }}</p>{% endblock %}
 {% block content %}
 <div class="grid grid-main-side">
   <div class="stack">
@@ -56,7 +56,7 @@
         {% if stocks %}<p class="field-help">Khả dụng nhóm {{ prq.blood_group }}: {% for s in stocks %}{{ s.product_spec.product.name }} {{ s.available }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% else %}<p class="field-help">Không có tồn nhóm {{ prq.blood_group }} phù hợp — hãy tìm nguồn liên viện.</p>{% endif %}
       {% endif %}
       {% if "support" in actions and not prq.linked_support_request %}
-        <a href="{% url 'bloodbank:source_search' %}?blood_group={{ prq.blood_group|urlencode }}{% if prq.blood_product_id %}&product={{ prq.blood_product_id }}{% endif %}&qty={{ prq.quantity_units }}&patient_request={{ prq.pk }}" class="btn secondary block">{% icon "search" %} Tạo yêu cầu liên viện</a>
+        <a href="{% url 'bloodbank:emergency_new' %}?blood_group={{ prq.blood_group|urlencode }}{% if prq.blood_product_id %}&product={{ prq.blood_product_id }}{% endif %}&qty={{ prq.quantity_units }}{% if prq.needed_by %}&needed_by={{ prq.needed_by|date:"c"|urlencode }}{% endif %}&patient_request={{ prq.pk }}" class="btn primary block">{% icon "siren" %} Xử lý khẩn (kho → bệnh viện gần → người hiến)</a>
       {% endif %}
       {% if "link_campaign" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" class="row u-fw-nowrap">{% csrf_token %}<input type="hidden" name="action" value="link_campaign">

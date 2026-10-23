@@ -1,74 +1,88 @@
 {% extends "layouts/workspace.html" %}
-{% block title %}Nhu cầu & thiếu hụt{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>Nhu cầu &amp; thiếu hụt</span>{% endblock %}
-{% block ws_title %}Nhu cầu &amp; thiếu hụt{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Thiếu = MAX(0, tổng nhu cầu đang cần cùng khóa − khả dụng). Cờ “dưới mức tối thiểu” tính riêng. Với mỗi dòng thiếu: xin hỗ trợ liên viện, tạo đợt hiến hoặc kêu gọi người hiến cùng nhóm máu ở gần.</p>{% endblock %}
+{% block title %}Dự báo thiếu hụt{% endblock %}
+{% block crumbs %}<span>Kho máu</span>{% icon "chevron-right" 14 %}<span>Dự báo thiếu hụt</span>{% endblock %}
+{% block ws_title %}Dự báo thiếu hụt{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Theo lượng xuất cho người bệnh {{ window }} ngày gần nhất và nhu cầu có kế hoạch, dự báo {{ horizon }} ngày tới. Cần máu trong vài giờ: dùng nút <strong>Khẩn cấp</strong>.</p>{% endblock %}
+{% block ws_actions %}<button type="button" class="btn secondary" data-open-dialog="demand-form">{% icon "calendar-plus" %} Khai nhu cầu có kế hoạch</button>{% endblock %}
 {% block content %}
+<p class="summary-line">
+  {% if sum.soon %}<b class="t-danger">{{ sum.soon }}</b> loại sắp hết trong 7 ngày — mời người hiến ngay{% else %}Không loại nào sắp hết trong 7 ngày{% endif %}
+  · {% if sum.plan %}<b class="t-warn">{{ sum.plan }}</b> loại cần lên kế hoạch (7–{{ horizon }} ngày){% else %}không loại nào cần lên kế hoạch{% endif %}
+  {% if campaign %}· đợt hiến gần nhất: <a class="link" href="{% url 'bloodbank:hospital_campaign_detail' campaign.pk %}">{{ campaign.name }}</a> ({{ campaign.start_time|vn_dt:"%d/%m" }}){% endif %}
+</p>
+
 <section class="panel">
-  <div class="panel-head"><h2 class="panel-title">{% icon "trending-down" %} Bảng thiếu hụt</h2></div>
-  {% if shortages %}
-  <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Nhóm máu</th><th>Chế phẩm / quy cách</th><th class="num">Cần</th><th class="num">Khả dụng</th><th class="num">Thiếu</th><th>Trạng thái</th><th class="num"></th></tr></thead>
-    <tbody>{% for s in shortages %}
-      <tr class="{% if s.shortage %}row-danger{% endif %}">
-        <td data-label="Nhóm máu">{% blood s.blood_group "sm" %}</td>
-        <td data-label="Chế phẩm">{{ s.spec.product.name }}<span class="cell-sub">{{ s.spec.name }}</span></td>
-        <td data-label="Cần" class="num">{{ s.required }}</td>
-        <td data-label="Khả dụng" class="num">{{ s.available }}</td>
-        <td data-label="Thiếu" class="num"><strong>{{ s.shortage }}</strong></td>
-        <td data-label="Trạng thái">{% if s.shortage %}<span class="badge danger">Đang thiếu</span>{% else %}<span class="badge ok">Đủ đáp ứng</span>{% endif %}{% if s.below_min %} <span class="badge warn plain">Dưới tối thiểu</span>{% endif %}</td>
-        <td>{% if s.shortage %}{% include "partials/shortage_actions.html" %}{% endif %}</td>
+  {% if rows %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Nhóm</th><th>Chế phẩm</th><th class="num">Khả dụng</th><th class="num">Dùng/ngày</th><th class="u-minw-200">Đủ dùng</th><th class="num">Có kế hoạch</th><th class="num">Thiếu {{ horizon }} ngày</th><th class="num">Việc nên làm</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="{% if r.level == 'soon' %}row-danger{% elif r.level == 'plan' %}row-warn{% endif %}">
+        <td>{% blood r.blood_group "sm" %}</td>
+        <td><span class="cell-title">{{ r.spec.product.name }}</span><span class="cell-sub">{{ r.spec.name }}{% if r.below_min %} · dưới tối thiểu ({{ r.min_level }}){% endif %}</span></td>
+        <td class="num">{{ r.available }}</td>
+        <td class="num">{% if r.per_day %}{{ r.per_day|floatformat:1 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>{% if r.days is not None %}
+            <div class="cover"><div class="progress u-h-8"><span class="{% if r.level == 'soon' %}u-bg-primary{% elif r.level == 'plan' %}u-bg-xf59e0b{% else %}u-bg-ok{% endif %}" data-pct="{{ r.cover_pct }}"></span></div>
+            <span class="cover-text">{% if r.days < 1 %}<b class="t-danger">dưới 1 ngày</b>{% else %}<b>{{ r.days|floatformat:0 }} ngày</b>{% endif %}{% if r.run_out %} · hết khoảng {{ r.run_out|date:"d/m" }}{% endif %}</span></div>
+          {% else %}<span class="muted">chưa có lượt dùng</span>{% endif %}</td>
+        <td class="num">{% if r.planned %}{{ r.planned }}{% if r.planned_first %}<span class="cell-sub">từ {{ r.planned_first|vn_dt:"%d/%m" }}</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td class="num">{% if r.shortage %}<b class="{% if r.level == 'soon' %}t-danger{% else %}t-warn{% endif %}">{{ r.shortage }}</b>{% else %}<span class="muted">0</span>{% endif %}</td>
+        <td class="num"><div class="table-actions">
+          {% if r.level == "soon" %}<a class="btn primary sm" href="{% url 'bloodbank:donor_suggest' %}?blood_group={{ r.blood_group|urlencode }}&thieu={{ r.shortage|default:1 }}">{% icon "users" 14 %} Mời người hiến</a>
+          {% elif r.level == "plan" %}<a class="btn secondary sm" href="{% url 'bloodbank:hospital_campaign_create' %}?blood_group={{ r.blood_group|urlencode }}"{% if r.campaign_by %} title="Nên tổ chức trước {{ r.campaign_by|date:'d/m' }}"{% endif %}>{% icon "calendar-plus" 14 %} Tạo đợt hiến{% if r.campaign_by %} trước {{ r.campaign_by|date:"d/m" }}{% endif %}</a>
+          {% else %}<span class="muted small">Đủ dùng</span>{% endif %}
+        </div></td>
       </tr>
     {% endfor %}</tbody>
   </table></div>
   {% else %}
-  <div class="empty"><div class="empty-icon">{% icon "shield-check" %}</div><h3>Chưa có nhu cầu đang cần</h3><p>Khai báo nhu cầu bên dưới để hệ thống tính thiếu hụt so với tồn khả dụng.</p></div>
+  <div class="empty"><div class="empty-icon">{% icon "chart-line" %}</div><h3>Chưa đủ dữ liệu để dự báo</h3><p>Dự báo dựa trên lượng xuất kho cho người bệnh. Khi có phiếu xuất hoặc nhu cầu có kế hoạch, bảng sẽ hiện ở đây.</p></div>
   {% endif %}
 </section>
 
-<div class="grid grid-main-side u-mt-20">
-  <section class="panel">
-    <div class="panel-head">
-      <div class="tabs u-m-0 u-bd-0">
-        <a href="?status=active" class="tab {% if status == 'active' %}active{% endif %}">Đang cần</a>
-        <a href="?status=fulfilled" class="tab {% if status == 'fulfilled' %}active{% endif %}">Đã đáp ứng</a>
-        <a href="?status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">Đã hủy</a>
-      </div>
+<section class="panel u-mt-20">
+  <div class="panel-head">
+    <h2 class="panel-title">{% icon "calendar-check" %} Nhu cầu có kế hoạch</h2>
+    <div class="row">
+      <a href="?status=active" class="chip-link {% if status == 'active' %}is-active{% endif %}">Đang cần</a>
+      <a href="?status=fulfilled" class="chip-link {% if status == 'fulfilled' %}is-active{% endif %}">Đã đáp ứng</a>
+      <a href="?status=cancelled" class="chip-link {% if status == 'cancelled' %}is-active{% endif %}">Đã hủy</a>
     </div>
-    {% if page.object_list %}
-    <div class="table-wrap"><table class="table stack-mobile">
-      <thead><tr><th>Nhóm máu</th><th>Chế phẩm</th><th class="num">Số cần</th><th>Cần trước</th><th>Ghi chú</th><th class="num"></th></tr></thead>
-      <tbody>{% for d in page %}
-        <tr>
-          <td data-label="Nhóm máu">{% blood d.blood_group "sm" %}</td>
-          <td data-label="Chế phẩm">{{ d.product_spec }}</td>
-          <td data-label="Số cần" class="num">{{ d.required_quantity }}</td>
-          <td data-label="Cần trước" class="nowrap">{{ d.needed_by|vn_dt }}</td>
-          <td data-label="Ghi chú">{{ d.note|default:"—" }}</td>
-          <td><div class="table-actions">{% if d.status == "active" %}
-            <a href="{% url 'bloodbank:demand_edit' d.pk %}" class="btn ghost sm">Sửa</a>
-            <form method="post" action="{% url 'bloodbank:demand_close' d.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="status" value="fulfilled"><button class="btn success sm">Đã đáp ứng</button></form>
-            <form method="post" action="{% url 'bloodbank:demand_close' d.pk %}" class="inline-form" data-confirm="Hủy nhu cầu này?" data-confirm-label="Hủy nhu cầu">{% csrf_token %}<input type="hidden" name="status" value="cancelled"><button class="btn danger sm">Hủy</button></form>
-          {% else %}{% status_badge d %}{% endif %}</div></td>
-        </tr>
-      {% endfor %}</tbody>
-    </table></div>
-    {% include "partials/pagination.html" %}
-    {% else %}<div class="empty"><h3>Không có nhu cầu trong nhóm này</h3></div>{% endif %}
-  </section>
+  </div>
+  {% if page.object_list %}
+  <div class="table-wrap"><table class="table stack-mobile">
+    <thead><tr><th>Nhóm</th><th>Chế phẩm</th><th class="num">Số cần</th><th>Cần trước</th><th>Ghi chú</th><th class="num"></th></tr></thead>
+    <tbody>{% for d in page %}
+      <tr>
+        <td data-label="Nhóm">{% blood d.blood_group "sm" %}</td>
+        <td data-label="Chế phẩm">{{ d.product_spec }}</td>
+        <td data-label="Số cần" class="num">{{ d.required_quantity }}</td>
+        <td data-label="Cần trước" class="nowrap">{% if d.needed_by %}{{ d.needed_by|vn_dt }}{% else %}—{% endif %}</td>
+        <td data-label="Ghi chú">{{ d.note|default:"—" }}</td>
+        <td><div class="table-actions">{% if d.status == "active" %}
+          <a href="{% url 'bloodbank:demand_edit' d.pk %}" class="btn ghost sm">Sửa</a>
+          <form method="post" action="{% url 'bloodbank:demand_close' d.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="status" value="fulfilled"><button class="btn success sm">Đã đáp ứng</button></form>
+          <form method="post" action="{% url 'bloodbank:demand_close' d.pk %}" class="inline-form" data-confirm="Hủy nhu cầu này?" data-confirm-label="Hủy nhu cầu">{% csrf_token %}<input type="hidden" name="status" value="cancelled"><button class="btn danger sm">Hủy</button></form>
+        {% else %}{% status_badge d %}{% endif %}</div></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}<p class="dash-empty">Chưa có nhu cầu có kế hoạch (vd ca mổ đã lên lịch). Khai báo để dự báo chính xác hơn.</p>{% endif %}
+</section>
 
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "clipboard-plus" %} {% if demand %}Sửa nhu cầu{% else %}Khai báo nhu cầu{% endif %}</h2></div>
-    <form method="post" novalidate>{% csrf_token %}
-      <div class="panel-body stack u-gap-14">
-        {% include "partials/field.html" with field=form.blood_group %}
-        {% include "partials/field.html" with field=form.product_spec_id %}
-        {% include "partials/field.html" with field=form.required_quantity %}
-        {% include "partials/field.html" with field=form.needed_by %}
-        {% include "partials/field.html" with field=form.note %}
-      </div>
-      <div class="panel-foot">{% if demand %}<a href="{% url 'bloodbank:demands' %}" class="btn secondary">Hủy sửa</a>{% endif %}<button class="btn primary">{% icon "save" %} Lưu nhu cầu</button></div>
-    </form>
-  </section>
-</div>
+<dialog class="modal-dialog" id="demand-form"{% if demand or form.errors %} data-open-on-load{% endif %}><form class="u-d-flex u-fd-column u-w-100pct" method="post" novalidate action="{% if demand %}{% url 'bloodbank:demand_edit' demand.pk %}{% else %}{% url 'bloodbank:demands' %}{% endif %}">{% csrf_token %}
+  <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "calendar-plus" %}</div><h3 class="modal-title">{% if demand %}Sửa nhu cầu có kế hoạch{% else %}Khai nhu cầu có kế hoạch{% endif %}</h3></div>{% if demand %}<a href="{% url 'bloodbank:demands' %}" class="modal-close-btn" aria-label="Đóng">{% icon "x" 20 %}</a>{% else %}<button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button>{% endif %}</div>
+  <div class="modal-body stack u-gap-14">
+    <p class="field-help">Nhu cầu biết trước (ca mổ lên lịch, bệnh nhân điều trị định kỳ) được cộng vào dự báo. Cần máu trong vài giờ: dùng nút Khẩn cấp.</p>
+    {% include "partials/field.html" with field=form.blood_group %}
+    {% include "partials/field.html" with field=form.product_spec_id %}
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.required_quantity %}
+      {% include "partials/field.html" with field=form.needed_by %}
+    </div>
+    {% include "partials/field.html" with field=form.note %}
+  </div>
+  <div class="modal-footer">{% if demand %}<a href="{% url 'bloodbank:demands' %}" class="btn secondary">Hủy sửa</a>{% else %}<button type="button" class="btn secondary" data-close-dialog>Quay lại</button>{% endif %}<button class="btn primary">{% icon "save" %} Lưu</button></div>
+</form></dialog>
 {% endblock %}

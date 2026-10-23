@@ -1,0 +1,38 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Báo ca khẩn cấp{% endblock %}
+{% block crumbs %}<span>Khẩn cấp</span>{% icon "chevron-right" 14 %}<span>Báo khẩn</span>{% endblock %}
+{% block ws_title %}Báo ca cần máu khẩn{% endblock %}
+{% block content %}
+<form method="post" novalidate class="form-page">
+  {% csrf_token %}
+  {% if patient_request_id %}<input type="hidden" name="patient_request_id" value="{{ patient_request_id }}">{% endif %}
+  {% include "partials/form_errors.html" %}
+  <div class="panel">
+    <section class="form-section">
+      <header class="form-section-head"><h2>Cần gì</h2><p>Chỉ cần nhóm máu, chế phẩm và số đơn vị là bắt đầu được.</p></header>
+      <div class="form-section-body">
+        <div class="form-row-2">
+          {% include "partials/field.html" with field=form.blood_group %}
+          {% include "partials/field.html" with field=form.quantity %}
+        </div>
+        {% include "partials/field.html" with field=form.product_spec_id %}
+        <div class="form-row-2">{% include "partials/field.html" with field=form.needed_by %}</div>
+        {% include "partials/field.html" with field=form.note %}
+      </div>
+    </section>
+    <section class="form-section">
+      <header class="form-section-head"><h2>Hệ thống sẽ làm</h2><p>Theo thứ tự, nguồn có sẵn trước.</p></header>
+      <ol class="flow-steps">
+        <li><strong>Báo toàn bệnh viện</strong> trong ứng dụng và qua email.</li>
+        <li><strong>Dùng kho của mình</strong> — phần đang có xuất ngay cho người bệnh.</li>
+        <li><strong>Xin bệnh viện gần còn dư</strong> — tự gửi đề nghị khẩn cho phần còn thiếu; không trả lời sau 60 phút thì tự hủy.</li>
+        <li><strong>Kêu gọi người hiến</strong> — chỉ khi các bệnh viện không đủ, đúng phần còn thiếu.</li>
+      </ol>
+    </section>
+    <div class="form-actions">
+      <a href="{% url 'bloodbank:hospital_dashboard' %}" class="btn secondary">Hủy</a>
+      <button type="submit" class="btn primary">{% icon "siren" %} Báo khẩn &amp; bắt đầu</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

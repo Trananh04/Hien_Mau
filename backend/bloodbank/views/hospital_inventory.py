@@ -1,14 +1,16 @@
 """SCR-30..33: tồn kho, phiếu nhập/xuất/điều chỉnh, sổ kho, nhu cầu & thiếu hụt."""
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.models import BLOOD_GROUPS
 from bloodbank.forms import DemandForm
-from bloodbank.models import Demand, PatientRequest, Product, ProductSpec, Stock, StockTxn
+from bloodbank.models import Demand, Donation, PatientRequest, Product, ProductSpec, Stock, StockTxn
 from bloodbank.permissions import staff_required
 from bloodbank.services import inventory as inv
-from bloodbank.services import callout, lab
+from bloodbank.services import callout, donor_match, lab
+from bloodbank.services import forecast as fc
 from bloodbank.services.common import BusinessError
 
 from .helpers import attempt, date_or_none, int_or_none, new_key, paginate, safe_next
@@ -115,6 +117,10 @@ def stock_ledger(request):
 
 @staff_required
 def demands(request, pk=None):
+    """Dự báo thiếu hụt (kế hoạch): đủ dùng bao nhiêu ngày, thiếu dự kiến 14 ngày, việc nên làm; khai nhu cầu có kế hoạch.
+
+    Ca cần máu trong vài giờ không xử lý ở đây — dùng nút Khẩn cấp (ca khẩn).
+    """
     h = request.hospital
     demand = get_object_or_404(Demand, pk=pk, hospital=h) if pk else None
     initial = {}
@@ -128,12 +134,56 @@ def demands(request, pk=None):
         if ok:
             return redirect("bloodbank:demands")
     status = request.GET.get("status", "active")
-    qs = Demand.objects.filter(hospital=h).select_related("product_spec__product")
+    qs = (Demand.objects.filter(hospital=h, is_emergency=False).select_related("product_spec__product")
+          .order_by("needed_by", "-created_at"))
     if status:
         qs = qs.filter(status=status)
+    rows = fc.forecast(h)
     return render(request, "hospital/demands.html", {
         "form": form, "demand": demand, "page": paginate(request, qs, 20), "status": status,
-        "shortages": callout.with_callout_info(h, inv.shortages(h)),
+        "rows": rows, "sum": fc.summary(rows), "window": fc.WINDOW_DAYS, "horizon": fc.HORIZON_DAYS,
+        "campaign": callout.next_campaign(h),
+    })
+
+
+@staff_required
+def donor_suggest(request):
+    """Gợi ý người hiến cho một nhóm máu đang thiếu: xếp hạng, mã ẩn danh, lý do; chọn sẵn số người nên mời.
+
+    `mode=urgent` (kêu gọi khẩn): ưu tiên người gần, mặc định bán kính 10 km, mời đến bệnh viện ngay hôm nay.
+    """
+    h = request.hospital
+    bg = request.GET.get("blood_group")
+    if bg not in dict(BLOOD_GROUPS):
+        messages.error(request, "Chọn nhóm máu cần kêu gọi từ bảng thiếu hụt.")
+        return redirect("bloodbank:demands")
+    mode = donor_match.mode_of(request.GET.get("mode"))
+    raw_radius = request.GET.get("radius")
+    radius = (callout.default_radius(h, mode) if raw_radius is None
+              else donor_match.radius_or_none(raw_radius, h))
+    rows_short = [r for r in inv.shortages(h) if r["blood_group"] == bg]
+    if mode == "urgent":
+        shortage = (sum(r["shortage"] for r in rows_short if r["urgent"])
+                    + sum(p["shortage"] for p in inv.urgent_requests(h) if p["blood_group"] == bg))
+    else:
+        shortage = 0
+    shortage = shortage or sum(r["shortage"] for r in rows_short)
+    case_pk = int_or_none(request.GET.get("ca"))
+    if int_or_none(request.GET.get("thieu")):
+        shortage = int_or_none(request.GET.get("thieu"))    # từ dự báo (thiếu dự kiến) hoặc ca khẩn (phần bệnh viện chưa lo)
+    rows = donor_match.suggest(h, bg, radius, mode=mode)
+    stats = donor_match.response_stats(h)
+    n_suggest = min(donor_match.suggested_count(shortage, stats["rate"], mode), len(rows))
+    for i, r in enumerate(rows):
+        r["preselected"] = i < n_suggest
+    return render(request, "hospital/donor_suggest.html", {
+        "blood_group": bg, "mode": mode, "radius": radius, "radius_choices": donor_match.RADIUS_CHOICES,
+        "can_radius": h.latitude is not None, "shortage": shortage, "rows": rows, "stats": stats,
+        "n_suggest": n_suggest, "max_send": donor_match.MAX_SEND,
+        "rate_pct": round(100 * (stats["rate"] or donor_match.DEFAULT_RESPONSE_RATE)
+                          * donor_match.MODES[mode]["rate_factor"]),
+        "last_callout": callout.last_callout(h, bg),
+        "back_url": reverse("bloodbank:emergency_case", args=[case_pk]) if case_pk else None,
     })
 
 
@@ -141,9 +191,21 @@ def demands(request, pk=None):
 @require_POST
 def donor_callout(request):
     bg = request.POST.get("blood_group")
-    attempt(request, lambda: callout.donor_callout(request.staff, bg, request),
-            lambda res: f"Đã gửi lời kêu gọi nhóm {bg} tới {res[0]} người hiến phù hợp"
-                        + (f", kèm đợt hiến \"{res[1].name}\"." if res[1] else ". Chưa có đợt hiến đang mở, nên tạo một đợt để người hiến đăng ký."))
+    mode = donor_match.mode_of(request.POST.get("mode"))
+    radius = donor_match.radius_or_none(request.POST.get("radius"), request.hospital)
+
+    def done(res):
+        msg = f"Đã gửi lời mời {'khẩn ' if mode == 'urgent' else ''}nhóm {bg} tới {res[0]} người hiến"
+        if res[2]:
+            msg += f" ({res[2]} người đã chọn không còn đủ điều kiện nên được bỏ qua)"
+        if mode == "urgent":
+            return msg + ". Máu hiến mới còn phải xét nghiệm, nên vẫn cần xin hỗ trợ liên viện cho ca cần ngay."
+        if res[1]:
+            return msg + f", kèm đợt hiến \"{res[1].name}\"."
+        return msg + ". Chưa có đợt hiến đang mở, nên tạo một đợt để người hiến đăng ký."
+
+    attempt(request, lambda: callout.donor_callout(request.staff, bg, request.POST.getlist("code"), radius, request,
+                                                   mode), done)
     return safe_next(request, "bloodbank:demands")
 
 
@@ -158,18 +220,40 @@ def demand_close(request, pk):
 # ---------------------------------------------------------------- SCR-29 Chờ xét nghiệm → nhập kho
 @staff_required
 def lab_queue(request):
-    """Lượt hiến đã ghi nhận, chờ kết quả xét nghiệm. Đạt → nhập kho một lần bấm; phiếu nhập gắn với lượt hiến."""
-    page = paginate(request, lab.lab_queue(request.hospital), 30)
-    for d in page:
-        d.suggested_spec = lab.default_spec(d)
-        d.form_key = new_key()
-    recent = (StockTxn.objects.filter(stock__hospital=request.hospital, donation__isnull=False)
-              .select_related("donation__donor", "stock__product_spec__product").order_by("-occurred_at")[:8])
-    return render(request, "hospital/lab_queue.html", {
-        "page": page, "blood_groups": BLOOD_GROUPS, "recent": recent,
-        "specs": ProductSpec.objects.select_related("product").filter(is_active=True, product__is_active=True)
-        .order_by("product__name", "-is_default", "name"),
-    })
+    """Màn xét nghiệm kiểu phần mềm kho: lưới dữ liệu, nhập kết quả ngay trên dòng được chọn (?chon=).
+
+    Tab "cho": lượt hiến chờ xét nghiệm (cũ trước). Chỉ mở hàng nhập khi người dùng chọn một dòng; lưu xong tự mở
+    lượt kế tiếp (next_pk) để xử lý liên tục. Tab "da": đã có kết quả.
+    """
+    h, q = request.hospital, (request.GET.get("q") or "").strip()
+    tab = "da" if request.GET.get("tab") == "da" else "cho"
+    queue = lab.lab_queue(h, q)
+    ctx = {"tab": tab, "q": q, "pending_count": lab.lab_queue(h).count()}
+    if tab == "da":
+        page = paginate(request, lab.lab_history(h, q), 50)
+        ctx.update(page=page, passed=sum(1 for d in page if d.lab_status == "passed"),
+                   units=sum(d.units or 0 for d in page))
+    else:
+        page = paginate(request, queue, 50)
+        rows = list(page)
+        chosen = int_or_none(request.GET.get("chon"))
+        selected = next((d for d in rows if d.pk == chosen), None)
+        next_pk = None
+        if selected:
+            selected.suggested_spec = lab.default_spec(selected)
+            selected.form_key = new_key()
+            selected.plan_tach, selected.plan_nguyen = lab.yield_plan(selected, "tach"), lab.yield_plan(selected, "nguyen")
+            # Nhóm máu từ lần xét nghiệm trước của chính người hiến (không dùng nhóm tự khai) — vẫn để nhân viên kiểm tra
+            selected.known_group = (Donation.objects.filter(donor_id=selected.donor_id, status="confirmed",
+                                                            lab_blood_group__isnull=False)
+                                    .order_by("-donated_at").values_list("lab_blood_group", flat=True).first())
+            after = rows[rows.index(selected) + 1:] + rows[:rows.index(selected)]
+            next_pk = after[0].pk if after else None
+        ctx.update(page=page, selected=selected, next_pk=next_pk, total_ml=sum(d.volume_ml or 0 for d in rows),
+                   blood_groups=BLOOD_GROUPS,
+                   specs=ProductSpec.objects.select_related("product").filter(is_active=True, product__is_active=True)
+                   .order_by("product__name", "-is_default", "name"))
+    return render(request, "hospital/lab_queue.html", ctx)
 
 
 @staff_required

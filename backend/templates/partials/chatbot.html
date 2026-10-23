@@ -1,8 +1,8 @@
 {% load static %}
-<button type="button" class="bot-fab" data-bot-toggle aria-label="Mở trợ lý hỏi đáp" aria-expanded="false" aria-controls="bot-panel">
+<button type="button" class="bot-fab" id="bot-fab" hx-preserve data-bot-toggle aria-label="Mở trợ lý hỏi đáp" aria-expanded="false" aria-controls="bot-panel">
   {% icon "message-circle-heart" %}
 </button>
-<section class="bot-panel" id="bot-panel" hidden aria-label="Trợ lý hỏi đáp hiến máu" data-bot-url="{% url 'bloodbank:chatbot' %}"{% if user.is_authenticated %} data-bot-conv-url="{% url 'bloodbank:api_conversations' %}"{% endif %}>
+<section class="bot-panel" id="bot-panel" hx-preserve hidden aria-label="Trợ lý hỏi đáp hiến máu" data-bot-url="{% url 'bloodbank:chatbot' %}"{% if user.is_authenticated %} data-bot-conv-url="{% url 'bloodbank:api_conversations' %}"{% endif %}>
   <div class="bot-head">
     <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="">
     <div>

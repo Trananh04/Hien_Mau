@@ -95,6 +95,7 @@ class SystemSetting(models.Model):
         "donation_interval_whole_blood_days": (84, "Khoảng cách tối thiểu giữa 2 lần hiến máu toàn phần (ngày) — chỉ cảnh báo khi check-in"),
         "donation_interval_component_days": (14, "Khoảng cách tối thiểu sau lần hiến thành phần (ngày) — chỉ cảnh báo khi check-in"),
         "offer_response_ttl_hours": (12, "Đề nghị liên viện không được phản hồi sau số giờ này sẽ tự hủy"),
+        "offer_response_ttl_urgent_minutes": (60, "Yêu cầu liên viện KHẨN: đề nghị không được phản hồi sau số phút này tự hủy để mời bệnh viện khác"),
         "prq_escalate_staff_minutes": (15, "Yêu cầu cần máu chưa được xác minh sau số phút này: nhắc lại toàn bộ nhân viên (kèm email)"),
         "prq_escalate_admin_minutes": (30, "Yêu cầu cần máu chưa được xác minh sau số phút này: báo lên Quản trị hệ thống"),
         "auth_email_max_per_window": (3, "Số email đặt lại mật khẩu / xác thực tối đa cho một tài khoản trong khung thời gian"),
@@ -106,7 +107,10 @@ class SystemSetting(models.Model):
         "chat_retention_days": (30, "Lịch sử trò chuyện với trợ lý được tự xóa sau số ngày này"),
         "chatbot_ai_enabled": (True, "Trợ lý dùng AI (true) hay chỉ chế độ từ khóa (false, không tốn phí)"),
         "lab_max_units_per_donation":(3, "Số đơn vị tối đa được nhập kho từ một lượt hiến khi xét nghiệm đạt"),
-        "donor_callout_cooldown_hours":(24, "Khoảng cách tối thiểu giữa 2 lần kêu gọi người hiến cùng nhóm máu của một bệnh viện (giờ)"),
+        "donor_invite_cooldown_days": (7, "Mỗi người hiến nhận tối đa 1 lời kêu gọi trong số ngày này (tính trên mọi bệnh viện)"),
+        "shortage_urgent_hours": (24, "Nhu cầu cần máu trước số giờ này được xếp mức Khẩn (ưu tiên xuất kho, xin liên viện, kêu gọi khẩn)"),
+        "donor_invite_urgent_cooldown_days": (3, "Kêu gọi khẩn: người hiến không nhận lời kêu gọi nào trong số ngày này mới được mời"),
+        "donor_invite_response_days": (7, "Người được mời đăng ký đợt hiến hoặc hiến máu tại bệnh viện trong số ngày này sau lời mời thì tính là đã hưởng ứng"),
     }
 
     @classmethod

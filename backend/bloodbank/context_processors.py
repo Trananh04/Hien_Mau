@@ -18,10 +18,7 @@ HOSPITAL_NAV = [
     ("Kho máu", "Chờ xét nghiệm", "bloodbank:lab_queue", "flask-conical"),
     ("Kho máu", "Tồn kho", "bloodbank:stock", "warehouse"),
     ("Kho máu", "Lịch sử biến động", "bloodbank:stock_ledger", "history"),
-    ("Kho máu", "Nhu cầu & thiếu hụt", "bloodbank:demands", "clipboard-list"),
-    ("Liên viện", "Tìm nguồn liên viện", "bloodbank:source_search", "search"),
-    ("Liên viện", "Yêu cầu đã gửi", "bloodbank:support_requests", "send"),
-    ("Liên viện", "Đề nghị đến bệnh viện", "bloodbank:incoming_offers", "inbox"),
+    ("Kho máu", "Dự báo thiếu hụt", "bloodbank:demands", "chart-line"),
     ("Bệnh viện", "Thông tin bệnh viện", "bloodbank:hospital_info", "building-2"),
     ("Bệnh viện", "Nhân viên", "bloodbank:hospital_staff", "users"),
     ("Bệnh viện", "Danh mục chế phẩm", "bloodbank:catalog", "package"),
@@ -29,8 +26,7 @@ HOSPITAL_NAV = [
 ]
 
 ADMIN_NAV = [
-    ("Quản trị", "Cảnh báo", "bloodbank:admin_alerts", "siren"),
-    ("Quản trị", "Thống kê hệ thống", "bloodbank:admin_stats", "chart-pie"),
+    ("Quản trị", "Tổng quan", "bloodbank:admin_stats", "layout-dashboard"),
     ("Quản trị", "Người dùng", "bloodbank:admin_users", "users"),
     ("Quản trị", "Bệnh viện", "bloodbank:admin_hospitals", "hospital"),
     ("Quản trị", "Danh mục chế phẩm", "bloodbank:catalog", "package"),
@@ -101,5 +97,5 @@ def workspace(request):
     if user.role == access.ADMIN:
         from bloodbank.services.admin import urgent_alert_count
 
-        ctx["admin_nav"] = _nav(user, ADMIN_NAV, {"bloodbank:admin_alerts": urgent_alert_count()}, request)
+        ctx["admin_nav"] = _nav(user, ADMIN_NAV, {"bloodbank:admin_stats": urgent_alert_count()}, request)
     return ctx

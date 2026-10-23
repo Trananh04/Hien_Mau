@@ -2,7 +2,6 @@
 {% block title %}Yêu cầu hỗ trợ đã gửi{% endblock %}
 {% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Yêu cầu đã gửi</span>{% endblock %}
 {% block ws_title %}Yêu cầu hỗ trợ đã gửi{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Theo dõi đến khi nhận đủ. Trạng thái yêu cầu suy ra từ các đề nghị.</p>{% endblock %}
 {% block ws_actions %}<a href="{% url 'bloodbank:source_search' %}" class="btn primary">{% icon "plus" %} Tạo yêu cầu</a>{% endblock %}
 {% block content %}
 <section class="panel">
@@ -11,10 +10,10 @@
   </div>
   {% if page.object_list %}
   <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Mã</th><th>Nhóm máu / chế phẩm</th><th>Ưu tiên</th><th class="u-minw-200">Tiến độ</th><th>Cần trước</th><th>Trạng thái</th><th></th></tr></thead>
+    <thead><tr><th>Mã</th><th>Nhóm máu / chế phẩm</th><th>Ưu tiên</th><th class="u-minw-200">Tiến độ</th><th>Cần trước</th><th>Trạng thái</th></tr></thead>
     <tbody>{% for r in page %}
       <tr>
-        <td data-label="Mã"><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="cell-title">{{ r.request_code }}</a><span class="cell-sub">{{ r.created_at|vn_dt }}</span></td>
+        <td data-label="Mã"><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="cell-title row-link">{{ r.request_code }}</a><span class="cell-sub">{{ r.created_at|vn_dt }}</span></td>
         <td data-label="Nhóm máu">{% blood r.blood_group "sm" %} {{ r.product_spec.product.name }}<span class="cell-sub">{{ r.product_spec.name }}</span></td>
         <td data-label="Ưu tiên">{% status_badge r field="priority" %}</td>
         <td data-label="Tiến độ">
@@ -23,7 +22,6 @@
         </td>
         <td data-label="Cần trước" class="nowrap">{{ r.needed_by|vn_dt }}</td>
         <td data-label="Trạng thái">{% status_badge r %}{% if r.closed_at and r.status == "partially_fulfilled" %}<span class="cell-sub">Đã đóng</span>{% endif %}</td>
-        <td data-label="Thao tác"><div class="table-actions"><a href="{% url 'bloodbank:support_request_detail' r.pk %}" class="btn ghost sm">Chi tiết</a></div></td>
       </tr>
     {% endfor %}</tbody>
   </table></div>

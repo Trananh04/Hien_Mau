@@ -2,17 +2,8 @@
 {% block title %}Phân quyền màn hình{% endblock %}
 {% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Phân quyền</span>{% endblock %}
 {% block ws_title %}Phân quyền màn hình{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Mỗi vai trò đăng nhập ở một cổng riêng và chỉ mở được các màn hình được đánh dấu. Mọi request đều được kiểm tra theo bảng này; đường dẫn chưa khai báo bị chặn.</p>{% endblock %}
 {% block content %}
-<div class="grid grid-3 u-mb-20">
-  {% for p in portals %}
-  <div class="stat">
-    <div class="stat-label">{% icon p.icon %} {{ p.label }}</div>
-    <div class="stat-value">{{ p.count }}<small>màn hình</small></div>
-    <div class="stat-note">{{ user_counts|get_item:p.code|default:0 }} tài khoản · <a class="link" href="{% url p.login %}">Trang đăng nhập</a></div>
-  </div>
-  {% endfor %}
-</div>
+<p class="summary-line">{% for p in portals %}{{ p.label }}: <b>{{ p.count }}</b> màn hình, {{ user_counts|get_item:p.code|default:0 }} tài khoản (<a class="link" href="{% url p.login %}">trang đăng nhập</a>){% if not forloop.last %} · {% endif %}{% endfor %}</p>
 
 <section class="panel">
   <div class="panel-head"><h2 class="panel-title">{% icon "key-round" %} Ma trận vai trò × màn hình</h2><span class="muted small">{{ rows|length }} màn hình · {{ route_count }} đường dẫn</span></div>

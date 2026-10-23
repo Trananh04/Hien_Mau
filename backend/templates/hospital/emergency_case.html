@@ -1,0 +1,70 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Ca khẩn #{{ d.pk }}{% endblock %}
+{% block crumbs %}<span>Khẩn cấp</span>{% icon "chevron-right" 14 %}<span>Ca khẩn #{{ d.pk }}</span>{% endblock %}
+{% block ws_title %}Ca khẩn #{{ d.pk }} · {% blood d.blood_group "sm" %} {{ d.required_quantity }} đơn vị{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{{ d.product_spec.product.name }} — {{ d.product_spec.name }} · cần trước <strong>{{ d.needed_by|vn_dt }}</strong>{% if d.patient_request %} · cho yêu cầu <a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' d.patient_request_id %}">{{ d.patient_request.request_code }}</a>{% endif %}{% if d.note %} · {{ d.note }}{% endif %} · <a class="link" href="{{ request.path }}">Tải lại</a></p>{% endblock %}
+{% block ws_actions %}
+  {% if d.status == "active" %}
+  <form method="post" action="{% url 'bloodbank:emergency_close' d.pk %}" class="inline-form" data-confirm="Hủy ca khẩn #{{ d.pk }}?" data-confirm-detail="Các đề nghị đã gửi bệnh viện khác vẫn giữ nguyên; hủy riêng ở phiếu liên viện nếu cần." data-confirm-label="Hủy ca">{% csrf_token %}<input type="hidden" name="status" value="cancelled"><button class="btn secondary">Hủy ca</button></form>
+  <form method="post" action="{% url 'bloodbank:emergency_close' d.pk %}" class="inline-form" data-confirm="Đóng ca khẩn #{{ d.pk }}: đã đủ máu cho người bệnh?" data-confirm-label="Đã đủ máu">{% csrf_token %}<input type="hidden" name="status" value="fulfilled"><button class="btn success">{% icon "check" %} Đã đủ máu</button></form>
+  {% else %}{% status_badge d %}{% endif %}
+{% endblock %}
+{% block content %}
+{% if s.step == "done" %}<div class="notice ok">{% icon "circle-check" %}<div>Ca khẩn đã {% if d.status == "fulfilled" %}đóng — đủ máu{% else %}hủy{% endif %}.</div></div>{% endif %}
+
+<ol class="case-steps">
+  {# 1. Kho mình #}
+  <li class="case-step{% if s.step == 'issue' %} is-current{% endif %}{% if s.short_now == 0 and d.status == 'active' %} is-ok{% endif %}">
+    <span class="case-no">1</span>
+    <div class="case-body">
+      <h2>Kho bệnh viện</h2>
+      <p>Khả dụng <b>{{ s.available }}</b> / cần {{ d.required_quantity }} đơn vị
+        {% if d.status == "active" %}{% if s.short_now %} · còn thiếu <b class="t-danger">{{ s.short_now }}</b>{% else %} · <b class="t-ok">đủ</b>{% endif %}{% endif %}</p>
+      {% if s.can_issue %}<p class="muted small">Máu bệnh viện khác giao tới cũng vào kho này; xuất cho người bệnh khi sẵn sàng.</p>{% endif %}
+    </div>
+    <div class="case-act">{% if s.can_issue %}<a class="btn {% if s.step == 'issue' %}primary{% else %}secondary{% endif %} sm" href="{% url 'bloodbank:stock_txn' 'xuat' %}?stock={{ s.stock_id }}{% if d.patient_request_id %}&patient_request={{ d.patient_request_id }}{% endif %}">{% icon "package-minus" 14 %} Xuất {{ s.can_issue }} đơn vị</a>{% endif %}</div>
+  </li>
+
+  {# 2. Bệnh viện gần #}
+  <li class="case-step{% if s.step == 'hospitals' %} is-current{% endif %}">
+    <span class="case-no">2</span>
+    <div class="case-body">
+      <h2>Bệnh viện gần còn dư</h2>
+      {% if s.hosp.request %}
+      <p>Đã nhận <b>{{ s.hosp.received }}</b> · đang chuyển <b>{{ s.hosp.transit }}</b> · đã nhận lời <b>{{ s.hosp.committed }}</b> · chờ trả lời <b>{{ s.hosp.waiting }}</b>{% if s.hosp.waiting %} <span class="muted small">(không trả lời sau 60 phút thì tự hủy)</span>{% endif %}</p>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Bệnh viện</th><th class="num">Cách</th><th class="num">Xin</th><th class="num">Nhận lời</th><th>Trạng thái</th><th>Liên hệ</th></tr></thead>
+        <tbody>{% for o in s.hosp.offers %}
+          <tr><td>{{ o.supplier_hospital.name }}</td>
+            <td class="num">{% if o.distance_km is not None %}{{ o.distance_km }} km{% else %}—{% endif %}</td>
+            <td class="num">{{ o.quantity_requested|default:"—" }}</td><td class="num">{{ o.quantity|default:"—" }}</td>
+            <td>{% status_badge o %}</td>
+            <td>{% if o.supplier_hospital.phone %}<a class="link" href="tel:{{ o.supplier_hospital.phone }}">{{ o.supplier_hospital.phone|phone }}</a>{% else %}<span class="muted">—</span>{% endif %}</td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+      {% else %}
+      <p class="muted">{% if s.step == "issue" or d.status != "active" %}Không cần xin — kho đủ.{% else %}Không bệnh viện nào gần đang chia sẻ chế phẩm này.{% endif %}</p>
+      {% endif %}
+    </div>
+    <div class="case-act">
+      {% if s.hosp.request %}<a class="btn {% if s.hosp.transit %}primary{% else %}secondary{% endif %} sm" href="{% url 'bloodbank:support_request_detail' s.hosp.request.pk %}">{% icon "truck" 14 %} {% if s.hosp.transit %}Xác nhận nhận hàng{% else %}Xem phiếu{% endif %}</a>{% endif %}
+      {% if d.status == "active" and s.donors_needed %}<form method="post" action="{% url 'bloodbank:emergency_more' d.pk %}" class="inline-form">{% csrf_token %}<button class="btn ghost sm">{% icon "refresh-cw" 14 %} Xin thêm bệnh viện</button></form>{% endif %}
+    </div>
+  </li>
+
+  {# 3. Người hiến #}
+  <li class="case-step{% if s.step == 'donors' %} is-current is-alert{% endif %}">
+    <span class="case-no">3</span>
+    <div class="case-body">
+      <h2>Kêu gọi người hiến</h2>
+      {% if s.step == "donors" %}
+      <p>Các bệnh viện chưa đủ: còn <b class="t-danger">{{ s.donors_needed }}</b> đơn vị chưa có nguồn. Mời người hiến ở gần đến hiến hôm nay.</p>
+      <p class="muted small">Máu hiến mới cần xét nghiệm trước khi dùng — chủ yếu để bù lại kho, trừ nhóm máu hiếm.</p>
+      {% elif d.status == "active" and s.short_now %}
+      <p class="muted">Chưa cần — đang chờ bệnh viện trả lời / giao hàng.</p>
+      {% else %}<p class="muted">Không cần.</p>{% endif %}
+    </div>
+    <div class="case-act">{% if s.step == "donors" %}<a class="btn primary sm" href="{% url 'bloodbank:donor_suggest' %}?blood_group={{ d.blood_group|urlencode }}&mode=urgent&thieu={{ s.donors_needed }}&ca={{ d.pk }}">{% icon "megaphone" 14 %} Kêu gọi khẩn</a>{% endif %}</div>
+  </li>
+</ol>
+{% endblock %}

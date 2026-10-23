@@ -2,11 +2,9 @@
 {% block title %}Đề nghị đến bệnh viện{% endblock %}
 {% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Đề nghị đến bệnh viện tôi</span>{% endblock %}
 {% block ws_title %}Đề nghị đến bệnh viện tôi{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Phản hồi đề nghị hỗ trợ từ bệnh viện khác: chấp thuận (giữ chỗ trong kho) rồi xác nhận xuất khi giao hàng.</p>{% endblock %}
 {% block content %}
 <nav class="tabs">
-  <a href="?" class="tab {% if not status %}active{% endif %}">Tất cả</a>
-  {% for v, l in statuses %}<a href="?status={{ v }}" class="tab {% if status == v %}active{% endif %}">{{ l }}</a>{% endfor %}
+  {% for k, label, n in tabs %}<a href="?nhom={{ k }}" class="tab {% if group == k %}active{% endif %}">{{ label }}{% if n %} <span class="count">{{ n }}</span>{% endif %}</a>{% endfor %}
 </nav>
 <section class="panel">
   {% if page.object_list %}

@@ -1,106 +1,99 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Tổng quan · {{ current_hospital.name }}{% endblock %}
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tổng quan</span>{% endblock %}
-{% block ws_title %}Tổng quan bệnh viện{% endblock %}
-{% block ws_sub %}<p class="ws-sub">{{ current_hospital.name }} · Số liệu lúc {{ now|vn_dt:"%H:%M %d/%m/%Y" }} · <a class="link" href="{{ request.path }}">Tải lại</a></p>{% endblock %}
+{% block ws_title %}Tổng quan{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Số liệu lúc {{ now|vn_dt:"%H:%M %d/%m/%Y" }} · <a class="link" href="{{ request.path }}">Tải lại</a></p>{% endblock %}
 {% block ws_actions %}
-  <a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">{% icon "calendar-plus" %} Tạo đợt hiến</a>
   <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="btn secondary">{% icon "package-plus" %} Nhập kho</a>
+  <a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">{% icon "calendar-plus" %} Tạo đợt hiến</a>
 {% endblock %}
 {% block content %}
-<div class="dash">
-  <section class="panel" aria-labelledby="todo-title">
-    <div class="panel-head"><h2 class="panel-title" id="todo-title">Cần xử lý</h2></div>
-    {% if todo %}
-    <ul class="todo-list">
-      {% for t in todo %}
-      <li><a href="{{ t.url }}" class="{% if t.urgent %}is-urgent{% endif %}">
-        {% icon t.icon 18 %}
-        <span class="todo-label">{{ t.label }}<span class="todo-hint">{{ t.hint }}</span></span>
-        <span class="todo-count">{{ t.count }}{% if t.urgent %}<span class="sr-only"> (cần ưu tiên)</span>{% endif %}</span>{% icon "chevron-right" 16 %}
-      </a></li>
-      {% endfor %}
-    </ul>
+{# 4 chỉ số chính: bấm để tới màn xử lý; ô có việc thì nổi màu #}
+<nav class="kpi-strip" aria-label="Việc cần xử lý">
+  {% for k in kpis %}
+  <a href="{{ k.url }}" class="kpi{% if k.count %} is-{{ k.tone }}{% endif %}">
+    <span class="kpi-label">{% icon k.icon 16 %} {{ k.label }}</span>
+    <span class="kpi-value">{{ k.count }}</span>
+    <span class="kpi-hint">{{ k.hint }}</span>
+  </a>
+  {% endfor %}
+</nav>
+{% if others %}
+<p class="kpi-others">{% icon "list-checks" 15 %} Việc khác:
+  {% for o in others %}<a class="link" href="{{ o.url }}"><strong>{{ o.count }}</strong> {{ o.label }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}
+</p>
+{% endif %}
+
+<div class="dash-cols">
+  <section class="panel" aria-labelledby="stock-title">
+    <div class="panel-head">
+      <h2 class="panel-title" id="stock-title">Sắp thiếu máu</h2>
+      <a href="{% url 'bloodbank:demands' %}" class="btn ghost sm">Dự báo {% icon "arrow-right" 14 %}</a>
+    </div>
+    {% if plan %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Nhóm</th><th>Chế phẩm</th><th class="num">Khả dụng</th><th>Đủ dùng</th><th class="num">Thiếu 14 ngày</th></tr></thead>
+      <tbody>{% for r in plan %}
+        <tr>
+          <td>{% blood r.blood_group "sm" %}</td>
+          <td><a class="row-link cell-title" href="{% url 'bloodbank:demands' %}">{{ r.spec.product.name }}</a><span class="cell-sub">{{ r.spec.name }}</span></td>
+          <td class="num">{{ r.available }}</td>
+          <td>{% if r.days is not None %}<b class="{% if r.level == 'soon' %}t-danger{% else %}t-warn{% endif %}">{% if r.days < 1 %}dưới 1 ngày{% else %}{{ r.days|floatformat:0 }} ngày{% endif %}</b>{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td class="num"><strong class="{% if r.level == 'soon' %}t-danger{% else %}t-warn{% endif %}">{{ r.shortage }}</strong></td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% if plan_more %}<p class="dash-more"><a class="link" href="{% url 'bloodbank:demands' %}">Còn {{ plan_more }} loại khác</a></p>{% endif %}
     {% else %}
-    <p class="dash-empty">{% icon "circle-check" 18 %} Không có việc tồn đọng.</p>
+    <p class="dash-empty">{% icon "circle-check" 18 %} Đủ dùng trên 14 ngày cho mọi nhóm máu theo dự báo.</p>
     {% endif %}
   </section>
 
   <section class="panel" aria-labelledby="prq-title">
     <div class="panel-head">
       <h2 class="panel-title" id="prq-title">Yêu cầu cần máu đang mở</h2>
-      <a href="{% url 'bloodbank:hospital_patient_requests' %}?status=" class="btn ghost sm">Tất cả</a>
+      <a href="{% url 'bloodbank:hospital_patient_requests' %}?status=" class="btn ghost sm">Tất cả {% icon "arrow-right" 14 %}</a>
     </div>
     {% if prqs %}
-    <ul class="dash-rows">
-      {% for p in prqs %}
-      <li>
-        {% blood p.blood_group "sm" %}
-        <a class="grow dash-link" href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{{ p.request_code }}
-          <span class="sub">{{ p.blood_product.name|default:"Chưa rõ chế phẩm" }} · {{ p.quantity_units }} đơn vị · {% if p.needed_by %}cần trước {{ p.needed_by|vn_dt }}{% else %}gửi {{ p.created_at|vn_dt }}{% endif %}</span></a>
-        {% status_badge p %}
-      </li>
-      {% endfor %}
-    </ul>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Nhóm</th><th>Mã yêu cầu</th><th class="num">Đơn vị</th><th>Hạn</th><th>Trạng thái</th></tr></thead>
+      <tbody>{% for p in prqs %}
+        <tr>
+          <td>{% blood p.blood_group "sm" %}</td>
+          <td><a class="row-link cell-title" href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}">{{ p.request_code }}</a><span class="cell-sub">{{ p.blood_product.name|default:"Chưa rõ chế phẩm" }}</span></td>
+          <td class="num">{{ p.quantity_units }}</td>
+          <td>{% if p.needed_by %}{{ p.needed_by|vn_dt }}{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{% status_badge p %}</td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
     {% else %}
     <p class="dash-empty">{% icon "circle-check" 18 %} Không có yêu cầu đang mở.</p>
     {% endif %}
   </section>
-
-  <section class="panel dash-wide" aria-labelledby="stock-title">
-    <div class="panel-head">
-      <h2 class="panel-title" id="stock-title">Kho cần chú ý</h2>
-      <span class="dash-meta">Hiện có <strong>{{ alerts.on_hand }}</strong> · đang giữ chỗ <strong>{{ alerts.reserved }}</strong> · khả dụng <strong>{{ alerts.available }}</strong> đơn vị</span>
-      <a href="{% url 'bloodbank:stock' %}" class="btn ghost sm">Tồn kho</a>
-    </div>
-    {% if alerts.rows %}
-    <div class="table-wrap"><table class="table stack-mobile">
-      <thead><tr><th>Nhóm máu</th><th>Chế phẩm / quy cách</th><th>Mức</th><th class="num">Thiếu</th><th class="num">Khả dụng</th><th class="num">Tối thiểu</th><th class="num">Nhu cầu</th><th class="num">Thao tác</th></tr></thead>
-      <tbody>
-        {% for r in alerts.rows %}
-        <tr>
-          <td data-label="Nhóm máu">{% blood r.blood_group "sm" %}</td>
-          <td data-label="Chế phẩm"><span class="cell-title">{{ r.spec.product.name }}</span><span class="cell-sub">{{ r.spec.name }}</span></td>
-          <td data-label="Mức">{% if r.level == "danger" %}<span class="tag danger">{% icon "triangle-alert" 14 %} Thiếu theo nhu cầu</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Dưới tối thiểu</span>{% endif %}</td>
-          <td data-label="Thiếu" class="num"><strong>{{ r.shortage }}</strong></td>
-          <td data-label="Khả dụng" class="num">{{ r.available }}</td>
-          <td data-label="Tối thiểu" class="num">{{ r.min_level|default:"—" }}</td>
-          <td data-label="Nhu cầu" class="num">{{ r.required|default:"—" }}</td>
-          <td data-label="Thao tác"><div class="table-actions">
-            {% if r.level == "danger" %}<a href="{% url 'bloodbank:demands' %}" class="btn secondary sm">Xử lý thiếu hụt</a>
-            {% else %}<a href="{% url 'bloodbank:stock' %}?product={{ r.spec.product_id }}" class="btn ghost sm">Xem kho</a>{% endif %}
-          </div></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table></div>
-    {% if alerts.more %}<p class="dash-more"><a class="link" href="{% url 'bloodbank:stock' %}">Còn {{ alerts.more }} dòng khác trong tồn kho</a></p>{% endif %}
-    {% else %}
-    <p class="dash-empty">{% icon "circle-check" 18 %} Không có nhu cầu đang thiếu và không dòng tồn nào dưới mức tối thiểu.</p>
-    {% endif %}
-  </section>
-
-  <section class="panel dash-wide" aria-labelledby="camp-title">
-    <div class="panel-head">
-      <h2 class="panel-title" id="camp-title">Đợt hiến đang tiếp nhận</h2>
-      <a href="{% url 'bloodbank:hospital_campaigns' %}" class="btn ghost sm">Tất cả</a>
-    </div>
-    {% if campaigns %}
-    <ul class="dash-rows">
-      {% for c in campaigns %}
-      <li>
-        <span class="dash-date">{{ c.start_time|vn_dt:"%d/%m" }}</span>
-        <a class="grow dash-link" href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}">{{ c.name }}
-          <span class="sub">{{ c.start_time|vn_dt:"%H:%M" }}–{{ c.end_time|vn_dt:"%H:%M %d/%m" }} · {{ c.location_name }}</span></a>
-        <span class="dash-regs">{{ c.reg_count }} đăng ký{% if c.pending_count %} · <a class="link" href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}?tab=registrations&amp;status=pending">{{ c.pending_count }} chờ duyệt</a>{% endif %}</span>
-        {% if c.live %}<span class="tag ok">{% icon "radio" 14 %} Đang diễn ra</span>{% else %}{% status_badge c %}{% endif %}
-        {% if c.checkin_ready %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn secondary sm">{% icon "scan-line" %} Mở điểm hiến</a>{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p class="dash-empty">Chưa có đợt hiến đang tiếp nhận. <a class="link" href="{% url 'bloodbank:hospital_campaign_create' %}">Tạo đợt hiến</a></p>
-    {% endif %}
-  </section>
 </div>
+
+<section class="panel u-mt-20" aria-labelledby="camp-title">
+  <div class="panel-head">
+    <h2 class="panel-title" id="camp-title">Đợt hiến đang tiếp nhận</h2>
+    <a href="{% url 'bloodbank:hospital_campaigns' %}" class="btn ghost sm">Tất cả {% icon "arrow-right" 14 %}</a>
+  </div>
+  {% if campaigns %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Ngày</th><th>Đợt hiến</th><th>Địa điểm</th><th class="num">Đăng ký</th><th>Trạng thái</th><th class="num"></th></tr></thead>
+    <tbody>{% for c in campaigns %}
+      <tr>
+        <td class="nowrap">{{ c.start_time|vn_dt:"%d/%m %H:%M" }}</td>
+        <td><a class="row-link cell-title" href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}">{{ c.name }}</a></td>
+        <td>{{ c.location_name }}</td>
+        <td class="num">{{ c.reg_count }}{% if c.pending_count %} <a class="link" href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}?tab=registrations&amp;status=pending">({{ c.pending_count }} chờ duyệt)</a>{% endif %}</td>
+        <td>{% if c.live %}<span class="t-ok">Đang diễn ra</span>{% else %}{% status_badge c %}{% endif %}</td>
+        <td class="num">{% if c.checkin_ready %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn secondary sm">{% icon "scan-line" 14 %} Điểm hiến</a>{% endif %}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <p class="dash-empty">Chưa có đợt hiến đang tiếp nhận. <a class="link" href="{% url 'bloodbank:hospital_campaign_create' %}">Tạo đợt hiến</a></p>
+  {% endif %}
+</section>
 {% endblock %}

@@ -91,3 +91,13 @@ def safe_next(request, default):
     if nxt and nxt.startswith("/") and not nxt.startswith("//") and "\\" not in nxt:
         return redirect(nxt)
     return redirect(default)
+
+
+def map_center(hospital=None, province=None):
+    """Tâm bản đồ chọn vị trí: vị trí đã ghim → trung tâm tỉnh/thành → giữa Việt Nam."""
+    from accounts.provinces import CENTERS
+
+    if hospital is not None and hospital.latitude is not None:
+        return {"center_lat": hospital.latitude, "center_lng": hospital.longitude}
+    lat, lng = CENTERS.get(province or getattr(hospital, "province", None) or "", (16.0544, 108.2022))
+    return {"center_lat": lat, "center_lng": lng}

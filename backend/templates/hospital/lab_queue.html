@@ -1,64 +1,110 @@
 {% extends "layouts/workspace.html" %}
-{% block title %}Chờ xét nghiệm{% endblock %}
-{% block crumbs %}<span>Kho máu</span>{% icon "chevron-right" 14 %}<span>Chờ xét nghiệm</span>{% endblock %}
-{% block ws_title %}Chờ xét nghiệm{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Lượt hiến đã ghi nhận nhưng chưa nhập kho. Máu chỉ vào kho khi xét nghiệm <strong>Đạt</strong>; nhóm máu nhập kho lấy theo kết quả xét nghiệm, không theo nhóm người hiến tự khai.</p>{% endblock %}
+{% block title %}Xét nghiệm{% endblock %}
+{% block crumbs %}<span>Kho máu</span>{% icon "chevron-right" 14 %}<span>Xét nghiệm</span>{% endblock %}
+{% block ws_title %}Xét nghiệm lượt hiến{% endblock %}
 {% block content %}
-<section class="panel u-mb-20">
-  <div class="panel-head"><h2 class="panel-title">{% icon "flask-conical" %} Hàng chờ</h2><span class="muted small">{{ page.paginator.count }} lượt hiến</span></div>
-  {% if page.object_list %}
-  <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Lượt hiến</th><th>Người hiến</th><th>Hình thức</th><th>Thời điểm hiến</th><th>Đợt hiến</th><th class="num">Thao tác</th></tr></thead>
-    <tbody>{% for d in page %}
-      <tr>
-        <td data-label="Lượt hiến"><a class="link" href="{% url 'bloodbank:hospital_donation_detail' d.pk %}">{{ d.code }}</a></td>
-        <td data-label="Người hiến">{{ d.donor.full_name }}</td>
-        <td data-label="Hình thức">{% if d.donation_type == "component" %}{{ d.component_product.name|default:"Thành phần" }}{% if d.component_quantity %} · {{ d.component_quantity|floatformat:"-2" }} {{ d.get_component_unit_display }}{% endif %}{% else %}{{ d.get_donation_type_display }}{% if d.volume_ml %} · {{ d.volume_ml }} ml{% endif %}{% endif %}</td>
-        <td data-label="Thời điểm" class="nowrap">{{ d.donated_at|vn_dt }}</td>
-        <td data-label="Đợt hiến">{{ d.registration.campaign.name|default:"—" }}</td>
-        <td data-label="Thao tác"><div class="table-actions"><button type="button" class="btn primary sm" data-open-dialog="lab-{{ d.pk }}">{% icon "clipboard-check" %} Nhập kết quả</button></div></td>
-      </tr>
-    {% endfor %}</tbody>
-  </table></div>
-  {% include "partials/pagination.html" %}
-  {% else %}
-  <div class="empty"><div class="empty-icon">{% icon "flask-conical" %}</div><h3>Không còn lượt hiến chờ xét nghiệm</h3><p>Lượt hiến mới ghi nhận tại điểm hiến sẽ xuất hiện ở đây.</p></div>
-  {% endif %}
-</section>
-
-{% if recent %}
-<section class="panel">
-  <div class="panel-head"><h2 class="panel-title">{% icon "package-check" %} Nhập kho gần đây từ lượt hiến</h2><a href="{% url 'bloodbank:stock_ledger' %}?type=receive" class="btn ghost sm">Sổ kho</a></div>
-  <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Thời điểm</th><th>Lượt hiến</th><th>Dòng tồn</th><th class="num">Số lượng</th></tr></thead>
-    <tbody>{% for t in recent %}
-      <tr><td data-label="Thời điểm" class="nowrap">{{ t.occurred_at|vn_dt }}</td>
-        <td data-label="Lượt hiến"><a class="link" href="{% url 'bloodbank:hospital_donation_detail' t.donation_id %}">{{ t.donation.code }}</a></td>
-        <td data-label="Dòng tồn">{% blood t.stock.blood_group "sm" %} {{ t.stock.product_spec.product.name }}<span class="cell-sub">{{ t.stock.product_spec.name }}</span></td>
-        <td data-label="Số lượng" class="num"><strong>+{{ t.quantity_change }}</strong></td></tr>
-    {% endfor %}</tbody>
-  </table></div>
-</section>
-{% endif %}
-
-{% for d in page %}
-<dialog class="modal-dialog" id="lab-{{ d.pk }}"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:lab_result' d.pk %}" data-lab-form>
-  {% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ d.form_key }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
-  <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "flask-conical" %}</div><h3 class="modal-title">Kết quả xét nghiệm · {{ d.code }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body stack u-gap-14">
-    <p class="muted small">{{ d.donor.full_name }} · {{ d.donated_at|vn_dt }}{% if d.donor.blood_group %} · nhóm tự khai {{ d.donor.get_blood_group_display }} (không dùng để nhập kho){% endif %}</p>
-    <div class="radio-cards">
-      <div class="radio-card"><input type="radio" id="r-ok-{{ d.pk }}" name="result" value="passed" checked><label for="r-ok-{{ d.pk }}"><strong>Đạt</strong><span class="small muted">Nhập vào kho ngay</span></label></div>
-      <div class="radio-card"><input type="radio" id="r-ng-{{ d.pk }}" name="result" value="failed"><label for="r-ng-{{ d.pk }}"><strong>Không đạt</strong><span class="small muted">Không nhập kho</span></label></div>
-    </div>
-    <div class="form-grid" data-when="passed">
-      <div class="field"><label for="bg-{{ d.pk }}">Nhóm máu (theo xét nghiệm) <span class="field-req">*</span></label><select id="bg-{{ d.pk }}" name="blood_group" class="field-select"><option value="">-- Chọn --</option>{% for v, l in blood_groups %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
-      <div class="field"><label for="q-{{ d.pk }}">Số đơn vị nhập</label><input id="q-{{ d.pk }}" type="number" min="1" max="{{ "lab_max_units_per_donation"|setting }}" name="quantity" value="1" class="field-input"></div>
-      <div class="field span-2"><label for="sp-{{ d.pk }}">Chế phẩm / quy cách <span class="field-req">*</span></label><select id="sp-{{ d.pk }}" name="product_spec_id" class="field-select">{% for s in specs %}<option value="{{ s.pk }}" {% if d.suggested_spec and s.pk == d.suggested_spec.pk %}selected{% endif %}>{{ s.product.name }} — {{ s.name }}</option>{% endfor %}</select></div>
-    </div>
-    <div class="field"><label for="n-{{ d.pk }}">Ghi chú <span class="muted small">(bắt buộc nếu không đạt)</span></label><input id="n-{{ d.pk }}" name="lab_note" maxlength="500" class="field-input"></div>
+<div class="erp">
+  <div class="erp-toolbar">
+    <nav class="erp-tabs" aria-label="Trạng thái">
+      <a href="?tab=cho" class="{% if tab == 'cho' %}is-active{% endif %}">Chờ xét nghiệm <span class="erp-count">{{ pending_count }}</span></a>
+      <a href="?tab=da" class="{% if tab == 'da' %}is-active{% endif %}">Đã xét nghiệm</a>
+    </nav>
+    <form method="get" class="erp-search" role="search">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      {% icon "search" 16 %}<input type="search" name="q" value="{{ q }}" placeholder="Tìm mã lượt hiến, tên, SĐT  ( / )" aria-label="Tìm lượt hiến" aria-keyshortcuts="/">
+    </form>
+    <a href="{% url 'bloodbank:stock_ledger' %}?type=receive" class="erp-tool">{% icon "book-open" 16 %} Sổ kho</a>
   </div>
-  <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">{% icon "check" %} Lưu kết quả</button></div>
-</form></dialog>
-{% endfor %}
+
+  <div class="erp-grid-wrap">
+  {% if tab == "cho" %}
+    <table class="erp-grid">
+      <thead><tr><th class="c-stt">#</th><th>Mã</th><th>Người hiến</th><th>Hình thức</th><th class="c-num">ml</th><th>Hiến lúc</th><th>Đợt hiến</th><th class="c-act"></th></tr></thead>
+      <tbody>{% for d in page %}
+        {% with open=selected.pk|default:0 %}
+        <tr class="{% if d.pk == open %}is-selected{% endif %}">
+          <td class="c-stt">{{ page.start_index|add:forloop.counter0 }}</td>
+          <td class="c-code">{{ d.code }}</td>
+          <td>{{ d.donor.full_name }}</td>
+          <td>{% if d.donation_type == "component" %}{{ d.component_product.name|default:"Thành phần" }}{% if d.component_quantity %} · {{ d.component_quantity|floatformat:"-2" }} {{ d.get_component_unit_display }}{% endif %}{% else %}{{ d.get_donation_type_display }}{% endif %}</td>
+          <td class="c-num">{% if d.volume_ml %}{{ d.volume_ml }}{% else %}—{% endif %}</td>
+          <td>{{ d.donated_at|vn_dt }}</td>
+          <td class="c-trunc" title="{{ d.registration.campaign.name|default:'' }}">{{ d.registration.campaign.name|default:"—" }}</td>
+          <td class="c-act">{% if d.pk != open %}<a class="btn secondary sm erp-row-link" href="?tab=cho&amp;chon={{ d.pk }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if page.number > 1 %}&amp;page={{ page.number }}{% endif %}#lab-entry">{% icon "clipboard-pen" 14 %} Nhập kết quả</a>{% endif %}</td>
+        </tr>
+        {% if d.pk == open %}
+        <tr class="erp-entry" id="lab-entry"><td colspan="8">
+          <form method="post" action="{% url 'bloodbank:lab_result' d.pk %}" data-lab-form class="erp-entry-form">
+            {% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ d.form_key }}">
+            <input type="hidden" name="next" value="{% url 'bloodbank:lab_queue' %}?tab=cho{% if next_pk %}&chon={{ next_pk }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}#lab-entry">
+            <fieldset class="erp-seg" aria-label="Kết quả {{ d.code }}">
+              <input type="radio" id="r-ok" name="result" value="passed" checked><label for="r-ok">Đạt</label>
+              <input type="radio" id="r-ng" name="result" value="failed"><label for="r-ng">Không đạt</label>
+            </fieldset>
+            <span class="erp-entry-field" data-when="passed">
+              <label for="bg">Nhóm máu XN</label>
+              <select id="bg" name="blood_group" class="field-select" autofocus required>
+                <option value="">Chọn{% if d.donor.blood_group and not d.known_group %} (tự khai {{ d.donor.get_blood_group_display }}){% endif %}</option>
+                {% for v, l in blood_groups %}<option value="{{ v }}" {% if d.known_group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+              </select>
+            </span>
+            {% if d.plan_tach %}
+            <span class="erp-entry-field mode-field" data-when="passed">
+              <span class="field-label-sm">Nhập kho (hệ thống tự tính)</span>
+              <span class="mode-pick" role="radiogroup" aria-label="Cách nhập kho">
+                <input type="radio" id="m-tach" name="mode" value="tach" checked>
+                <label for="m-tach"><b>Tách</b> {% for sp, q in d.plan_tach %}{{ q }} {{ sp.product.name }} ({{ sp.name }}){% if not forloop.last %} + {% endif %}{% endfor %}</label>
+                {% if d.plan_nguyen %}<input type="radio" id="m-nguyen" name="mode" value="nguyen">
+                <label for="m-nguyen"><b>Giữ nguyên</b> {% for sp, q in d.plan_nguyen %}{{ q }} {{ sp.product.name }} ({{ sp.name }}){% endfor %}</label>{% endif %}
+              </span>
+            </span>
+            {% else %}{# không có quy tắc điều chế → chọn tay #}
+            <span class="erp-entry-field grow" data-when="passed">
+              <label for="sp">Chế phẩm</label>
+              <select id="sp" name="product_spec_id" class="field-select">{% for s in specs %}<option value="{{ s.pk }}" {% if d.suggested_spec and s.pk == d.suggested_spec.pk %}selected{% endif %}>{{ s.product.name }} — {{ s.name }}</option>{% endfor %}</select>
+            </span>
+            <span class="erp-entry-field" data-when="passed">
+              <label for="qty">SL</label>
+              <input id="qty" type="number" min="1" max="{{ "lab_max_units_per_donation"|setting }}" name="quantity" value="1" class="field-input erp-qty">
+            </span>
+            {% endif %}
+            <span class="erp-entry-field grow">
+              <label for="note">Ghi chú</label>
+              <input id="note" name="lab_note" maxlength="500" class="field-input" placeholder="Bắt buộc nếu không đạt">
+            </span>
+            <button class="btn primary">{% icon "check" 16 %} Xác nhận</button>
+            <a class="btn secondary" href="?tab=cho{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Hủy</a>
+          </form>
+        </td></tr>
+        {% endif %}
+        {% endwith %}
+      {% empty %}
+        <tr class="erp-empty"><td colspan="8">{% if q %}Không có lượt hiến khớp “{{ q }}”.{% else %}{% icon "circle-check" 18 %} Không còn lượt hiến chờ xét nghiệm.{% endif %}</td></tr>
+      {% endfor %}</tbody>
+      {% if page.object_list %}<tfoot><tr><td></td><td colspan="3">{{ page.paginator.count }} lượt chờ</td><td class="c-num">{{ total_ml }}</td><td colspan="3"></td></tr></tfoot>{% endif %}
+    </table>
+  {% else %}
+    <table class="erp-grid">
+      <thead><tr><th class="c-stt">#</th><th>Mã</th><th>Người hiến</th><th>Kết quả</th><th>Nhóm máu XN</th><th class="c-num">Nhập kho</th><th>Xét nghiệm lúc</th><th>Người nhập</th><th>Ghi chú</th></tr></thead>
+      <tbody>{% for d in page %}
+        <tr>
+          <td class="c-stt">{{ page.start_index|add:forloop.counter0 }}</td>
+          <td class="c-code"><a class="erp-row-link" href="{% url 'bloodbank:hospital_donation_detail' d.pk %}">{{ d.code }}</a></td>
+          <td>{{ d.donor.full_name }}</td>
+          <td>{% if d.lab_status == "passed" %}<span class="erp-ok">Đạt</span>{% else %}<span class="erp-ng">Không đạt</span>{% endif %}</td>
+          <td>{{ d.get_lab_blood_group_display|default:"—" }}</td>
+          <td class="c-num">{% if d.units %}+{{ d.units }}{% else %}—{% endif %}</td>
+          <td>{{ d.lab_checked_at|vn_dt }}</td>
+          <td>{{ d.lab_checked_by.full_name|default:"—" }}</td>
+          <td class="c-trunc" title="{{ d.lab_note|default:'' }}">{{ d.lab_note|default:"" }}</td>
+        </tr>
+      {% empty %}
+        <tr class="erp-empty"><td colspan="9">{% if q %}Không có lượt hiến khớp “{{ q }}”.{% else %}Chưa có lượt hiến nào được xét nghiệm.{% endif %}</td></tr>
+      {% endfor %}</tbody>
+      {% if page.object_list %}<tfoot><tr><td></td><td colspan="2">{{ page.paginator.count }} lượt</td><td>Đạt {{ passed }}</td><td></td><td class="c-num">+{{ units }}</td><td colspan="3"></td></tr></tfoot>{% endif %}
+    </table>
+  {% endif %}
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
 {% endblock %}

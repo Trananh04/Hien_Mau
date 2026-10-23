@@ -29,14 +29,13 @@
           {% if not n.read_at %}<span class="notif-dot"><span class="sr-only">Chưa đọc</span></span>{% endif %}
           <time datetime="{{ n.created_at|date:'c' }}" title="{{ n.created_at|vn_dt }}">{{ n.created_at|ago }}</time>
         </p>
-        <strong class="notif-title">{{ n.title }}</strong>
+        {% if n.link %}<button type="submit" form="notif-{{ n.pk }}" class="notif-title notif-link">{{ n.title }}</button>{% else %}<strong class="notif-title">{{ n.title }}</strong>{% endif %}
         {% if n.body %}<span class="notif-text">{{ n.body }}</span>{% endif %}
       </div>
-      <form method="post" action="{% url 'bloodbank:notifications_read' %}" class="notif-action">
+      <form method="post" action="{% url 'bloodbank:notifications_read' %}" class="notif-action" id="notif-{{ n.pk }}">
         {% csrf_token %}<input type="hidden" name="id" value="{{ n.pk }}">
         {% if n.link %}<input type="hidden" name="next" value="{{ n.link }}">{% endif %}
-        {% if n.link %}<button type="submit" class="btn ghost sm">Xem {% icon "arrow-right" %}</button>
-        {% elif not n.read_at %}<button type="submit" class="btn ghost sm">Đã đọc</button>{% endif %}
+        {% if not n.link and not n.read_at %}<button type="submit" class="btn ghost sm">Đã đọc</button>{% endif %}
       </form>
     </li>
     {% endfor %}

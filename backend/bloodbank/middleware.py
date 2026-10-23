@@ -1,8 +1,9 @@
 """Lớp phân quyền thứ nhất: mọi request được đối chiếu với bảng màn hình trong `bloodbank/access.py`."""
 from django.contrib.auth.views import redirect_to_login
 from django.conf import settings
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.urls import reverse
+from django.utils.cache import patch_vary_headers
 
 from bloodbank import access
 
@@ -19,7 +20,7 @@ class SecurityHeadersMiddleware:
         "script-src 'self'",
         "style-src 'self' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
-        "img-src 'self' data: https://*.tile.openstreetmap.org",
+        "img-src 'self' data: https://tile.openstreetmap.org",
         "connect-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
@@ -97,4 +98,33 @@ class ScreenAccessMiddleware:
                 return JsonResponse({"error": {"code": "ERR-AUTH-FORBIDDEN",
                                                "message": "Bạn không có quyền truy cập."}}, status=403)
             deny(request, "screen_role")
+        return None
+
+
+class HtmxPageMiddleware:
+    """Điều hướng bằng HTMX (hx-boost) chỉ thay <body>, không chạy script của trang mới.
+
+    Trang cần script riêng (bản đồ Leaflet, hiệu ứng cuộn) được tải đầy đủ: trả `HX-Redirect` TRƯỚC khi chạy view
+    (để thông báo flash chưa bị tiêu thụ). Chỉ áp dụng cho GET; form trên các trang này gửi kiểu thường (hx-boost=false).
+    """
+
+    FULL_PAGE = {"bloodbank:map", "bloodbank:campaign_detail", "bloodbank:process",
+                 "bloodbank:hospital_campaign_create", "bloodbank:hospital_campaign_edit", "bloodbank:hospital_info",
+                 "bloodbank:admin_hospital_create", "bloodbank:admin_hospital_edit"}
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        patch_vary_headers(response, ["HX-Request"])   # cùng URL, khác cách tải → không dùng chung bộ đệm
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        match = request.resolver_match
+        if (request.method == "GET" and request.headers.get("HX-Request") == "true"
+                and match is not None and match.view_name in self.FULL_PAGE):
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = request.get_full_path()
+            return response
         return None

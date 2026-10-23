@@ -4,7 +4,7 @@ Hệ thống kết nối người hiến máu, người nhà bệnh nhân cần 
 quản lý kho máu, điều phối máu giữa các bệnh viện và xử lý yêu cầu cần máu.
 
 - **Backend:** Django 5.2 · PostgreSQL 16 · pgAdmin 4 · tác vụ định kỳ (scheduler), chạy toàn bộ bằng Docker
-- **Giao diện:** cùng phông chữ (Be Vietnam Pro, Dancing Script), màu và bộ icon Lucide với trang chủ React trong `frontend/`
+- **Giao diện:** Django template kết xuất phía máy chủ + **HTMX 2** (chuyển trang, gửi form, lọc không tải lại trang) · CSS riêng · icon Lucide · bản đồ Leaflet. Không cần Node.js, an toàn với CSP chặt (không script/style nội tuyến)
 - **Đặc tả:** BLOOD-SRS-001 v1.1 (*Tài liệu thiết kế CSDL hiến máu*)
 
 > Dự án học tập. Mọi bệnh viện, người dùng và số liệu đều là **dữ liệu mẫu**.
@@ -241,23 +241,26 @@ backend/
                             0005: xét nghiệm lượt hiến, liên kết phiếu nhập ↔ lượt hiến, tham số tác vụ
                             0006: nhật ký kêu gọi người hiến
     services/               nghiệp vụ: máy trạng thái, kho (TX-STOCK), idempotency, nhật ký, thông báo,
-                            lab (xét nghiệm → kho), jobs (tác vụ định kỳ), callout (kêu gọi người hiến),
-                            badges (huy hiệu)
+                            lab (xét nghiệm → kho), jobs (tác vụ định kỳ), callout + donor_match (gợi ý và
+                            kêu gọi người hiến), shortage (danh sách "Cần xử lý"), badges (huy hiệu)
     views/                  public · member · hospital_* · admin
-    management/commands/    seed_demo (dữ liệu mẫu) · run_jobs (tác vụ định kỳ)
+    management/commands/    seed_demo (dữ liệu mẫu) · seed_hanoi_demo (dữ liệu mẫu Hà Nội, --xoa để gỡ)
+                            · run_jobs (tác vụ định kỳ)
     tests/                  bộ kiểm thử
   templates/                giao diện (công khai / cá nhân / khu làm việc bệnh viện, quản trị)
-  static/                   css (site.css = CSS trang chủ React, ui.css), js, ảnh, thư viện vendor
-frontend/                   trang chủ React gốc (Vite), tham chiếu thiết kế
+  static/                   css (site.css: trang công khai, ui.css: thành phần dùng chung), js (app.js: tương tác +
+                            khởi tạo lại sau mỗi lần HTMX thay nội dung, maps.js), ảnh, vendor (htmx, lucide, leaflet)
 ```
 
-### Chạy trang chủ React gốc (không bắt buộc)
+### Giao diện với HTMX
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+- `<body hx-boost="true">`: liên kết và form được gửi bằng AJAX, máy chủ trả trang HTML đầy đủ, HTMX chỉ thay `<body>`
+  (không tải lại CSS/JS/font) và cập nhật thanh địa chỉ. Tắt JS thì mọi thứ vẫn chạy như web thường.
+- Cấu hình trong thẻ `<meta name="htmx-config">` của `base.html`: không eval, không chèn style, không chạy script trong
+  nội dung mới (giữ CSP chặt); trang lỗi 403/404 vẫn được hiển thị.
+- `static/js/app.js`: sự kiện gắn một lần ở `document` + hàm `init(root)` chạy lại sau mỗi lần thay nội dung.
+- Trang có script riêng (bản đồ, quy trình) được tải đầy đủ: `HtmxPageMiddleware` trả `HX-Redirect`.
+- Khung trợ lý giữ nguyên khi chuyển trang (`hx-preserve`).
 
 ## 10. Ghi chú chuyển đổi MySQL → PostgreSQL
 

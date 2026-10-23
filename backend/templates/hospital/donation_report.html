@@ -2,7 +2,6 @@
 {% block title %}Báo cáo lượng máu tiếp nhận{% endblock %}
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Báo cáo tiếp nhận</span>{% endblock %}
 {% block ws_title %}Báo cáo lượng máu tiếp nhận{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Tính từ lượt hiến đã xác nhận. Máu tiếp nhận không tự quy đổi thành đơn vị chế phẩm trong kho.</p>{% endblock %}
 {% block content %}
 <section class="panel u-mb-20"><div class="panel-body">
   <form method="get" class="filters">
@@ -13,12 +12,7 @@
   </form>
 </div></section>
 
-<div class="grid grid-4 u-mb-20">
-  <div class="stat"><div class="stat-label">{% icon "badge-check" %} Lượt hiến xác nhận</div><div class="stat-value">{{ summary.count }}</div><div class="stat-note">{{ voided }} lượt đã hủy hiệu lực (không tính)</div></div>
-  <div class="stat"><div class="stat-label">{% icon "droplet" %} Toàn phần</div><div class="stat-value">{{ summary.whole_ml|vnum }}<small>ml</small></div><div class="stat-note">{{ summary.whole_count }} lượt</div></div>
-  <div class="stat"><div class="stat-label">{% icon "flask-conical" %} Thành phần</div><div class="stat-value">{{ summary.component_count }}<small>lượt</small></div><div class="stat-note">{% for c in summary.components %}{{ c.component_product__name }}: {{ c.qty|vnum }} {{ c.component_unit }}{% if not forloop.last %} · {% endif %}{% empty %}Thống kê theo loại & đơn vị{% endfor %}</div></div>
-  <div class="stat"><div class="stat-label">{% icon "circle-ellipsis" %} Hình thức khác</div><div class="stat-value">{{ summary.other_count }}<small>lượt</small></div></div>
-</div>
+<p class="summary-line">Xác nhận <b>{{ summary.count }}</b> lượt{% if voided %} (không tính {{ voided }} lượt hủy hiệu lực){% endif %} · toàn phần <b>{{ summary.whole_ml|vnum }}</b> ml / {{ summary.whole_count }} lượt · thành phần <b>{{ summary.component_count }}</b> lượt{% for c in summary.components %}{% if forloop.first %} ({% endif %}{{ c.component_product__name }} {{ c.qty|vnum }} {{ c.component_unit }}{% if not forloop.last %}, {% else %}){% endif %}{% endfor %}{% if summary.other_count %} · khác <b>{{ summary.other_count }}</b> lượt{% endif %}</p>
 
 <div class="grid grid-2">
   <section class="panel">

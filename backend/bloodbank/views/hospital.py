@@ -14,11 +14,12 @@ from bloodbank.models import (
 )
 from bloodbank.permissions import current_staff, staff_required
 from bloodbank.services import admin as admin_service
+from bloodbank.services import forecast as fc
 from bloodbank.services import inventory as inv
 from bloodbank.services import lab
 from bloodbank.services import transfers as trf
 
-from .helpers import attempt, audit_filters, int_or_none, paginate
+from .helpers import attempt, audit_filters, int_or_none, map_center, paginate
 
 
 
@@ -38,22 +39,24 @@ def dashboard(request):
         "to_dispatch": RequestOffer.objects.filter(supplier_hospital=h, status="accepted").count(),
         "to_receive": RequestOffer.objects.filter(request__requesting_hospital=h, status="in_transit").count(),
     }
-    # Việc cần xử lý: chỉ mục có số > 0, xếp theo mức ảnh hưởng tới người bệnh rồi tới vận hành
-    todo = [
-        (counts["prq_waiting"], "Yêu cầu cần máu chờ xác minh", "Người nhà bệnh nhân gửi, chưa xác minh", "heart-pulse",
-         reverse("bloodbank:hospital_patient_requests"), True),
-        (alerts["danger"], "Nhu cầu đang thiếu máu", "Nhu cầu đang mở vượt tồn khả dụng", "trending-down",
-         reverse("bloodbank:demands"), True),
-        (counts["to_receive"], "Hàng liên viện đang tới", "Cần xác nhận số thực nhận khi tới nơi", "truck",
-         reverse("bloodbank:support_requests") + "?status=open", False),
-        (counts["incoming_pending"], "Đề nghị cấp máu chờ phản hồi", "Bệnh viện khác xin hỗ trợ", "inbox",
-         reverse("bloodbank:incoming_offers") + "?status=pending", False),
-        (counts["to_dispatch"], "Đề nghị đã chấp thuận, chờ xuất kho", "Đã giữ chỗ trong kho", "package-check",
-         reverse("bloodbank:incoming_offers") + "?status=accepted", False),
-        (counts["lab_pending"], "Lượt hiến chờ kết quả xét nghiệm", "Chưa nhập kho", "flask-conical",
-         reverse("bloodbank:lab_queue"), False),
-        (counts["pending_regs"], "Đơn đăng ký hiến chờ duyệt", "Trong các đợt đang tiếp nhận", "clipboard-list",
-         reverse("bloodbank:hospital_campaigns") + "?status=open", False),
+    # 4 chỉ số chính (luôn hiện, bấm để tới màn xử lý) + việc phụ (chỉ hiện khi có)
+    urgent = sum(1 for r in inv.shortages(h, now) if r["urgent"]) + len(inv.urgent_requests(h))
+    plan = [r for r in fc.forecast(h, now) if r["level"] != "ok"]   # dự báo: sắp thiếu / cần lên kế hoạch
+    kpis = [
+        {"label": "Thiếu máu khẩn", "count": urgent, "icon": "siren", "url": reverse("bloodbank:demands"),
+         "tone": "danger", "hint": "cần trong 24 giờ"},
+        {"label": "Yêu cầu chờ xác minh", "count": counts["prq_waiting"], "icon": "heart-pulse",
+         "url": reverse("bloodbank:hospital_patient_requests"), "tone": "danger", "hint": "từ người nhà bệnh nhân"},
+        {"label": "Chờ xét nghiệm", "count": counts["lab_pending"], "icon": "flask-conical",
+         "url": reverse("bloodbank:lab_queue"), "tone": "warn", "hint": "lượt hiến chưa nhập kho"},
+        {"label": "Sắp thiếu (7 ngày)", "count": sum(1 for r in plan if r["level"] == "soon"), "icon": "chart-line",
+         "url": reverse("bloodbank:demands"), "tone": "warn", "hint": f"khả dụng {alerts['available']} đơn vị"},
+    ]
+    others = [
+        (counts["to_receive"], "hàng liên viện đang tới", reverse("bloodbank:support_requests") + "?status=open"),
+        (counts["incoming_pending"], "đề nghị cấp máu chờ phản hồi", reverse("bloodbank:incoming_offers") + "?status=pending"),
+        (counts["to_dispatch"], "đề nghị đã chấp thuận chờ xuất", reverse("bloodbank:incoming_offers") + "?status=accepted"),
+        (counts["pending_regs"], "đơn đăng ký hiến chờ duyệt", reverse("bloodbank:hospital_campaigns") + "?status=open"),
     ]
     # Yêu cầu cần máu đang mở: chờ xác minh trước, rồi hạn cần sớm nhất
     open_statuses = PatientRequest.WAITING_STATUSES + PatientRequest.ACTIVE_STATUSES
@@ -68,9 +71,9 @@ def dashboard(request):
         c.live = c.start_time <= now <= c.end_time
         c.checkin_ready = c.start_time - timedelta(hours=12) <= now <= c.end_time
     return render(request, "hospital/dashboard.html", {
-        "now": now, "alerts": alerts, "prqs": prqs, "campaigns": campaigns,
-        "todo": [{"count": n, "label": label, "hint": hint, "icon": icon, "url": url, "urgent": urgent}
-                 for n, label, hint, icon, url, urgent in todo if n],
+        "now": now, "alerts": alerts, "prqs": prqs, "campaigns": campaigns, "kpis": kpis, "plan": plan[:6],
+        "plan_more": max(0, len(plan) - 6),
+        "others": [{"count": n, "label": label, "url": url} for n, label, url in others if n],
     })
 
 
@@ -107,7 +110,8 @@ def hospital_info(request):
             if ok:
                 return redirect("bloodbank:hospital_info")
     return render(request, "hospital/hospital_info.html", {"form": form, "can_edit": can_edit, "h": h,
-                                                           "staff_count": h.staffs.filter(is_active=True).count()})
+                                                           "staff_count": h.staffs.filter(is_active=True).count(),
+                                                           **map_center(h)})
 
 
 # ---------------------------------------------------------------- SCR-38 Nhân viên (xem)

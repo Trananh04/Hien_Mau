@@ -2,7 +2,6 @@
 {% block title %}{% if scope == "system" %}Nhật ký hệ thống{% else %}Nhật ký bệnh viện{% endif %}{% endblock %}
 {% block crumbs %}<span>{% if scope == "system" %}Quản trị{% else %}Bệnh viện{% endif %}</span>{% icon "chevron-right" 14 %}<span>Nhật ký</span>{% endblock %}
 {% block ws_title %}{% if scope == "system" %}Nhật ký hệ thống{% else %}Nhật ký bệnh viện{% endif %}{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Nhật ký chỉ thêm — không sửa, không xóa. Gồm thay đổi dữ liệu, truy cập bị từ chối và lần xem dữ liệu nhạy cảm.</p>{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="panel-head">
@@ -13,7 +12,7 @@
       <div class="field"><label for="au">Người thực hiện</label><input id="au" name="actor" value="{{ f.actor }}" class="field-input" placeholder="Email hoặc tên"></div>
       <div class="field"><label for="af">Từ ngày</label><input id="af" type="date" name="from" value="{{ f.from }}" class="field-input"></div>
       <div class="field"><label for="at">Đến ngày</label><input id="at" type="date" name="to" value="{{ f.to }}" class="field-input"></div>
-      <button class="btn secondary" type="submit">{% icon "filter" %} Lọc</button>
+      <button class="btn secondary filter-submit" type="submit">{% icon "filter" %} Lọc</button>
     </form>
   </div>
   {% if page.object_list %}

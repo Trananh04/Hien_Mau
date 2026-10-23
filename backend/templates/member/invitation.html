@@ -1,0 +1,27 @@
+{% extends "member/base.html" %}
+{% block title %}Lời mời hiến máu nhóm {{ c.blood_group }}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Lời mời hiến máu" %}{% endblock %}
+{% block member %}
+<section class="panel u-maxw-820">
+  <div class="panel-head"><h2 class="panel-title">{% blood c.blood_group "sm" %} {{ h.name }} cần máu nhóm {{ c.blood_group }}</h2>{% if urgent %}<span class="level-tag urgent">{% icon "siren" 14 %} Khẩn</span>{% endif %}</div>
+  <div class="panel-body stack u-gap-14">
+    {% if urgent %}
+    <div class="notice danger">{% icon "siren" %}<div><strong>Bệnh viện cần người hiến ngay hôm nay.</strong> Nếu bạn đến được, hãy gọi trước để bệnh viện đón tiếp.</div></div>
+    {% elif campaign %}
+    <div class="notice info">{% icon "calendar-heart" %}<div>Bệnh viện mời bạn tham gia đợt hiến <strong>{{ campaign.name }}</strong>, {{ campaign.start_time|vn_dt }} tại {{ campaign.location_name }}.</div></div>
+    {% endif %}
+    <dl class="dl">
+      <dt>Bệnh viện</dt><dd>{{ h.name }}</dd>
+      <dt>Địa chỉ</dt><dd>{{ h.address }}{% if h.area %}, {{ h.area }}{% endif %}</dd>
+      {% if h.phone %}<dt>Điện thoại</dt><dd><a class="link" href="tel:{{ h.phone }}">{{ h.phone|phone }}</a></dd>{% endif %}
+      <dt>Nhận lúc</dt><dd>{{ note.created_at|vn_dt }}</dd>
+    </dl>
+    <p class="muted small">Bác sĩ sẽ khám sàng lọc trước khi hiến. Bạn không bắt buộc phải nhận lời mời này.</p>
+  </div>
+  <div class="panel-foot">
+    {% if campaign %}<a href="{% url 'bloodbank:campaign_detail' campaign.pk %}" class="btn primary">{% icon "calendar-check" %} Đăng ký đợt hiến</a>{% endif %}
+    {% if h.phone %}<a href="tel:{{ h.phone }}" class="btn {% if campaign %}secondary{% else %}primary{% endif %}">{% icon "phone" %} Gọi bệnh viện</a>{% endif %}
+    {% if h.latitude is not None %}<a href="https://www.google.com/maps/dir/?api=1&destination={{ h.latitude|stringformat:"s" }},{{ h.longitude|stringformat:"s" }}" target="_blank" rel="noopener" class="btn secondary">{% icon "navigation" %} Chỉ đường</a>{% endif %}
+  </div>
+</section>
+{% endblock %}

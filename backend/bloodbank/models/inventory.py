@@ -124,7 +124,8 @@ class StockTxn(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["offer", "txn_type"], name="uq_txn_offer_type"),
             # Mỗi lượt hiến nhập kho tối đa một lần
-            models.UniqueConstraint(fields=["donation"], condition=Q(donation__isnull=False), name="uq_txn_donation"),
+            models.UniqueConstraint(fields=["donation", "stock"], condition=Q(donation__isnull=False),
+                                    name="uq_txn_donation_stock"),   # một lượt hiến tách được nhiều chế phẩm, mỗi dòng tồn 1 phiếu
             models.CheckConstraint(condition=Q(donation__isnull=True) | Q(txn_type="receive"), name="chk_txn_donation_receive"),
             models.CheckConstraint(
                 condition=Q(txn_type="adjustment", adjustment_reason__isnull=False)
@@ -179,6 +180,14 @@ class Demand(models.Model):
     needed_by = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     note = models.CharField(max_length=500, null=True, blank=True)
+    # Ca khẩn cấp (nút "Khẩn cấp"): kho mình → xin bệnh viện gần còn dư (support_request) → người hiến
+    is_emergency = models.BooleanField(default=False)
+    support_request = models.ForeignKey(
+        "bloodbank.HospitalRequest", on_delete=models.SET_NULL, null=True, blank=True, related_name="emergency_demands"
+    )
+    patient_request = models.ForeignKey(
+        "bloodbank.PatientRequest", on_delete=models.SET_NULL, null=True, blank=True, related_name="emergency_demands"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

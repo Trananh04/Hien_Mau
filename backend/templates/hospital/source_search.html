@@ -2,7 +2,6 @@
 {% block title %}Tìm nguồn liên viện{% endblock %}
 {% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Tìm nguồn</span>{% endblock %}
 {% block ws_title %}Tìm nguồn liên viện{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Chỉ hiển thị số bệnh viện khác cho phép chia sẻ (đã trừ phần giữ chỗ), xếp bệnh viện gần trước. Nhập "Số cần" để hệ thống gợi ý chia cho các nguồn. Nền tảng không tự điều chuyển — bạn gửi đề nghị và bên cấp phản hồi.</p>{% endblock %}
 {% block content %}
 {% if patient_request %}<div class="notice info">{% icon "link" %}<div>Đang tìm nguồn cho yêu cầu người cần máu <strong>{{ patient_request.request_code }}</strong>; yêu cầu hỗ trợ tạo ra sẽ được liên kết.</div></div>{% endif %}
 <section class="panel u-mb-20"><div class="panel-body">

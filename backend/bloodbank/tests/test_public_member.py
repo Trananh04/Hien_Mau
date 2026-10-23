@@ -20,7 +20,7 @@ class HomeAndAuthTests(TestCase):
         r = self.client.get("/")
         self.assertEqual(r.status_code, 200)
         html = r.content.decode()
-        for needle in ["GIỌT HỒNG", "Be+Vietnam+Pro", "Dancing+Script", "btn-heart-theme",
+        for needle in ["GIỌT HỒNG", "family=Roboto", "btn-heart-theme",
                        "btn-cross-theme", "Tôi cần xin máu", 'id="ve-chung-toi"', "VỀ CHÚNG TÔI", "lucide.min.js",
                        "footer-section"]:
             self.assertIn(needle, html)

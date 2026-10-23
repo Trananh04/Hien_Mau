@@ -37,14 +37,17 @@ class CampaignAndDonationFlowTests(TestCase):
 
         self.client.force_login(self.ha)
         r = self.client.get(reverse("bloodbank:hospital_dashboard"))
-        self.assertEqual(r.context["todo"], [])
-        self.assertContains(r, "Không có việc tồn đọng.")
+        self.assertEqual([k["count"] for k in r.context["kpis"]], [0, 0, 0, 0])   # 4 chỉ số luôn hiện, đều 0
+        self.assertEqual(r.context["others"], [])
+        self.assertNotContains(r, "is-danger")
         PatientRequest.objects.create(requester=self.donor, contact_name="A", contact_phone="0905000999",
                                       hospital=self.h, quantity_units=1, consent_at=timezone.now(),
                                       request_code="PR-DASH-0001")
         r = self.client.get(reverse("bloodbank:hospital_dashboard"))
-        self.assertEqual([(t["label"], t["count"], t["urgent"]) for t in r.context["todo"]],
-                         [("Yêu cầu cần máu chờ xác minh", 1, True)])
+        kpi = {k["label"]: k for k in r.context["kpis"]}
+        self.assertEqual(kpi["Yêu cầu chờ xác minh"]["count"], 1)
+        self.assertContains(r, 'class="kpi is-danger"')
+        self.assertContains(r, "PR-DASH-0001")
         self.assertNotContains(r, "Thông báo gần đây")   # đã có chuông trên thanh trên cùng
 
     def test_campaign_lifecycle_publish_close_cancel(self):

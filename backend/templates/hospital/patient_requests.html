@@ -2,7 +2,6 @@
 {% block title %}Yêu cầu cần máu{% endblock %}
 {% block crumbs %}<span>Người cần máu</span>{% icon "chevron-right" 14 %}<span>Yêu cầu</span>{% endblock %}
 {% block ws_title %}Yêu cầu từ người cần máu{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Chỉ các yêu cầu chọn {{ current_hospital.name }} là bệnh viện điều trị. Tên bệnh nhân và SĐT được ẩn ở danh sách; mở chi tiết sẽ ghi nhật ký.</p>{% endblock %}
 {% block content %}
 <nav class="tabs">
   <a href="?status=waiting" class="tab {% if status == 'waiting' %}active{% endif %}">{% icon "clock" %} Chờ xác minh</a>
@@ -18,14 +17,14 @@
     <thead><tr><th>Mã</th><th>Nhóm máu</th><th>Chế phẩm</th><th class="num">Số đơn vị</th><th>Cần trước</th><th>Bệnh nhân</th><th>Trạng thái</th><th></th></tr></thead>
     <tbody>{% for p in page %}
       <tr>
-        <td data-label="Mã"><span class="cell-title">{{ p.request_code }}</span><span class="cell-sub">{{ p.created_at|vn_dt }}</span></td>
+        <td data-label="Mã"><a href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}" class="cell-title row-link">{{ p.request_code }}</a><span class="cell-sub">{{ p.created_at|vn_dt }}</span></td>
         <td data-label="Nhóm máu">{% blood p.blood_group "sm" %}</td>
         <td data-label="Chế phẩm">{{ p.blood_product.name|default:"Chưa rõ" }}</td>
         <td data-label="Số đơn vị" class="num">{{ p.quantity_units }}</td>
         <td data-label="Cần trước" class="nowrap">{{ p.needed_by|vn_dt }}</td>
         <td data-label="Bệnh nhân">{{ p.patient_name|mask_name }}</td>
         <td data-label="Trạng thái">{% status_badge p %}</td>
-        <td data-label="Thao tác"><div class="table-actions"><a href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}" class="btn {% if p.status == 'submitted' or p.status == 'verifying' %}primary{% else %}ghost{% endif %} sm">{% if p.status == "submitted" or p.status == "verifying" %}Xác minh{% else %}Chi tiết{% endif %}</a></div></td>
+        <td data-label="Thao tác"><div class="table-actions">{% if p.status == "submitted" or p.status == "verifying" %}<a href="{% url 'bloodbank:hospital_patient_request_detail' p.pk %}" class="btn primary sm">Xác minh</a>{% endif %}</div></td>
       </tr>
     {% endfor %}</tbody>
   </table></div>

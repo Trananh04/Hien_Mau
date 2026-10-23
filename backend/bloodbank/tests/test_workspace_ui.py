@@ -31,12 +31,11 @@ class StockAlertTests(TestCase):
         Demand.objects.create(hospital=self.h, blood_group="A-", product_spec=self.rbc, required_quantity=2)
         self.client.force_login(self.staff)
         r = self.client.get(reverse("bloodbank:hospital_dashboard"))
-        self.assertContains(r, "Thiếu theo nhu cầu")
-        self.assertContains(r, "Xử lý thiếu hụt")
+        self.assertContains(r, "Sắp thiếu máu")
+        self.assertContains(r, reverse("bloodbank:demands"))
         self.assertContains(r, "Số liệu lúc")
-        self.assertEqual([t["label"] for t in r.context["todo"]], ["Nhu cầu đang thiếu máu"])
+        self.assertEqual({k["label"]: k["count"] for k in r.context["kpis"]}["Sắp thiếu (7 ngày)"], 1)
         self.assertEqual(Demand.objects.get().status, Demand.Status.ACTIVE)   # mở tổng quan không ghi gì
-
 
 class SidebarTests(TestCase):
     @classmethod
@@ -66,14 +65,17 @@ class SidebarTests(TestCase):
         self.assertLess(html.index('data-ws-sec="nguoi-can-mau"'), html.index('data-ws-sec="hien-mau"'))
 
     def test_action_cells_use_shared_wrapper(self):
-        """Cột thao tác dùng .table-actions → được ghim ở mép phải khi bảng cuộn ngang (laptop/tablet)."""
+        """Cột thao tác (chỉ ở danh sách còn hành động thật: Xác minh, Điểm hiến) dùng .table-actions → ghim mép phải.
+        Danh sách chỉ để mở chi tiết thì không có cột này: bấm tên / cả dòng (.row-link)."""
         from pathlib import Path
 
         from django.conf import settings
 
-        for name in ("hospital/patient_requests.html", "hospital/support_requests.html", "admin/hospitals.html"):
-            self.assertIn('<div class="table-actions">',
-                          (Path(settings.BASE_DIR) / "templates" / name).read_text(encoding="utf-8"), name)
+        root = Path(settings.BASE_DIR) / "templates"
+        for name in ("hospital/patient_requests.html", "hospital/campaigns.html"):
+            self.assertIn('<div class="table-actions">', (root / name).read_text(encoding="utf-8"), name)
+        for name in ("hospital/support_requests.html", "admin/hospitals.html", "hospital/campaigns.html"):
+            self.assertIn("row-link", (root / name).read_text(encoding="utf-8"), name)
 
 
 class NotificationCenterTests(TestCase):
@@ -123,3 +125,21 @@ class AgoFilterTests(TestCase):
             self.assertEqual(ago(now - delta, now), expected)
         old = now - timedelta(days=40)
         self.assertEqual(ago(old, now), timezone.localtime(old).strftime("%d/%m/%Y"))
+
+
+class IncomingOfferTabsTests(TestCase):
+    def test_tabs_group_offers_by_next_action(self):
+        from bloodbank.services import transfers as trf
+
+        asker, supplier = f.hospital(), f.hospital()
+        asker_staff, supplier_staff = f.staff(asker), f.staff(supplier)
+        trf.create_request(asker_staff.staffs.get(), {"blood_group": "O+", "product_spec_id": f.spec().pk,
+                                                      "quantity_needed": 2, "priority": "high"}, [(supplier.pk, 2)])
+        self.client.force_login(supplier_staff)
+        url = reverse("bloodbank:incoming_offers")
+        r = self.client.get(url)                                    # mặc định: cần xử lý
+        self.assertEqual((r.context["group"], len(r.context["page"])), ("can-xu-ly", 1))
+        self.assertEqual(r.context["tabs"][0], ("can-xu-ly", "Cần xử lý", 1))
+        self.assertEqual(len(self.client.get(url + "?nhom=da-xong").context["page"]), 0)
+        r = self.client.get(url + "?status=pending")                # liên kết cũ vẫn chạy
+        self.assertEqual((r.context["group"], len(r.context["page"])), ("can-xu-ly", 1))

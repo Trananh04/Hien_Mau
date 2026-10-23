@@ -12,12 +12,11 @@ backend/staticfiles/
 backend/media/
 *.sqlite3
 
-# Frontend React
-frontend/node_modules/
-frontend/dist/
-
 # Công cụ / hệ điều hành
 .claude/
+.ruff_cache/
+# Bộ đệm của công cụ thiết kế impeccable (đổi sau mỗi lần sửa file)
+**/.impeccable/hook.cache.json
 .vscode/
 .idea/
 .DS_Store

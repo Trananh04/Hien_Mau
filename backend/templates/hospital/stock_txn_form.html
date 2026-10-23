@@ -2,7 +2,6 @@
 {% block title %}{% if mode == "receive" %}Phiếu nhập kho{% elif mode == "issue" %}Phiếu xuất kho{% else %}Phiếu điều chỉnh{% endif %}{% endblock %}
 {% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>{% if mode == "receive" %}Nhập kho{% elif mode == "issue" %}Xuất kho{% else %}Điều chỉnh{% endif %}</span>{% endblock %}
 {% block ws_title %}{% if mode == "receive" %}Phiếu nhập kho{% elif mode == "issue" %}Phiếu xuất kho{% else %}Phiếu điều chỉnh tồn{% endif %}{% endblock %}
-{% block ws_sub %}<p class="ws-sub">{% if mode == "receive" %}Nhập theo số đơn vị thực tế đã sản xuất/tiếp nhận — không tự quy đổi từ ml máu hiến.{% elif mode == "issue" %}Chỉ xuất trên phần khả dụng; có thể liên kết yêu cầu người cần máu đã xác minh.{% else %}Mọi điều chỉnh có lý do và được ghi vào sổ kho chỉ-thêm.{% endif %}</p>{% endblock %}
 {% block content %}
 <nav class="tabs">
   <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="tab {% if mode == 'receive' %}active{% endif %}">{% icon "package-plus" %} Nhập</a>

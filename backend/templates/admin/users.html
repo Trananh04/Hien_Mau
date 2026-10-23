@@ -2,7 +2,6 @@
 {% block title %}Quản lý người dùng{% endblock %}
 {% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Người dùng</span>{% endblock %}
 {% block ws_title %}Quản lý người dùng{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Ba loại tài khoản tách biệt: Người dùng, Nhân viên bệnh viện, Quản trị hệ thống. Tài khoản nhân viên được tạo tại màn hình Bệnh viện. Khóa tài khoản có hiệu lực ngay ở lần truy cập kế tiếp. Không xóa cứng — “Xóa” là trạng thái cuối, dữ liệu lịch sử giữ nguyên.</p>{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="panel-head">
@@ -10,7 +9,7 @@
       <div class="field grow"><label for="uq">Tìm kiếm</label><div class="search-input">{% icon "search" %}<input id="uq" name="q" value="{{ f.q }}" class="field-input" placeholder="Tên, email, số điện thoại"></div></div>
       <div class="field"><label for="us">Trạng thái</label><select id="us" name="status" class="field-select"><option value="">Tất cả</option><option value="active" {% if f.status == "active" %}selected{% endif %}>Đang hoạt động</option><option value="locked" {% if f.status == "locked" %}selected{% endif %}>Đã khóa</option><option value="deleted" {% if f.status == "deleted" %}selected{% endif %}>Đã xóa</option></select></div>
       <div class="field"><label for="ur">Vai trò</label><select id="ur" name="role" class="field-select"><option value="">Tất cả</option>{% for v, l in roles %}<option value="{{ v }}" {% if f.role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
-      <button class="btn secondary">{% icon "filter" %} Lọc</button>
+      <button class="btn secondary filter-submit">{% icon "filter" %} Lọc</button>
     </form>
   </div>
   {% if page.object_list %}
@@ -26,9 +25,9 @@
           {% elif u.pk == user.pk or u.status == "deleted" %}
             <span class="badge {% if u.role == 'admin' %}danger{% else %}neutral{% endif %} plain">{{ u.get_role_display }}</span>
           {% else %}
-          <form method="post" class="row u-gap-6 u-fw-nowrap" data-confirm="Đổi vai trò của {{ u.email }}?" data-confirm-detail="Mỗi vai trò đăng nhập ở một cổng riêng và chỉ thấy màn hình của vai trò đó. Người này sẽ bị đăng xuất." data-confirm-label="Đổi vai trò">{% csrf_token %}<input type="hidden" name="action" value="role"><input type="hidden" name="user_id" value="{{ u.pk }}">
+          <form method="post" class="row u-gap-6 u-fw-nowrap" data-autosubmit data-confirm="Đổi vai trò của {{ u.email }}?" data-confirm-detail="Mỗi vai trò đăng nhập ở một cổng riêng và chỉ thấy màn hình của vai trò đó. Người này sẽ bị đăng xuất." data-confirm-label="Đổi vai trò">{% csrf_token %}<input type="hidden" name="action" value="role"><input type="hidden" name="user_id" value="{{ u.pk }}">
             <select name="role" class="field-select u-minh-34" aria-label="Vai trò"><option value="member" {% if u.role == "member" %}selected{% endif %}>Người dùng</option><option value="admin" {% if u.role == "admin" %}selected{% endif %}>Quản trị hệ thống</option></select>
-            <button class="btn secondary sm" title="Lưu" aria-label="Lưu thay đổi tài khoản">{% icon "check" %}</button>
+            <noscript><button class="btn secondary sm" aria-label="Lưu thay đổi tài khoản">{% icon "check" %}</button></noscript>
           </form>
           {% endif %}
         </td>

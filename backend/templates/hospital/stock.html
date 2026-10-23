@@ -2,7 +2,6 @@
 {% block title %}Tồn kho{% endblock %}
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tồn kho</span>{% endblock %}
 {% block ws_title %}Tồn kho chế phẩm{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Khả dụng = Hiện có − Giữ chỗ. Bệnh viện khác chỉ thấy MIN(Chia sẻ, Khả dụng).</p>{% endblock %}
 {% block ws_actions %}
   {% if can_edit %}
   <a href="{% url 'bloodbank:stock_txn' 'nhap' %}" class="btn primary">{% icon "package-plus" %} Nhập kho</a>
@@ -11,12 +10,7 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-<div class="grid grid-4 u-mb-20">
-  <div class="stat"><div class="stat-label">{% icon "boxes" %} Hiện có</div><div class="stat-value">{{ totals.on_hand }}<small>đơn vị</small></div></div>
-  <div class="stat"><div class="stat-label">{% icon "lock" %} Đang giữ chỗ</div><div class="stat-value">{{ totals.reserved }}<small>đơn vị</small></div><div class="stat-note">Cho đề nghị liên viện đã chấp thuận</div></div>
-  <div class="stat {% if totals.low %}alert{% endif %}"><div class="stat-label">{% icon "triangle-alert" %} Dưới tối thiểu</div><div class="stat-value">{{ totals.low }}</div><div class="stat-note">Dòng tồn</div></div>
-  <div class="stat {% if totals.short %}alert{% endif %}"><div class="stat-label">{% icon "trending-down" %} Đang thiếu</div><div class="stat-value">{{ totals.short }}</div><div class="stat-note">Khóa có nhu cầu vượt khả dụng</div></div>
-</div>
+<p class="summary-line">Hiện có <b>{{ totals.on_hand }}</b> đơn vị · giữ chỗ cho liên viện <b>{{ totals.reserved }}</b> · dưới tối thiểu <b class="{% if totals.low %}t-warn{% endif %}">{{ totals.low }}</b> dòng · đang thiếu theo nhu cầu <b class="{% if totals.short %}t-danger{% endif %}">{{ totals.short }}</b> khóa</p>
 
 <section class="panel">
   <div class="panel-head">
@@ -28,12 +22,12 @@
       <thead><tr><th>Nhóm máu</th>{% for s in specs %}<th>{{ s.product.name }}<span class="cell-sub u-tt-none u-ls-0">{{ s.name }}</span></th>{% endfor %}</tr></thead>
       <tbody>
       {% for row in matrix %}
-        <tr><td>{% blood row.bg %}</td>
+        <tr><td>{% blood row.bg "sm" %}</td>
         {% for cell in row.cells %}
           <td>{% with st=cell.stock %}
             <span class="stock-cell {% if cell.short %}short{% elif st and st.below_min %}low{% elif not st or st.available == 0 %}zero{% endif %}" title="{% if st %}Hiện có {{ st.quantity_on_hand }}, giữ {{ st.quantity_reserved }}, tối thiểu {{ st.min_stock_level }}{% else %}Chưa có dòng tồn{% endif %}">
-              <b>{% if st %}{{ st.available }}{% else %}0{% endif %}</b>
-              <span>{% if cell.short %}thiếu {{ cell.short }}{% elif st and st.quantity_reserved %}giữ {{ st.quantity_reserved }}{% elif st and st.min_stock_level %}min {{ st.min_stock_level }}{% else %}&nbsp;{% endif %}</span>
+              <b>{% if st and st.available %}{{ st.available }}{% else %}–{% endif %}</b>
+              {% if cell.short %}<span>thiếu {{ cell.short }}</span>{% elif st and st.quantity_reserved %}<span>giữ {{ st.quantity_reserved }}</span>{% elif st and st.min_stock_level %}<span>min {{ st.min_stock_level }}</span>{% endif %}
             </span>
           {% endwith %}</td>
         {% endfor %}</tr>

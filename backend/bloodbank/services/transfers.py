@@ -8,8 +8,8 @@ from django.utils import timezone
 from bloodbank.models import Hospital, HospitalRequest, PatientRequest, ProductSpec, RequestOffer, Stock, StockTxn
 
 from .common import (
-    BusinessError, as_id, audit, business_transaction, create_with_code, notify_hospital_staff, positive_int, require,
-    snapshot,
+    BusinessError, alert, as_id, audit, business_transaction, create_with_code, hospital_staff_users,
+    notify_hospital_staff, positive_int, require, snapshot,
 )
 from .inventory import apply_txn, change_reserved, get_or_create_stock_locked
 
@@ -90,6 +90,7 @@ def recompute_status(req, now=None):
     statuses = set(req.offers.values_list("status", flat=True))
     if n["received"] >= req.quantity_needed:
         req.status, req.closed_at = H.FULFILLED, now or timezone.now()
+        _release_open_offers(req, None)   # đã đủ: đề nghị còn chờ / đã giữ chỗ ở bệnh viện khác không cần nữa
     elif O.COMPLETED in statuses:
         req.status = H.PARTIALLY_FULFILLED
     elif statuses & {O.ACCEPTED, O.IN_TRANSIT}:
@@ -101,17 +102,30 @@ def recompute_status(req, now=None):
 
 
 def expire_overdue(hospital=None):
-    """Yêu cầu quá needed_by và không còn hàng đang chuyển → expired (giải phóng giữ chỗ)."""
+    """Yêu cầu quá needed_by và không còn hàng đang chuyển → expired (giải phóng giữ chỗ).
+
+    Đã nhận một phần thì không "hết hạn" mà được ĐÓNG (giữ trạng thái đáp ứng một phần), cũng trả giữ chỗ còn treo.
+    """
     now = timezone.now()
-    qs = HospitalRequest.objects.filter(needed_by__lt=now, status__in=[H.OPEN, H.IN_PROGRESS])
+    qs = HospitalRequest.objects.filter(needed_by__lt=now, closed_at__isnull=True,
+                                        status__in=[H.OPEN, H.IN_PROGRESS, H.PARTIALLY_FULFILLED])
     if hospital is not None:
         qs = qs.filter(Q(requesting_hospital=hospital) | Q(offers__supplier_hospital=hospital)).distinct()
     for req_id in list(qs.values_list("pk", flat=True)):
         with business_transaction():
             req = HospitalRequest.objects.select_for_update().get(pk=req_id)
-            if req.status not in (H.OPEN, H.IN_PROGRESS) or req.offers.filter(status=O.IN_TRANSIT).exists():
+            if (req.status not in (H.OPEN, H.IN_PROGRESS, H.PARTIALLY_FULFILLED) or req.closed_at
+                    or req.offers.filter(status=O.IN_TRANSIT).exists()):
                 continue
             _release_open_offers(req, None)
+            if req.status == H.PARTIALLY_FULFILLED:
+                req.closed_at = now
+                req.save(update_fields=["closed_at", "updated_at"])
+                audit(None, req, "status_change", new={"closed_at": now, "reason": "overdue"},
+                      hospital=req.requesting_hospital)
+                notify_hospital_staff(req.requesting_hospital, "request_expired",
+                                      f"Yêu cầu hỗ trợ {req.request_code} quá hạn, đã đóng (nhận một phần)", entity=req)
+                continue
             req.status, req.closed_at = H.EXPIRED, now
             req.save(update_fields=["status", "closed_at", "updated_at"])
             audit(None, req, "status_change", new={"status": "expired"}, hospital=req.requesting_hospital)
@@ -197,9 +211,12 @@ def _invite(staff, req, hospital, qty, request):
         offer = RequestOffer.objects.create(request=req, supplier_hospital=hospital, quantity_requested=qty)
         action = "create"
     audit(staff.user, offer, action, new=snapshot(offer), hospital=staff.hospital, request=request)
-    notify_hospital_staff(hospital, "offer_received",
-                          f"Đề nghị hỗ trợ mới: {req.request_code} ({req.blood_group})",
-                          f"{staff.hospital.name} đề nghị hỗ trợ {qty or ''} đơn vị.".replace("  ", " "), entity=offer)
+    title = f"{'[Khẩn] ' if req.priority == 'urgent' else ''}Đề nghị hỗ trợ mới: {req.request_code} ({req.blood_group})"
+    body = f"{staff.hospital.name} đề nghị hỗ trợ {qty or ''} đơn vị.".replace("  ", " ")
+    if req.priority in ("urgent", "high"):   # cần phản hồi nhanh: thông báo trong ứng dụng + email
+        alert(hospital_staff_users(hospital), "offer_received", title, body, entity=offer)
+    else:
+        notify_hospital_staff(hospital, "offer_received", title, body, entity=offer)
     return offer
 
 

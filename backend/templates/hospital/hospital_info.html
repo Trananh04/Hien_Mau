@@ -1,22 +1,20 @@
 {% extends "layouts/workspace.html" %}
+{% load static %}
 {% block title %}Thông tin bệnh viện{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
 {% block crumbs %}<span>Bệnh viện</span>{% icon "chevron-right" 14 %}<span>Thông tin</span>{% endblock %}
 {% block ws_title %}{{ h.name }}{% endblock %}
-{% block ws_sub %}<p class="ws-sub">{% status_badge h %} &nbsp;Mã cơ sở {{ h.code }} · {{ staff_count }} nhân viên đang hoạt động. Nhân viên sửa được thông tin liên hệ và tọa độ; mã, tên, tỉnh do Quản trị hệ thống quản lý.</p>{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{% status_badge h %} &nbsp;Mã cơ sở {{ h.code }} · {{ staff_count }} nhân viên đang hoạt động</p>{% endblock %}
 {% block content %}
-<form method="post" novalidate>
+<form method="post" novalidate hx-boost="false" class="form-page">
   {% csrf_token %}
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "building-2" %} Hồ sơ bệnh viện</h2>{% if not can_edit %}<span class="badge neutral plain">Chỉ xem</span>{% endif %}</div>
-    <div class="panel-body">
-      {% include "partials/form_errors.html" %}
-      <fieldset class="u-bd-0" {% if not can_edit %}disabled{% endif %}>
-        <div class="form-grid">
-          {% for field in form %}{% include "partials/field.html" with field=field %}{% endfor %}
-        </div>
-      </fieldset>
-    </div>
-    {% if can_edit %}<div class="panel-foot"><button class="btn primary">{% icon "save" %} Lưu thông tin</button></div>{% endif %}
-  </section>
+  <div class="panel">
+    {% include "partials/hospital_form_body.html" with staff_view=True %}
+    <div class="form-actions"><button class="btn primary">{% icon "save" %} Lưu thông tin</button></div>
+  </div>
 </form>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/maps.js' %}"></script>
 {% endblock %}

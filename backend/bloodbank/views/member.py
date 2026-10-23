@@ -159,27 +159,38 @@ ENTITY_LINKS = {
     "request_offers": lambda n: reverse("bloodbank:offer_open", args=[n.entity_id]),
     "hospital_requests": lambda n: reverse("bloodbank:support_request_detail", args=[n.entity_id]),
     "hospitals": lambda n: reverse("bloodbank:campaigns"),
-    # Lời kêu gọi hiến máu: tới đợt hiến kèm theo (nếu có), nếu không thì danh sách đợt hiến
-    "donor_callouts": lambda n: _callout_link(n.entity_id),
+    # Lời kêu gọi hiến máu: trang lời mời (bệnh viện, địa chỉ, nút gọi / chỉ đường, đợt hiến kèm theo nếu có)
+    "donor_callouts": lambda n: reverse("bloodbank:my_invitation", args=[n.entity_id]),
 }
 
 
-def _callout_link(callout_id):
+@member_required
+def my_invitation(request, pk):
+    """Lời mời hiến máu người dùng đã nhận. Chỉ người được mời mở được (người khác → 404)."""
     from bloodbank.models import DonorCallout
 
-    c = DonorCallout.objects.filter(pk=callout_id).first()
-    if c and c.campaign_id:
-        return reverse("bloodbank:campaign_detail", args=[c.campaign_id])
-    return reverse("bloodbank:campaigns")
+    note = (Notification.objects.filter(user=request.user, type="donor_callout", channel="in_app",
+                                        entity_type="donor_callouts", entity_id=pk).order_by("-created_at").first())
+    callout = DonorCallout.objects.select_related("hospital", "campaign").filter(pk=pk).first()
+    if note is None or callout is None:
+        raise Http404
+    mark_notifications_read(request.user, note.pk)
+    return render(request, "member/invitation.html", {
+        "c": callout, "h": callout.hospital, "note": note, "urgent": note.title.startswith("[Khẩn]"),
+        "campaign": callout.campaign if callout.campaign and callout.campaign.status == "open" else None,
+    })
 
 
 def notification_link(n):
+    # Chọn trang theo VAI TRÒ người nhận (không theo danh sách loại thông báo): người dùng luôn tới trang của mình,
+    # nhân viên tới trang bệnh viện — tránh liên kết nhầm cổng (vd "đủ điều kiện hiến lại" từng trỏ tới trang bệnh viện)
+    staff_side = n.user.role != "member"
     if n.entity_type == "patient_requests":
-        if n.type in ("patient_request_new", "patient_request_cancelled"):
-            return reverse("bloodbank:hospital_patient_request_detail", args=[n.entity_id])
-        return reverse("bloodbank:my_patient_request_detail", args=[n.entity_id])
-    if n.entity_type == "donations" and n.type not in ("donation_recorded", "donation_voided", "donation_updated"):
-        return reverse("bloodbank:hospital_donation_detail", args=[n.entity_id])
+        name = "hospital_patient_request_detail" if staff_side else "my_patient_request_detail"
+        return reverse(f"bloodbank:{name}", args=[n.entity_id])
+    if n.entity_type == "donations":
+        name = "hospital_donation_detail" if staff_side else "my_donation_detail"
+        return reverse(f"bloodbank:{name}", args=[n.entity_id])
     fn = ENTITY_LINKS.get(n.entity_type)
     try:
         return fn(n) if fn else None
@@ -208,7 +219,7 @@ def notification_category(n):
 
 @signed_in_required
 def notifications(request):
-    base = Notification.objects.filter(user=request.user, channel="in_app")
+    base = Notification.objects.filter(user=request.user, channel="in_app").select_related("user")
     qs = base
     unread_only = request.GET.get("unread") == "1"
     if unread_only:

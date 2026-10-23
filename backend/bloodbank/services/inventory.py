@@ -281,12 +281,28 @@ def stock_alerts(hospital, limit=8):
             "on_hand": on_hand, "reserved": reserved, "available": on_hand - reserved}
 
 
-def shortages(hospital):
-    """BR-43: Thiếu = MAX(0, SUM nhu cầu active cùng khóa − khả dụng); tính một lần mỗi khóa."""
+def urgent_deadline(now=None):
+    """Mốc phân loại: cần trước thời điểm này = KHẨN (cấu hình `shortage_urgent_hours`)."""
+    from datetime import timedelta
+
+    from bloodbank.models import SystemSetting
+
+    return (now or timezone.now()) + timedelta(hours=SystemSetting.get("shortage_urgent_hours"))
+
+
+def shortages(hospital, now=None):
+    """BR-43: Thiếu = MAX(0, SUM nhu cầu active cùng khóa − khả dụng); tính một lần mỗi khóa.
+
+    Mỗi dòng có thêm mức: KHẨN nếu một nhu cầu cùng khóa cần trước `shortage_urgent_hours` giờ tới, còn lại THIẾU KHO.
+    Dòng khẩn xếp trước, rồi tới dòng thiếu nhiều.
+    """
+    from django.db.models import Min
+
+    deadline = urgent_deadline(now)
     rows = (
         Demand.objects.filter(hospital=hospital, status=Demand.Status.ACTIVE)
         .values("blood_group", "product_spec")
-        .annotate(required=Sum("required_quantity"))
+        .annotate(required=Sum("required_quantity"), needed_by=Min("needed_by"))
     )
     stocks = {
         (s.blood_group, s.product_spec_id): s
@@ -297,10 +313,39 @@ def shortages(hospital):
     for r in rows:
         stock = stocks.get((r["blood_group"], r["product_spec"]))
         available = stock.available if stock else 0
+        shortage = max(0, r["required"] - available)
         result.append({
             "blood_group": r["blood_group"], "spec": specs[r["product_spec"]], "required": r["required"],
-            "available": available, "shortage": max(0, r["required"] - available),
-            "below_min": bool(stock and stock.below_min),
+            "available": available, "shortage": shortage,
+            "below_min": bool(stock and stock.below_min), "needed_by": r["needed_by"],
+            "urgent": bool(shortage and r["needed_by"] and r["needed_by"] <= deadline),
         })
-    result.sort(key=lambda x: (-x["shortage"], x["blood_group"]))
+    result.sort(key=lambda x: (not x["urgent"], -x["shortage"], x["blood_group"]))
+    return result
+
+
+def urgent_requests(hospital):
+    """Yêu cầu cần máu ĐÃ XÁC MINH còn thiếu — luôn là KHẨN (có người bệnh đang chờ).
+
+    Còn thiếu = số đơn vị yêu cầu − số đã xuất kho cho yêu cầu. Kèm số khả dụng đúng nhóm máu (và chế phẩm, nếu yêu cầu
+    có ghi) để nhân viên biết xuất ngay được hay phải xin liên viện / kêu gọi khẩn.
+    """
+    P = PatientRequest.Status
+    prqs = list(PatientRequest.objects.filter(hospital=hospital, status__in=[P.VERIFIED, P.PROCESSING],
+                                              blood_group__isnull=False)
+                .exclude(emergency_demands__status=Demand.Status.ACTIVE)
+                .select_related("blood_product", "linked_support_request").order_by("needed_by", "created_at"))
+    issued = dict(StockTxn.objects.filter(patient_request__in=prqs, txn_type=T.ISSUE).values_list("patient_request")
+                  .annotate(n=Sum("quantity_change")).values_list("patient_request", "n"))
+    result = []
+    for p in prqs:
+        remaining = p.quantity_units + (issued.get(p.pk) or 0)          # quantity_change của phiếu xuất là số âm
+        if remaining <= 0:
+            continue
+        stocks = Stock.objects.filter(hospital=hospital, blood_group=p.blood_group)
+        if p.blood_product_id:
+            stocks = stocks.filter(product_spec__product_id=p.blood_product_id)
+        available = sum(s.available for s in stocks)
+        result.append({"prq": p, "blood_group": p.blood_group, "remaining": remaining, "available": available,
+                       "covered": available >= remaining, "shortage": max(0, remaining - available)})
     return result

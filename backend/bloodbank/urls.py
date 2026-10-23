@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import admin, hospital, hospital_campaigns as hc, hospital_inventory as hi, hospital_transfers as ht
 from .views import api, member, public
+from .views import hospital_emergency as he
 
 app_name = "bloodbank"
 
@@ -35,6 +36,7 @@ urlpatterns = [
     path("tai-khoan/yeu-cau-can-mau/<int:pk>/", member.my_patient_request_detail, name="my_patient_request_detail"),
     path("tai-khoan/yeu-cau-can-mau/<int:pk>/huy/", member.cancel_patient_request, name="cancel_patient_request"),
     path("thong-bao/", member.notifications, name="notifications"),
+    path("loi-moi-hien-mau/<int:pk>/", member.my_invitation, name="my_invitation"),
     path("thong-bao/da-doc/", member.notifications_read, name="notifications_read"),
     path("tai-khoan-cong-tac/", member.work_account, name="work_account"),
 
@@ -65,6 +67,11 @@ urlpatterns = [
     path("benh-vien/nhu-cau/", hi.demands, name="demands"),
     path("benh-vien/nhu-cau/<int:pk>/sua/", hi.demands, name="demand_edit"),
     path("benh-vien/nhu-cau/<int:pk>/dong/", hi.demand_close, name="demand_close"),
+    path("benh-vien/nhu-cau/goi-y/", hi.donor_suggest, name="donor_suggest"),
+    path("benh-vien/khan-cap/", he.emergency_new, name="emergency_new"),
+    path("benh-vien/khan-cap/<int:pk>/", he.emergency_case, name="emergency_case"),
+    path("benh-vien/khan-cap/<int:pk>/xin-them/", he.emergency_more, name="emergency_more"),
+    path("benh-vien/khan-cap/<int:pk>/dong/", he.emergency_close, name="emergency_close"),
     path("benh-vien/nhu-cau/keu-goi/", hi.donor_callout, name="donor_callout"),
 
     path("benh-vien/tim-nguon/", ht.source_search, name="source_search"),

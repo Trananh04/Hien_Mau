@@ -50,7 +50,7 @@
         {% elif state.can_register %}
           {% if user.is_authenticated %}
             {% if state.rereg %}<div class="notice warn">{% icon "rotate-ccw" %}<div>Bạn đã hủy đơn trước đó. Có thể đăng ký lại.</div></div>{% endif %}
-            <form method="post" novalidate>
+            <form method="post" novalidate hx-boost="false">
               {% csrf_token %}
               <div class="field">
                 <span class="field-label">{{ form.donation_type.label }}</span>

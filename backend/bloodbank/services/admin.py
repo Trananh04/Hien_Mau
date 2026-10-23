@@ -4,7 +4,7 @@ from django.db.models import Q
 from accounts.models import User
 from accounts.services import revoke_tokens
 from bloodbank.models import (
-    Campaign, Demand, Hospital, HospitalRequest, Product, ProductSpec, RequestOffer, Staff, Stock, SystemSetting,
+    Campaign, Hospital, HospitalRequest, Product, ProductSpec, RequestOffer, Staff, SystemSetting,
 )
 
 from .common import BusinessError, as_id, audit, business_transaction, notify, require, snapshot
@@ -215,11 +215,6 @@ def toggle_catalog(actor, obj, active, request=None):
         obj.save(update_fields=["is_active", "updated_at"])
         audit(actor, obj, "status_change", new={"is_active": active}, request=request)
     return obj
-
-
-def catalog_in_use(spec):
-    return (Stock.objects.filter(product_spec=spec).exists() or Demand.objects.filter(product_spec=spec).exists()
-            or HospitalRequest.objects.filter(product_spec=spec).exists())
 
 
 # ---------------------------------------------------------------- Cấu hình

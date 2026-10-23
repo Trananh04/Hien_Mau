@@ -2,7 +2,6 @@
 {% block title %}Tra cứu người hiến{% endblock %}
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tra cứu người hiến</span>{% endblock %}
 {% block ws_title %}Tra cứu người hiến{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Chỉ tìm thấy người đã đăng ký hoặc hiến tại {{ current_hospital.name }}; lịch sử hiển thị trong phạm vi bệnh viện.</p>{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="panel-body">
@@ -13,6 +12,7 @@
   </div>
 </section>
 
+{% if q %}
 <div class="grid grid-main-side u-mt-20">
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "users" %} Kết quả</h2></div>
@@ -51,4 +51,5 @@
     {% endif %}
   </section>
 </div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,4 @@
+{# Nút Khẩn cấp nổi (cạnh trợ lý) — chỉ cho Nhân viên bệnh viện: mở phiếu báo ca khẩn (kho → bệnh viện gần → người hiến). #}
+{% if user.is_authenticated and user.role == "hospital" %}
+<a href="{% url 'bloodbank:emergency_new' %}" class="sos-fab" title="Báo ca cần máu khẩn" aria-label="Khẩn cấp: báo ca cần máu khẩn">{% icon "siren" 22 %}<span class="sos-label">Khẩn cấp</span></a>
+{% endif %}

@@ -1,8 +1,10 @@
 {% extends "layouts/workspace.html" %}
+{% load static %}
 {% block title %}{% if h %}{{ h.name }}{% else %}Thêm bệnh viện{% endif %}{% endblock %}
 {% block crumbs %}<a href="{% url 'bloodbank:admin_hospitals' %}">Bệnh viện</a>{% icon "chevron-right" 14 %}<span>{% if h %}{{ h.name }}{% else %}Thêm mới{% endif %}</span>{% endblock %}
 {% block ws_title %}{% if h %}{{ h.name }}{% else %}Thêm bệnh viện{% endif %}{% endblock %}
 {% block ws_sub %}{% if h %}<p class="ws-sub">{% status_badge h %} &nbsp;Mã {{ h.code }}</p>{% endif %}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
 {% block ws_actions %}
   {% if h %}
   <form method="post" data-confirm="{% if h.status == 'active' %}Ngừng hoạt động {{ h.name }}?{% else %}Kích hoạt lại {{ h.name }}?{% endif %}" data-confirm-detail="{% if h.status == 'active' %}Nhân viên mất quyền thao tác; bệnh viện bị ẩn khỏi bản đồ và tra cứu. Chỉ thực hiện được khi không còn đề nghị đang giữ chỗ/vận chuyển và đợt hiến đang mở.{% endif %}" data-confirm-label="Xác nhận">{% csrf_token %}<input type="hidden" name="form" value="status"><input type="hidden" name="status" value="{% if h.status == 'active' %}inactive{% else %}active{% endif %}">
@@ -10,12 +12,12 @@
   {% endif %}
 {% endblock %}
 {% block content %}
-<form method="post" novalidate>{% csrf_token %}<input type="hidden" name="form" value="hospital">
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "building-2" %} Hồ sơ bệnh viện</h2></div>
-    <div class="panel-body">{% include "partials/form_errors.html" %}<div class="form-grid">{% for field in form %}{% include "partials/field.html" with field=field %}{% endfor %}</div></div>
-    <div class="panel-foot"><a href="{% url 'bloodbank:admin_hospitals' %}" class="btn secondary">Quay lại</a><button class="btn primary">{% icon "save" %} Lưu</button></div>
-  </section>
+<div hx-boost="false">{# trang có bản đồ: mọi form gửi kiểu thường để bản đồ luôn chạy #}
+<form method="post" novalidate class="form-page">{% csrf_token %}<input type="hidden" name="form" value="hospital">
+  <div class="panel">
+    {% include "partials/hospital_form_body.html" %}
+    <div class="form-actions"><a href="{% url 'bloodbank:admin_hospitals' %}" class="btn secondary">Quay lại</a><button class="btn primary">{% icon "save" %} {% if h %}Lưu{% else %}Thêm bệnh viện{% endif %}</button></div>
+  </div>
 </form>
 {% if h %}
 <div class="row between u-m-26-0-12"><h2 class="panel-title u-fs-17">{% icon "users" %} Tài khoản nhân viên bệnh viện</h2><button type="button" class="btn secondary" data-open-dialog="add-staff">{% icon "user-plus" %} Cấp tài khoản</button></div>
@@ -35,4 +37,9 @@
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">{% icon "user-plus" %} Cấp tài khoản</button></div>
 </form></dialog>
 {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/maps.js' %}"></script>
 {% endblock %}

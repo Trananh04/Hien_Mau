@@ -34,7 +34,9 @@ class SystemAlertTests(TestCase):
         self.assertEqual([(s["hospital"].pk, s["total"]) for s in a["shortages"]], [(self.h.pk, 3)])
         self.assertEqual(a["urgent_count"], 1)
         self.client.force_login(self.admin)
-        r = self.client.get(reverse("bloodbank:admin_alerts"))
+        r = self.client.get(reverse("bloodbank:admin_alerts"), follow=True)   # cảnh báo đã gộp vào Tổng quan
+        self.assertEqual(r.redirect_chain[-1][0], reverse("bloodbank:admin_stats") + "#canh-bao")
+        self.assertEqual([k["count"] for k in r.context["kpis"]][:2], [1, 1])
         self.assertContains(r, "PR-LATE-0001")
         self.assertNotContains(r, "PR-FRESH-0002")
         self.assertNotContains(r, "Bệnh Nhân Kín")          # tên bệnh nhân chỉ bệnh viện điều trị được xem

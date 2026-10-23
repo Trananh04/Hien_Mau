@@ -1,0 +1,5 @@
+{# Ô chọn phạm vi quanh bệnh viện; gắn vào form GET #radius-form (đặt ngoài form gửi lời mời) và tự lọc khi đổi. #}
+{% if can_radius %}<div class="row"><label for="dr" class="muted small">Phạm vi</label>
+  <select id="dr" name="radius" form="radius-form" data-autosubmit-field class="field-select u-w-auto" title="Vị trí người hiến là gần đúng (đợt hiến gần nhất họ đã đến); người chưa có vị trí bị ẩn khi chọn bán kính">
+    <option value="all" {% if not radius %}selected{% endif %}>Cả tỉnh/thành</option>{% for r in radius_choices %}<option value="{{ r }}" {% if radius == r %}selected{% endif %}>Trong {{ r }} km</option>{% endfor %}
+  </select></div>{% endif %}

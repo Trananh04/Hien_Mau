@@ -2,16 +2,15 @@
 {% block title %}Quản lý bệnh viện{% endblock %}
 {% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Bệnh viện</span>{% endblock %}
 {% block ws_title %}Quản lý bệnh viện{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Bệnh viện ngừng hoạt động bị loại khỏi bản đồ, tra cứu và danh sách chọn; dữ liệu lịch sử giữ nguyên.</p>{% endblock %}
 {% block ws_actions %}<a href="{% url 'bloodbank:admin_hospital_create' %}" class="btn primary">{% icon "plus" %} Thêm bệnh viện</a>{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="panel-head"><form method="get" class="filters u-flex-1"><div class="field grow"><label for="hq">Tìm kiếm</label><div class="search-input">{% icon "search" %}<input id="hq" name="q" value="{{ q }}" class="field-input" placeholder="Tên, mã, tỉnh"></div></div><button class="btn secondary">Tìm</button></form></div>
   {% if page.object_list %}
   <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Bệnh viện</th><th>Mã</th><th>Khu vực</th><th>Liên hệ</th><th class="num">Nhân viên</th><th>Trạng thái</th><th></th></tr></thead>
+    <thead><tr><th>Bệnh viện</th><th>Mã</th><th>Khu vực</th><th>Liên hệ</th><th class="num">Nhân viên</th><th>Trạng thái</th></tr></thead>
     <tbody>{% for h in page %}
-      <tr><td data-label="Bệnh viện"><span class="cell-title">{{ h.name }}</span><span class="cell-sub">{{ h.address }}</span></td><td data-label="Mã">{{ h.code }}</td><td data-label="Khu vực">{{ h.area }}</td><td data-label="Liên hệ">{{ h.phone|phone|default:"—" }}</td><td data-label="Nhân viên" class="num">{{ h.staff_count }}</td><td data-label="Trạng thái">{% status_badge h %}</td><td data-label="Thao tác"><div class="table-actions"><a href="{% url 'bloodbank:admin_hospital_edit' h.pk %}" class="btn ghost sm">Quản lý</a></div></td></tr>
+      <tr><td data-label="Bệnh viện"><a href="{% url 'bloodbank:admin_hospital_edit' h.pk %}" class="cell-title row-link">{{ h.name }}</a><span class="cell-sub">{{ h.address }}</span></td><td data-label="Mã">{{ h.code }}</td><td data-label="Khu vực">{{ h.area }}</td><td data-label="Liên hệ">{{ h.phone|phone|default:"—" }}</td><td data-label="Nhân viên" class="num">{{ h.staff_count }}</td><td data-label="Trạng thái">{% status_badge h %}</td></tr>
     {% endfor %}</tbody>
   </table></div>
   {% include "partials/pagination.html" %}

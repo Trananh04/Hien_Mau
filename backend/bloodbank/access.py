@@ -54,6 +54,7 @@ SCREENS = [
     S("SCR-08", "Đơn đăng ký hiến của tôi", "Người dùng", (MEMBER,), (
         "bloodbank:my_registrations", "bloodbank:cancel_registration", "bloodbank:reregister")),
     S("SCR-09", "Lịch sử hiến máu", "Người dùng", (MEMBER,), ("bloodbank:my_history", "bloodbank:my_donation_detail")),
+    S("SCR-09b", "Lời mời hiến máu đã nhận", "Người dùng", (MEMBER,), ("bloodbank:my_invitation",)),
     S("SCR-11", "Gửi yêu cầu cần máu", "Người dùng", (MEMBER,), ("bloodbank:patient_request_new",)),
     S("SCR-12", "Yêu cầu cần máu của tôi", "Người dùng", (MEMBER,), (
         "bloodbank:my_patient_requests", "bloodbank:my_patient_request_detail", "bloodbank:cancel_patient_request")),
@@ -83,8 +84,11 @@ SCREENS = [
     S("SCR-30", "Tồn kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock", "bloodbank:stock_settings", "bloodbank:stock_threshold")),
     S("SCR-31", "Phiếu nhập / xuất / điều chỉnh", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock_txn",)),
     S("SCR-32", "Lịch sử biến động kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock_ledger",)),
-    S("SCR-33", "Nhu cầu & thiếu hụt", "Bệnh viện", (HOSPITAL,), (
-        "bloodbank:demands", "bloodbank:demand_edit", "bloodbank:demand_close", "bloodbank:donor_callout")),
+    S("SCR-33", "Dự báo thiếu hụt & nhu cầu có kế hoạch", "Bệnh viện", (HOSPITAL,), (
+        "bloodbank:demands", "bloodbank:demand_edit", "bloodbank:demand_close", "bloodbank:donor_suggest",
+        "bloodbank:donor_callout")),
+    S("SCR-41", "Ca khẩn cấp (kho → bệnh viện gần → người hiến)", "Bệnh viện", (HOSPITAL,), (
+        "bloodbank:emergency_new", "bloodbank:emergency_case", "bloodbank:emergency_more", "bloodbank:emergency_close")),
     S("SCR-34", "Tìm nguồn liên viện", "Bệnh viện", (HOSPITAL,), ("bloodbank:source_search",)),
     S("SCR-35", "Yêu cầu hỗ trợ đã gửi", "Bệnh viện", (HOSPITAL,), (
         "bloodbank:support_requests", "bloodbank:support_request_create", "bloodbank:support_request_detail",

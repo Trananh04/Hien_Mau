@@ -56,8 +56,53 @@ class LabQueueTests(TestCase):
         self.assertEqual((stock.blood_group, stock.quantity_on_hand), ("O-", 1))  # theo xét nghiệm, không theo A+ tự khai
         txn = StockTxn.objects.get(donation=d)
         self.assertEqual((txn.txn_type, txn.quantity_change), ("receive", 1))
-        self.assertNotContains(self.client.get(reverse("bloodbank:lab_queue")), f"lab-{d.pk}")
+        self.assertNotIn(d, list(self.client.get(reverse("bloodbank:lab_queue")).context["page"]))   # rời hàng chờ
+        r = self.client.get(reverse("bloodbank:lab_queue") + "?tab=da")
+        self.assertContains(r, d.code)
+        self.assertEqual(r.context["units"], 1)                                          # đã nhập 1 đơn vị
         self.assertContains(self.client.get(reverse("bloodbank:stock_ledger")), d.code)
+
+    def test_auto_yield_separates_whole_blood_into_products(self):
+        d = self.donation(350)
+        self.assertEqual([(sp.product.code, sp.code, q) for sp, q in lab.yield_plan(d, "tach")],
+                         [("RBC", "350ML", 1), ("FFP", "STANDARD", 1)])
+        self.assertEqual([(sp.product.code, sp.code, q) for sp, q in lab.yield_plan(d, "nguyen")], [("WB", "350ML", 1)])
+        self.client.force_login(self.staff_user)
+        url = reverse("bloodbank:lab_result", args=[d.pk])
+        data = {"result": "passed", "blood_group": "O+", "mode": "tach", "idempotency_key": "auto-1"}
+        self.client.post(url, data)
+        self.client.post(url, data)                                  # bấm 2 lần → không nhập trùng
+        got = sorted((t.stock.product_spec.product.code, t.stock.blood_group, t.quantity_change)
+                     for t in StockTxn.objects.filter(donation=d))
+        self.assertEqual(got, [("FFP", "O+", 1), ("RBC", "O+", 1)])   # 1 túi → 2 chế phẩm, nhóm theo xét nghiệm
+        r = self.client.get(reverse("bloodbank:lab_queue") + "?tab=da")
+        self.assertEqual(r.context["units"], 2)
+        d2 = self.donation(250)                                      # lần sau của cùng người hiến
+        r = self.client.get(reverse("bloodbank:lab_queue") + f"?chon={d2.pk}")
+        self.assertEqual(r.context["selected"].known_group, "O+")    # điền sẵn nhóm đã xét nghiệm lần trước
+        self.assertContains(r, "Huyết tương")
+        self.client.post(reverse("bloodbank:lab_result", args=[d2.pk]),
+                         {"result": "passed", "blood_group": "O+", "mode": "nguyen", "idempotency_key": "auto-2"})
+        self.assertEqual([(t.stock.product_spec.product.code, t.stock.product_spec.code)
+                          for t in StockTxn.objects.filter(donation=d2)], [("WB", "250ML")])
+
+    def test_queue_selects_row_and_searches(self):
+        d1, d2 = self.donation(), self.donation(volume=250)
+        self.client.force_login(self.staff_user)
+        url = reverse("bloodbank:lab_queue")
+        r = self.client.get(url)
+        self.assertIsNone(r.context["selected"])                    # chưa chọn dòng → chưa mở hàng nhập
+        self.assertEqual(r.context["total_ml"], 600)
+        self.assertNotContains(r, reverse("bloodbank:lab_result", args=[d1.pk]))
+        r = self.client.get(url + f"?chon={d1.pk}")
+        self.assertEqual((r.context["selected"], r.context["next_pk"]), (d1, d2.pk))   # lưu xong mở lượt kế tiếp
+        self.assertContains(r, reverse("bloodbank:lab_result", args=[d1.pk]))
+        self.assertContains(r, f"chon={d2.pk}")
+        r = self.client.get(url + f"?chon={d2.pk}")
+        self.assertEqual((r.context["selected"], r.context["next_pk"]), (d2, d1.pk))
+        self.assertEqual(list(self.client.get(url + f"?q={d2.code}").context["page"]), [d2])
+        self.assertEqual(list(self.client.get(url + f"?q={d2.pk}").context["page"]), [d2])
+        self.assertEqual(len(self.client.get(url + "?q=" + self.donor.full_name[:4]).context["page"]), 2)
 
     def test_failed_lab_needs_note_and_does_not_touch_stock(self):
         d = self.donation()
@@ -316,45 +361,74 @@ class ShortageActionTests(TestCase):
                                 donated_at=timezone.now() - timedelta(days=30), confirmed_by=cls.staff_user)
         cls.open_campaign = f.campaign(cls.h, start_offset_h=48, name="Đợt cứu O−")
 
-    def test_candidates_follow_fixed_rules(self):
-        from bloodbank.services import callout
+    def test_suggest_follows_fixed_rules(self):
+        from bloodbank.services import donor_match
 
-        self.assertEqual(set(callout.candidates(self.h, "O-")), {self.ok1, self.ok2})
+        got = {r["user_id"] for r in donor_match.suggest(self.h, "O-")}
+        self.assertEqual(got, {self.ok1.pk, self.ok2.pk})
 
-    def test_demands_screen_shows_three_actions(self):
+    def test_forecast_suggests_inviting_donors_for_planned_need(self):
         self.client.force_login(self.staff_user)
         r = self.client.get(reverse("bloodbank:demands"))
-        self.assertContains(r, "Xin hỗ trợ")
-        self.assertContains(r, reverse("bloodbank:hospital_campaign_create") + "?blood_group=O-")
-        self.assertContains(r, "Kêu gọi (2)")
+        row = r.context["rows"][0]
+        self.assertEqual((row["blood_group"], row["level"], row["shortage"]), ("O-", "soon", 5))
+        self.assertContains(r, reverse("bloodbank:donor_suggest") + "?blood_group=O-&thieu=5")
+        self.assertNotContains(r, "Xin liên viện")
+        r = self.client.get(reverse("bloodbank:donor_suggest") + "?blood_group=O-&thieu=5")
+        self.assertEqual(r.context["shortage"], 5)
         r = self.client.get(reverse("bloodbank:hospital_campaign_create") + "?blood_group=O-")
         self.assertEqual(r.context["form"].initial["name"], "Hiến máu khẩn: cần nhóm O-")
 
-    def test_callout_notifies_and_has_cooldown(self):
+    def test_suggest_screen_hides_identity_and_preselects(self):
+        self.client.force_login(self.staff_user)
+        r = self.client.get(reverse("bloodbank:donor_suggest") + "?blood_group=O-")
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, self.ok1.full_name)
+        self.assertNotContains(r, self.ok1.email)
+        rows = r.context["rows"]
+        self.assertEqual(len(rows), 2)
+        # Thiếu 5 đơn vị, chưa có dữ liệu hưởng ứng (30%) → nên mời 17, nhưng chỉ có 2 người
+        self.assertEqual(r.context["n_suggest"], 2)
+        self.assertTrue(all(x["preselected"] for x in rows))
+        self.assertContains(r, "Chi tiết điểm")
+
+    def test_callout_sends_only_to_selected_codes_and_respects_cooldown(self):
         from django.core import mail
 
         from bloodbank.models import AuditLog, Notification
+        from bloodbank.services import donor_match
 
+        code1 = donor_match.donor_code(self.h, self.ok1.pk)
         self.client.force_login(self.staff_user)
         with self.captureOnCommitCallbacks(execute=True):
-            r = self.client.post(reverse("bloodbank:donor_callout"), {"blood_group": "O-"}, follow=True)
-        self.assertContains(r, "tới 2 người hiến phù hợp")
+            r = self.client.post(reverse("bloodbank:donor_callout"),
+                                 {"blood_group": "O-", "code": [code1, "ZZZZZZ"]}, follow=True)
+        self.assertContains(r, "tới 1 người hiến")
+        self.assertContains(r, "1 người đã chọn không còn đủ điều kiện")
         got = Notification.objects.filter(type="donor_callout", channel="in_app")
-        self.assertEqual(set(got.values_list("user_id", flat=True)), {self.ok1.pk, self.ok2.pk})
+        self.assertEqual(list(got.values_list("user_id", flat=True)), [self.ok1.pk])
         self.assertEqual(set(got.values_list("entity_type", flat=True)), {"donor_callouts"})
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(AuditLog.objects.get(action="donor_callout").new_values["recipients"], 2)
-        # Gửi lại ngay → bị chặn bởi thời gian chờ
-        r = self.client.post(reverse("bloodbank:donor_callout"), {"blood_group": "O-"}, follow=True)
-        self.assertContains(r, "Có thể kêu gọi lại sau")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(AuditLog.objects.get(action="donor_callout").new_values["recipients"], 1)
+        # Người vừa được mời rời khỏi danh sách gợi ý; gửi lại cùng mã → bị từ chối
+        self.assertNotIn(self.ok1.pk, {x["user_id"] for x in donor_match.suggest(self.h, "O-")})
+        r = self.client.post(reverse("bloodbank:donor_callout"), {"blood_group": "O-", "code": [code1]}, follow=True)
+        self.assertContains(r, "không còn đủ điều kiện")
+        self.assertEqual(got.count(), 1)
+        # Đợt hai: vẫn mời được người chưa được mời
+        code2 = donor_match.donor_code(self.h, self.ok2.pk)
+        self.client.post(reverse("bloodbank:donor_callout"), {"blood_group": "O-", "code": [code2]})
         self.assertEqual(got.count(), 2)
-        # Người nhận mở thông báo → tới trang đợt hiến để đăng ký
+        # Người nhận mở thông báo → trang lời mời → nút đăng ký đợt hiến kèm theo
         self.client.force_login(self.ok1)
+        callout_id = got.get(user=self.ok1).entity_id
         r = self.client.get(reverse("bloodbank:notifications"))
+        self.assertContains(r, reverse("bloodbank:my_invitation", args=[callout_id]))
+        r = self.client.get(reverse("bloodbank:my_invitation", args=[callout_id]))
         self.assertContains(r, reverse("bloodbank:campaign_detail", args=[self.open_campaign.pk]))
 
-    def test_callout_requires_candidates(self):
+    def test_callout_requires_selection(self):
         from bloodbank.services import callout
 
         with self.assertRaises(BusinessError):
-            callout.donor_callout(self.staff_user.staffs.get(), "AB-")
+            callout.donor_callout(self.staff_user.staffs.get(), "O-", [])

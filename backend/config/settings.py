@@ -48,6 +48,7 @@ MIDDLEWARE = [
     "accounts.middleware.ActiveUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "bloodbank.middleware.ScreenAccessMiddleware",
+    "bloodbank.middleware.HtmxPageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

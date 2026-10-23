@@ -1,0 +1,34 @@
+{# Hồ sơ bệnh viện chia nhóm (dùng chung: bệnh viện tự sửa / quản trị). Vị trí ghim trên bản đồ thay cho ô vĩ độ, kinh độ. #}
+{% include "partials/form_errors.html" %}
+<section class="form-section">
+  <header class="form-section-head"><h2>Định danh</h2><p>{% if staff_view %}Mã, tên và tỉnh/thành do Quản trị hệ thống quản lý.{% else %}Mã cơ sở là duy nhất, dùng trong báo cáo và mã yêu cầu.{% endif %}</p></header>
+  <div class="form-section-body">
+    <div class="form-row-2">{% include "partials/field.html" with field=form.code %}</div>
+    {% include "partials/field.html" with field=form.name %}
+  </div>
+</section>
+<section class="form-section">
+  <header class="form-section-head"><h2>Liên hệ</h2><p>Hiện cho người hiến và bệnh viện khác khi cần liên lạc.</p></header>
+  <div class="form-section-body form-row-2">
+    {% include "partials/field.html" with field=form.phone %}
+    {% include "partials/field.html" with field=form.email %}
+  </div>
+</section>
+<section class="form-section">
+  <header class="form-section-head"><h2>Địa chỉ &amp; vị trí</h2><p>Vị trí dùng cho bản đồ công khai, tìm nguồn liên viện gần nhất và gợi ý người hiến theo khoảng cách.</p></header>
+  <div class="form-section-body">
+    {% include "partials/field.html" with field=form.address %}
+    <div class="form-row-2">
+      {% include "partials/field.html" with field=form.province %}
+      {% include "partials/field.html" with field=form.district %}
+    </div>
+    <div class="form-row-2">{% include "partials/field.html" with field=form.ward %}</div>
+    {{ form.latitude.as_hidden }}{{ form.longitude.as_hidden }}
+    <div class="map-pick" data-map-picker data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ center_lat|stringformat:"f" }}" data-default-lng="{{ center_lng|stringformat:"f" }}" data-empty-text="Chưa ghim — bệnh viện chưa hiện trên bản đồ" role="application" aria-label="Bản đồ: bấm để ghim vị trí bệnh viện"></div>
+    <div class="pin-bar">
+      <span class="pin-status" data-pin-status aria-live="polite"></span>
+      <button type="button" class="btn ghost sm" data-clear-pin>{% icon "x" 14 %} Xóa ghim</button>
+    </div>
+    {% if form.latitude.errors or form.longitude.errors %}<p class="field-error">{% icon "circle-alert" 14 %} {{ form.latitude.errors|join:" " }} {{ form.longitude.errors|join:" " }}</p>{% endif %}
+  </div>
+</section>
