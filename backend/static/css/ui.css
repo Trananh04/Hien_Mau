@@ -1330,3 +1330,4 @@ html.js .ws-shell .filter-submit { display: none; }
 .mode-pick b { font-weight: 700; }
 .erp-entry-form .mode-field { order: 10; flex: 1 1 100%; }
 .mode-pick label { white-space: nowrap; }
+.erp-search .erp-filter { flex: 0 0 auto; width: auto; height: 32px; min-height: 32px; padding: 0 28px 0 10px; font-size: 13.5px; }

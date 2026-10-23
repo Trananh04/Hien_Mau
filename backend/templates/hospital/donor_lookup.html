@@ -3,53 +3,61 @@
 {% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tra cứu người hiến</span>{% endblock %}
 {% block ws_title %}Tra cứu người hiến{% endblock %}
 {% block content %}
-<section class="panel">
-  <div class="panel-body">
-    <form method="get" class="filters">
-      <div class="field grow"><label for="dq">Tên, email hoặc số điện thoại</label><div class="search-input">{% icon "search" %}<input id="dq" name="q" value="{{ q }}" class="field-input" autofocus placeholder="VD: Nguyễn Văn An hoặc 0905123456"></div></div>
-      <button class="btn primary" type="submit">Tra cứu</button>
+<div class="{% if selected %}grid grid-main-side{% endif %}">
+<div class="erp">
+  <div class="erp-toolbar">
+    <nav class="erp-tabs" aria-label="Phạm vi">
+      <a href="?tab=da-hien{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}" class="{% if tab == 'da-hien' %}is-active{% endif %}">Đã hiến <span class="erp-count">{{ total_donated }}</span></a>
+      <a href="?tab=tat-ca{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}" class="{% if tab == 'tat-ca' %}is-active{% endif %}">Cả người chỉ đăng ký</a>
+    </nav>
+    <form method="get" class="erp-search" role="search" data-autosubmit>
+      <input type="hidden" name="tab" value="{{ tab }}">
+      {% icon "search" 16 %}<input type="search" name="q" value="{{ q }}" placeholder="Tìm tên, email, SĐT  ( / )" aria-label="Tìm người hiến" aria-keyshortcuts="/">
+      <select name="nhom" class="field-select erp-filter" aria-label="Nhóm máu"><option value="">Mọi nhóm máu</option>{% for v, l in blood_groups %}<option value="{{ v }}" {% if group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
     </form>
   </div>
-</section>
-
-{% if q %}
-<div class="grid grid-main-side u-mt-20">
-  <section class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "users" %} Kết quả</h2></div>
-    {% if donors %}
-      <div class="list-select">{% for u in donors %}
-        <a href="?q={{ q|urlencode }}&donor={{ u.pk }}" class="{% if selected and selected.pk == u.pk %}active{% endif %}"><span class="avatar">{{ u.full_name|initials }}</span><div class="grow"><strong>{{ u.full_name }}</strong><span class="sub">{{ u.phone|phone|default:"—" }} · {{ u.email }}</span></div>{% icon "chevron-right" %}</a>
-      {% endfor %}</div>
-    {% elif q %}
-      <div class="empty"><div class="empty-icon">{% icon "user-x" %}</div><h3>Không tìm thấy người hiến</h3><p>Không có người nào khớp “{{ q }}” trong phạm vi bệnh viện.</p></div>
-    {% else %}
-      <div class="empty"><div class="empty-icon">{% icon "user-search" %}</div><h3>Nhập thông tin để tra cứu</h3></div>
-    {% endif %}
-  </section>
-
-  <section class="panel">
-    {% if selected %}
-      <div class="panel-head"><div class="person-card"><span class="avatar">{{ selected.full_name|initials }}</span><div><strong>{{ selected.full_name }}</strong><span class="muted small">{{ selected.phone|phone|default:selected.email }}</span></div></div></div>
-      <div class="panel-body">
-        <dl class="dl u-cols-1fr-auto">
-          <dt>Lượt hiến tại bệnh viện</dt><dd class="num">{{ history.summary.count }}</dd>
-          <dt>Toàn phần</dt><dd class="num">{{ history.summary.whole_ml|vnum }} ml</dd>
-          <dt>Thành phần</dt><dd class="num">{{ history.summary.component_count }} lượt</dd>
-          <dt>Lần gần nhất</dt><dd>{{ history.summary.last|vn_date }}</dd>
-        </dl>
-        <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Lượt hiến</h3>
-        <div class="list-select">{% for d in history.rows %}
-          <a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}"><div class="grow"><strong>{{ d.donated_at|vn_dt }}</strong><span class="sub">{{ d.get_donation_type_display }}{% if d.volume_ml %} · {{ d.volume_ml }} ml{% endif %} · {{ d.registration.campaign.name|default:"Ngoài đợt" }}</span></div>{% status_badge d %}</a>
-        {% empty %}<p class="muted small">Chưa có lượt hiến tại bệnh viện.</p>{% endfor %}</div>
-        <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Đơn đăng ký</h3>
-        <div class="list-select">{% for r in regs %}
-          <a href="{% url 'bloodbank:hospital_campaign_detail' r.campaign_id %}?tab=registrations"><div class="grow"><strong>{{ r.campaign.name }}</strong><span class="sub">{{ r.code }} · {{ r.registered_at|vn_dt }}</span></div>{% status_badge r %}</a>
-        {% empty %}<p class="muted small">Không có đơn.</p>{% endfor %}</div>
-      </div>
-    {% else %}
-      <div class="empty u-p-64-24"><div class="empty-icon">{% icon "id-card" %}</div><h3>Chọn một người để xem lịch sử</h3></div>
-    {% endif %}
-  </section>
+  <div class="erp-grid-wrap">
+    <table class="erp-grid">
+      <thead><tr><th class="c-stt">#</th><th>Họ tên</th><th>Điện thoại</th><th>Nhóm máu</th><th class="c-num">Số lần hiến</th><th class="c-num">Tổng ml</th><th>Lần gần nhất</th></tr></thead>
+      <tbody>{% for u in page %}
+        <tr class="{% if selected and selected.pk == u.pk %}is-selected{% endif %}">
+          <td class="c-stt">{{ page.start_index|add:forloop.counter0 }}</td>
+          <td class="c-code"><a class="erp-row-link" href="?tab={{ tab }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}{% if page.number > 1 %}&amp;page={{ page.number }}{% endif %}&amp;donor={{ u.pk }}">{{ u.full_name }}</a></td>
+          <td>{{ u.phone|phone|default:"—" }}</td>
+          <td>{{ u.get_blood_group_display|default:"—" }}</td>
+          <td class="c-num">{{ u.n }}</td>
+          <td class="c-num">{% if u.ml %}{{ u.ml|vnum }}{% else %}—{% endif %}</td>
+          <td>{% if u.last %}{{ u.last|vn_date }}{% else %}—{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr class="erp-empty"><td colspan="7">{% if q or group %}Không có người hiến khớp điều kiện tìm.{% else %}Chưa có ai hiến máu tại bệnh viện.{% endif %}</td></tr>
+      {% endfor %}</tbody>
+      {% if page.object_list %}<tfoot><tr><td></td><td colspan="6">{{ page.paginator.count }} người</td></tr></tfoot>{% endif %}
+    </table>
+    {% include "partials/pagination.html" %}
+  </div>
 </div>
+
+{% if selected %}
+<section class="panel" id="nguoi-hien">
+  <div class="panel-head"><div class="person-card"><span class="avatar">{{ selected.full_name|initials }}</span><div><strong>{{ selected.full_name }}</strong><span class="muted small">{{ selected.phone|phone|default:selected.email }}</span></div></div></div>
+  <div class="panel-body">
+    <dl class="dl u-cols-1fr-auto">
+      <dt>Lượt hiến tại bệnh viện</dt><dd class="num">{{ history.summary.count }}</dd>
+      <dt>Toàn phần</dt><dd class="num">{{ history.summary.whole_ml|vnum }} ml</dd>
+      <dt>Thành phần</dt><dd class="num">{{ history.summary.component_count }} lượt</dd>
+      <dt>Lần gần nhất</dt><dd>{{ history.summary.last|vn_date|default:"—" }}</dd>
+    </dl>
+    <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Lượt hiến</h3>
+    <div class="list-select">{% for d in history.rows %}
+      <a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}"><div class="grow"><strong>{{ d.donated_at|vn_dt }}</strong><span class="sub">{{ d.get_donation_type_display }}{% if d.volume_ml %} · {{ d.volume_ml }} ml{% endif %} · {{ d.registration.campaign.name|default:"Ngoài đợt" }}</span></div>{% status_badge d %}</a>
+    {% empty %}<p class="muted small">Chưa có lượt hiến tại bệnh viện.</p>{% endfor %}</div>
+    <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Đơn đăng ký</h3>
+    <div class="list-select">{% for r in regs %}
+      <a href="{% url 'bloodbank:hospital_campaign_detail' r.campaign_id %}?tab=registrations"><div class="grow"><strong>{{ r.campaign.name }}</strong><span class="sub">{{ r.code }} · {{ r.registered_at|vn_dt }}</span></div>{% status_badge r %}</a>
+    {% empty %}<p class="muted small">Không có đơn.</p>{% endfor %}</div>
+  </div>
+</section>
 {% endif %}
+</div>
 {% endblock %}

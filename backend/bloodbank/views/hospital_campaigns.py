@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, F, Max, Q, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -275,25 +275,45 @@ def donation_manage(request, pk):
 # ---------------------------------------------------------------- SCR-26 Tra cứu người hiến
 @staff_required
 def donor_lookup(request):
+    """Sổ người hiến của bệnh viện: mặc định liệt kê mọi người đã hiến / đăng ký tại đây, ô tìm để lọc."""
+    h = request.hospital
     q = (request.GET.get("q") or "").strip()
-    donors, selected, history, regs = [], None, None, None
-    scope = Q(donations__hospital=request.hospital) | Q(registrations__campaign__hospital=request.hospital)
+    tab = request.GET.get("tab") if request.GET.get("tab") in ("da-hien", "tat-ca") else "da-hien"
+    group = request.GET.get("nhom") if request.GET.get("nhom") in BLOOD_GROUP_VALUES else ""
+    donated = Q(donations__hospital=h, donations__status="confirmed")
+    scope = Q(pk__in=Donation.objects.filter(hospital=h).values("donor_id"))
+    if tab == "tat-ca":
+        scope |= Q(pk__in=Registration.objects.filter(campaign__hospital=h).values("donor_id"))
+    donors = User.objects.filter(scope)
     if q:
         cond = Q(full_name__icontains=q) | Q(email__icontains=q.lower())
         phone = normalize_phone(q)
         if phone and phone[1:].isdigit():
             cond |= Q(phone=phone)
-        donors = User.objects.filter(cond).filter(scope).distinct().order_by("full_name")[:50]
+        donors = donors.filter(cond)
+    if group:
+        donors = donors.filter(blood_group=group)
+    donors = donors.annotate(n=Count("donations", filter=donated), ml=Sum("donations__volume_ml", filter=donated),
+                             last=Max("donations__donated_at", filter=donated))
+    if tab == "da-hien":
+        donors = donors.filter(n__gt=0)
+    page = paginate(request, donors.order_by(F("last").desc(nulls_last=True), "full_name"), 50)
+
+    selected = history = regs = None
     if request.GET.get("donor"):
         donor_id = int_or_none(request.GET["donor"])
+        scope = Q(donations__hospital=h) | Q(registrations__campaign__hospital=h)
         selected = User.objects.filter(scope).filter(pk=donor_id).distinct().first() if donor_id else None
         if selected is None:
             raise Http404
-        hd = Donation.objects.filter(donor=selected, hospital=request.hospital).select_related("registration__campaign")
+        hd = Donation.objects.filter(donor=selected, hospital=h).select_related("registration__campaign")
         history = {"summary": don.summarize(hd), "rows": hd.order_by("-donated_at")}
-        regs = Registration.objects.filter(donor=selected, campaign__hospital=request.hospital).select_related("campaign")
-    return render(request, "hospital/donor_lookup.html", {"q": q, "donors": donors, "selected": selected,
-                                                          "history": history, "regs": regs})
+        regs = Registration.objects.filter(donor=selected, campaign__hospital=h).select_related("campaign")
+    return render(request, "hospital/donor_lookup.html", {
+        "q": q, "tab": tab, "group": group, "page": page, "selected": selected, "history": history, "regs": regs,
+        "blood_groups": User._meta.get_field("blood_group").choices,
+        "total_donated": Donation.objects.filter(hospital=h, status="confirmed").values("donor_id").distinct().count(),
+    })
 
 
 # ---------------------------------------------------------------- SCR-27 Báo cáo tiếp nhận
