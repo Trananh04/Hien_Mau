@@ -1,15 +1,14 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Yêu cầu cần máu{% endblock %}
-{% block crumbs %}<span>Người cần máu</span>{% icon "chevron-right" 14 %}<span>Yêu cầu</span>{% endblock %}
 {% block ws_title %}Yêu cầu từ người cần máu{% endblock %}
 {% block content %}
 <nav class="tabs">
-  <a href="?status=waiting" class="tab {% if status == 'waiting' %}active{% endif %}">{% icon "clock" %} Chờ xác minh</a>
-  <a href="?status=active" class="tab {% if status == 'active' %}active{% endif %}">{% icon "activity" %} Đang điều phối</a>
-  <a href="?status=fulfilled" class="tab {% if status == 'fulfilled' %}active{% endif %}">Đã hoàn tất</a>
-  <a href="?status=rejected" class="tab {% if status == 'rejected' %}active{% endif %}">Bị từ chối</a>
-  <a href="?status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">Đã hủy</a>
-  <a href="?status=" class="tab {% if status == '' %}active{% endif %}">Tất cả</a>
+  <a href="?status=waiting" class="tab {% if status == 'waiting' %}active{% endif %}">Chờ xác minh ({{ counts.waiting }})</a>
+  <a href="?status=active" class="tab {% if status == 'active' %}active{% endif %}">Đang điều phối ({{ counts.active }})</a>
+  <a href="?status=fulfilled" class="tab {% if status == 'fulfilled' %}active{% endif %}">Đã hoàn tất ({{ counts.fulfilled }})</a>
+  <a href="?status=rejected" class="tab {% if status == 'rejected' %}active{% endif %}">Bị từ chối ({{ counts.rejected }})</a>
+  <a href="?status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">Đã hủy ({{ counts.cancelled }})</a>
+  <a href="?status=" class="tab {% if status == '' %}active{% endif %}">Tất cả ({{ counts.all }})</a>
 </nav>
 <section class="panel">
   {% if page.object_list %}

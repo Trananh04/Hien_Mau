@@ -16,7 +16,6 @@
       {% if h.phone %}<dt>Điện thoại</dt><dd><a class="link" href="tel:{{ h.phone }}">{{ h.phone|phone }}</a></dd>{% endif %}
       <dt>Nhận lúc</dt><dd>{{ note.created_at|vn_dt }}</dd>
     </dl>
-    <p class="muted small">Bác sĩ sẽ khám sàng lọc trước khi hiến. Bạn không bắt buộc phải nhận lời mời này.</p>
   </div>
   <div class="panel-foot">
     {% if campaign %}<a href="{% url 'bloodbank:campaign_detail' campaign.pk %}" class="btn primary">{% icon "calendar-check" %} Đăng ký đợt hiến</a>{% endif %}

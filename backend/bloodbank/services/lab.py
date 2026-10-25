@@ -43,9 +43,16 @@ def search(qs, q):
     return qs.filter(cond)
 
 
-# Quy tắc điều chế mặc định: (mã chế phẩm, mã quy cách, số đơn vị). Túi ≥ 300 ml dùng quy cách "350ML".
-SEPARATE = {"350ML": [("RBC", "350ML", 1), ("FFP", "STANDARD", 1)], "250ML": [("RBC", "250ML", 1), ("FFP", "STANDARD", 1)]}
-WHOLE = {"350ML": [("WB", "350ML", 1)], "250ML": [("WB", "250ML", 1)]}
+# Quy tắc điều chế mặc định: (mã chế phẩm, mã quy cách, số đơn vị). Túi theo thể tích: < 300 ml → 250,
+# 300–399 ml → 350, ≥ 400 ml → 450.
+SEPARATE = {size: [("RBC", size, 1), ("FFP", "STANDARD", 1)] for size in ("250ML", "350ML", "450ML")}
+WHOLE = {size: [("WB", size, 1)] for size in ("250ML", "350ML", "450ML")}
+
+
+def bag_size(volume_ml):
+    if volume_ml and volume_ml >= 400:
+        return "450ML"
+    return "250ML" if volume_ml and volume_ml < 300 else "350ML"
 
 
 def yield_plan(donation, mode="tach"):
@@ -63,7 +70,7 @@ def yield_plan(donation, mode="tach"):
         return [(spec, max(1, qty))] if spec else []
     if donation.donation_type != "whole_blood":
         return []
-    size = "250ML" if donation.volume_ml and donation.volume_ml < 300 else "350ML"
+    size = bag_size(donation.volume_ml)
     out = []
     for product, code, qty in (SEPARATE if mode == "tach" else WHOLE)[size]:
         spec = active.filter(product__code=product, code=code).first()

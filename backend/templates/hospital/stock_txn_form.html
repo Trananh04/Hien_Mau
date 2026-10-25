@@ -1,6 +1,6 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}{% if mode == "receive" %}Phiếu nhập kho{% elif mode == "issue" %}Phiếu xuất kho{% else %}Phiếu điều chỉnh{% endif %}{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:stock' %}">Tồn kho</a>{% icon "chevron-right" 14 %}<span>{% if mode == "receive" %}Nhập kho{% elif mode == "issue" %}Xuất kho{% else %}Điều chỉnh{% endif %}</span>{% endblock %}
+{% block back %}{% url 'bloodbank:stock' %}{% endblock %}
 {% block ws_title %}{% if mode == "receive" %}Phiếu nhập kho{% elif mode == "issue" %}Phiếu xuất kho{% else %}Phiếu điều chỉnh tồn{% endif %}{% endblock %}
 {% block content %}
 <nav class="tabs">
@@ -41,7 +41,7 @@
         {% else %}
         <div class="field"><label for="qty">Số đơn vị <span class="field-req">*</span></label><input id="qty" type="number" name="quantity" min="1" step="1" required class="field-input" value="{{ data.quantity|default:'' }}"><p class="field-help" data-available-hint></p></div>
         <div class="field"><label for="pp">Mục đích</label><input id="pp" name="purpose" maxlength="500" class="field-input" value="{{ data.purpose|default:'' }}" placeholder="VD: Cấp cho khoa Hồi sức"></div>
-        <div class="field span-2"><label for="pr">Yêu cầu người cần máu (đã xác minh)</label><select id="pr" name="patient_request_id" class="field-select"><option value="">Không liên kết</option>{% for p in patient_requests %}<option value="{{ p.pk }}" {% if initial_prq == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.request_code }} · {{ p.blood_group }} · {{ p.quantity_units }} đơn vị</option>{% endfor %}</select><p class="field-help">Chỉ hiển thị yêu cầu đã xác minh/đang xử lý tại bệnh viện này.</p></div>
+        <div class="field span-2"><label for="pr">Yêu cầu người cần máu (đã xác minh)</label><select id="pr" name="patient_request_id" class="field-select"><option value="">Không liên kết</option>{% for p in patient_requests %}<option value="{{ p.pk }}" {% if initial_prq == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.request_code }} · {{ p.blood_group }} · {{ p.blood_product.name|default:"chưa rõ chế phẩm" }} · {{ p.quantity_units }} đơn vị</option>{% endfor %}</select><p class="field-help">Chỉ hiển thị yêu cầu đã xác minh/đang xử lý tại bệnh viện này.</p></div>
         {% endif %}
       {% endif %}
       </div></div>

@@ -19,9 +19,11 @@ def submit(user, data, request=None):
     hospital = Hospital.objects.filter(pk=as_id(data.get("hospital_id")), status="active").first()
     require(hospital is not None, "ERR-VALIDATION", "Chọn bệnh viện đang điều trị.")
     qty = positive_int(data.get("quantity_units"))
+    # Nhóm máu và chế phẩm bắt buộc: yêu cầu "chưa rõ" thì bệnh viện không điều phối được
     bg = data.get("blood_group") or None
-    require(bg is None or bg in BLOOD_GROUP_VALUES, "ERR-VALIDATION")
+    require(bg in BLOOD_GROUP_VALUES, "ERR-VALIDATION", "Chọn nhóm máu của bệnh nhân.")
     product = Product.objects.filter(pk=as_id(data.get("blood_product_id")), is_active=True).first()
+    require(product is not None, "ERR-VALIDATION", "Chọn loại chế phẩm cần.")
     phone = normalize_phone(data.get("contact_phone"))
     require(phone and len(phone) >= 11, "ERR-VALIDATION", "Số điện thoại liên hệ không hợp lệ.")
     with business_transaction():
@@ -35,7 +37,7 @@ def submit(user, data, request=None):
                                         "quantity_units": qty, "blood_group": bg}, hospital=hospital, request=request)
         # Khẩn: báo trong ứng dụng + email cho mọi nhân viên của bệnh viện (không kèm dữ liệu nhạy cảm)
         alert(hospital_staff_users(hospital), "patient_request_new", f"Yêu cầu cần máu mới {prq.request_code}",
-              f"Cần {qty} đơn vị{(' nhóm ' + bg) if bg else ''}. Vui lòng xác minh.", entity=prq)
+              f"Cần {qty} đơn vị {product.name} nhóm {bg}. Vui lòng xác minh.", entity=prq)
         notify(user, "patient_request_submitted", f"Đã tiếp nhận yêu cầu {prq.request_code}",
                "Bệnh viện điều trị sẽ xác minh và liên hệ theo số điện thoại bạn cung cấp.", entity=prq)
     return prq
@@ -59,11 +61,12 @@ def cancel_by_requester(user, prq_id, request=None):
 
 
 def hospital_actions(prq):
-    """Nút theo trạng thái (Ch.7 mục 7.7)."""
+    """Nút theo trạng thái (Ch.7 mục 7.7). Không còn bước trung gian "Nhận xác minh" / "Bắt đầu xử lý":
+    xác minh thẳng từ yêu cầu mới; xuất kho / kết nối nguồn tự chuyển sang "Đang xử lý"."""
     return {
-        P.SUBMITTED: ["start_verify", "verify", "reject"],
-        P.VERIFYING: ["verify", "reject"],
-        P.VERIFIED: ["start_processing", "issue", "support", "link_campaign", "cancel"],
+        P.SUBMITTED: ["verify", "reject"],
+        P.VERIFYING: ["verify", "reject"],      # dữ liệu cũ còn ở trạng thái này
+        P.VERIFIED: ["issue", "support", "link_campaign", "fulfill", "cancel"],
         P.PROCESSING: ["issue", "support", "link_campaign", "fulfill", "cancel"],
     }.get(prq.status, [])
 
@@ -80,9 +83,7 @@ def hospital_action(staff, prq_id, action, data, request=None):
         require(action in hospital_actions(prq), "ERR-STATE-INVALID")
         old = snapshot(prq, ["status", "blood_group", "linked_campaign"])
         msg = None
-        if action == "start_verify":
-            prq.status = P.VERIFYING
-        elif action == "verify":
+        if action == "verify":
             bg = data.get("blood_group") or prq.blood_group
             require(bg in BLOOD_GROUP_VALUES, "ERR-VALIDATION", "Xác minh bắt buộc có nhóm máu.")
             require(prq.requester_id != staff.user_id, "ERR-AUTH-FORBIDDEN", "Người xác minh phải khác người gửi.")
@@ -93,8 +94,6 @@ def hospital_action(staff, prq_id, action, data, request=None):
             require(reason, "ERR-DON-REASON-REQUIRED", "Vui lòng nhập lý do từ chối.")
             prq.status, prq.reject_reason = P.REJECTED, reason[:500]
             msg = f"Yêu cầu không được tiếp nhận. Lý do: {reason}"
-        elif action == "start_processing":
-            prq.status = P.PROCESSING
         elif action == "link_campaign":
             camp = Campaign.objects.filter(pk=as_id(data.get("campaign_id")), hospital=staff.hospital).first()
             require(camp is not None, "ERR-VALIDATION", "Chọn đợt hiến của bệnh viện.")

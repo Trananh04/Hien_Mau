@@ -51,6 +51,32 @@
       show();
     });
     show();
+
+    /* Nhập địa chỉ → tự đặt ghim (tra qua máy chủ: /dia-chi/vi-tri/). Vẫn bấm bản đồ để chỉnh lại được. */
+    var addrEl = document.getElementById(picker.dataset.addressInput || '');
+    var provEl = document.getElementById(picker.dataset.provinceInput || '');
+    var findBtn = document.querySelector('[data-geocode]');
+    var geoUrl = picker.dataset.geocodeUrl;
+    function locate(auto) {
+      var a = addrEl.value.trim();
+      if (a.length < 4) { if (!auto && statusEl) statusEl.textContent = 'Nhập địa chỉ trước khi tìm.'; return; }
+      if (statusEl) statusEl.textContent = 'Đang tìm vị trí theo địa chỉ…';
+      var q = '?address=' + encodeURIComponent(a) + '&province=' + encodeURIComponent(provEl ? provEl.value : '');
+      fetch(geoUrl + q, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) { show(); if (!auto && statusEl) statusEl.textContent = res.d.error || 'Không tìm thấy địa chỉ.'; return; }
+          var ll = L.latLng(res.d.lat, res.d.lng);
+          pin(ll); pmap.setView(ll, 16);
+          if (statusEl) statusEl.textContent = 'Đã đặt ghim theo địa chỉ — bấm bản đồ nếu cần chỉnh.';
+        })
+        .catch(function () { show(); });
+    }
+    if (addrEl && geoUrl) {
+      addrEl.addEventListener('change', function () { locate(true); });
+      if (provEl) provEl.addEventListener('change', function () { if (addrEl.value.trim()) locate(true); });
+      if (findBtn) findBtn.addEventListener('click', function () { locate(false); });
+    }
   }
 
   /* Bản đồ nhỏ ở trang chi tiết đợt hiến */

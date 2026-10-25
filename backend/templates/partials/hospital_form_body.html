@@ -24,9 +24,10 @@
     </div>
     <div class="form-row-2">{% include "partials/field.html" with field=form.ward %}</div>
     {{ form.latitude.as_hidden }}{{ form.longitude.as_hidden }}
-    <div class="map-pick" data-map-picker data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ center_lat|stringformat:"f" }}" data-default-lng="{{ center_lng|stringformat:"f" }}" data-empty-text="Chưa ghim — bệnh viện chưa hiện trên bản đồ" role="application" aria-label="Bản đồ: bấm để ghim vị trí bệnh viện"></div>
+    <div class="map-pick" data-map-picker data-geocode-url="{% url 'bloodbank:geocode' %}" data-address-input="{{ form.address.id_for_label }}" data-province-input="{{ form.province.id_for_label }}" data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ center_lat|stringformat:"f" }}" data-default-lng="{{ center_lng|stringformat:"f" }}" data-empty-text="Chưa ghim — bệnh viện chưa hiện trên bản đồ" role="application" aria-label="Bản đồ: bấm để ghim vị trí bệnh viện"></div>
     <div class="pin-bar">
       <span class="pin-status" data-pin-status aria-live="polite"></span>
+      <button type="button" class="btn secondary sm" data-geocode>{% icon "map-pin" 14 %} Tìm theo địa chỉ</button>
       <button type="button" class="btn ghost sm" data-clear-pin>{% icon "x" 14 %} Xóa ghim</button>
     </div>
     {% if form.latitude.errors or form.longitude.errors %}<p class="field-error">{% icon "circle-alert" 14 %} {{ form.latitude.errors|join:" " }} {{ form.longitude.errors|join:" " }}</p>{% endif %}

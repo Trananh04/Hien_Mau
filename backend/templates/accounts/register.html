@@ -5,7 +5,6 @@
 {% block art_text %}Một tài khoản giúp bạn đăng ký các đợt hiến máu, theo dõi lịch sử hiến được bệnh viện xác nhận, và gửi yêu cầu cần máu khi người thân cần.{% endblock %}
 {% block card %}
 <h2>Tạo tài khoản</h2>
-<p class="lead">Chỉ mất khoảng một phút. Trường có dấu <span class="field-req">*</span> là bắt buộc.</p>
 {% include "partials/form_errors.html" %}
 <form method="post" novalidate>
   {% csrf_token %}
@@ -20,7 +19,6 @@
   {% include "partials/field.html" with field=form.password %}
   {% include "partials/field.html" with field=form.password2 %}
   <div class="u-mt-16">{% include "partials/field.html" with field=form.accept_terms %}</div>
-  <p class="field-help u-mt-6">Xem <button type="button" class="link" data-open-dialog="info-privacy">Chính sách bảo mật</button>. Nhóm máu bạn tự khai chỉ để tham khảo; bệnh viện luôn xét nghiệm lại.</p>
   <button type="submit" class="btn primary lg block u-mt-18">{% icon "user-plus" %} Tạo tài khoản</button>
 </form>
 <p class="auth-switch">Đã có tài khoản? <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link">Đăng nhập</a></p>

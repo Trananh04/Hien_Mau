@@ -1,27 +1,9 @@
-{# Ghi nhận người hiến: ngày có thể hiến lại + huy hiệu theo mốc (không có bảng xếp hạng). #}
+{# Ngày có thể hiến lại (theo khoảng cách tối thiểu giữa 2 lần hiến). #}
 {% if eligible %}
 <div class="notice {% if eligible.ready %}ok{% else %}info{% endif %} u-mb-18">{% icon "calendar-heart" %}
   <div class="u-flex-1">
     {% if eligible.ready %}<strong>Bạn đã đủ thời gian nghỉ để hiến máu lại.</strong>{% else %}<strong>Bạn có thể hiến lại từ {{ eligible.date|date:"d/m/Y" }}</strong> (còn {{ eligible.days_left }} ngày).{% endif %}
     {% if eligible.campaign %} Đợt gần bạn: <a class="link" href="{% url 'bloodbank:campaign_detail' eligible.campaign.pk %}">{{ eligible.campaign.name }}</a> · {{ eligible.campaign.start_time|vn_dt }}.{% endif %}
-    <span class="small muted u-d-block u-mt-4">Mốc tính theo khuyến nghị khoảng cách giữa 2 lần hiến; bác sĩ khám sàng lọc quyết định.</span>
   </div>
 </div>
 {% endif %}
-<section class="panel u-mb-22">
-  <div class="panel-head"><h2 class="panel-title">{% icon "award" %} Huy hiệu của bạn</h2>
-    {% if badges.next %}<span class="small muted">Còn {{ badges.next.remaining }} lần nữa để đạt “{{ badges.next.name }}”</span>{% endif %}</div>
-  <div class="panel-body">
-    <div class="badge-row">
-      {% for b in badges.all %}
-      <div class="medal {% if b.earned %}earned{% endif %}" title="{{ b.name }}: {{ b.count }} lần hiến">
-        <span class="medal-icon">{% icon b.icon 22 %}</span>
-        <strong>{{ b.name }}</strong><span>{{ b.count }} lần</span>
-      </div>
-      {% endfor %}
-    </div>
-    {% if badges.next %}
-    <div class="progress u-h-8 u-mt-16" role="img" aria-label="Tiến độ tới huy hiệu kế tiếp: {{ badges.next.progress }}%"><span class="u-bg-primary" data-pct="{{ badges.next.progress }}"></span></div>
-    {% endif %}
-  </div>
-</section>

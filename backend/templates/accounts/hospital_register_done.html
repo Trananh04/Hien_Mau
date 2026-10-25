@@ -1,0 +1,16 @@
+{% extends "layouts/public.html" %}
+{% block title %}Đã gửi đăng ký bệnh viện{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Đã gửi đăng ký" narrow=True %}{% endblock %}
+{% block content %}
+<div class="container narrow page-body">
+  <section class="panel">
+    <div class="panel-body">
+      <div class="notice ok" role="status">{% icon "circle-check" %}
+        <div><strong>{{ hospital.name }}</strong> đang chờ Quản trị hệ thống duyệt.</div>
+      </div>
+      <p class="u-mt-16">Khi được duyệt, email <strong>{{ email }}</strong> sẽ nhận thông báo. Sau đó đăng nhập cổng Bệnh viện để bắt đầu làm việc và cấp tài khoản cho nhân viên.</p>
+      <a href="{% url 'accounts:hospital_login' %}" class="btn primary u-mt-16">Tới cổng Bệnh viện</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -96,7 +96,7 @@ def my_history(request):
     return render(request, "member/history.html", {
         "summary": summary, "page": page, "show_voided": show_voided, "f": f, "years": years, "hospitals": hospitals,
         "has_any": base.exists(), "filtered": any(f.values()), "tab": "history",
-        "badges": badges.badges_for(summary["count"]), "eligible": badges.next_eligible(request.user),
+        "eligible": badges.next_eligible(request.user),
     })
 
 
@@ -191,6 +191,10 @@ def notification_link(n):
     if n.entity_type == "donations":
         name = "hospital_donation_detail" if staff_side else "my_donation_detail"
         return reverse(f"bloodbank:{name}", args=[n.entity_id])
+    if n.entity_type == "hospitals" and n.user.role == "admin":      # bệnh viện mới đăng ký → trang duyệt
+        return reverse("bloodbank:admin_hospital_edit", args=[n.entity_id])
+    if n.entity_type == "hospitals" and n.user.role == "hospital":
+        return reverse("bloodbank:hospital_dashboard")
     fn = ENTITY_LINKS.get(n.entity_type)
     try:
         return fn(n) if fn else None
@@ -203,10 +207,10 @@ NOTIF_CATEGORIES = {
     "nguoi-can-mau": ("Người cần máu", "heart-pulse", ("patient_request_", "prq_")),
     "lien-vien": ("Liên viện", "truck", ("offer_", "request_")),
     "hien-mau": ("Hiến máu", "calendar-heart", ("registration_", "donation_", "campaign_", "eligible_", "donor_callout")),
-    "tai-khoan": ("Tài khoản", "user-cog", ("staff_",)),
+    "tai-khoan": ("Tài khoản", "user-cog", ("staff_", "hospital_")),
 }
 # Cần phản ứng ngay: yêu cầu cần máu mới / bị nhắc lại, bệnh viện khác xin cấp máu, lời kêu gọi hiến, đợt hiến bị hủy
-URGENT_TYPES = {"patient_request_new", "prq_escalated_staff", "prq_escalated_admin", "offer_received",
+URGENT_TYPES = {"hospital_signup", "patient_request_new", "prq_escalated_staff", "prq_escalated_admin", "offer_received",
                 "donor_callout", "campaign_cancelled"}
 
 

@@ -34,16 +34,9 @@ class SystemAlertTests(TestCase):
         self.assertEqual([(s["hospital"].pk, s["total"]) for s in a["shortages"]], [(self.h.pk, 3)])
         self.assertEqual(a["urgent_count"], 1)
         self.client.force_login(self.admin)
-        r = self.client.get(reverse("bloodbank:admin_alerts"), follow=True)   # cảnh báo đã gộp vào Tổng quan
-        self.assertEqual(r.redirect_chain[-1][0], reverse("bloodbank:admin_stats") + "#canh-bao")
-        self.assertEqual([k["count"] for k in r.context["kpis"]][:2], [1, 1])
-        self.assertContains(r, "PR-LATE-0001")
-        self.assertNotContains(r, "PR-FRESH-0002")
-        self.assertNotContains(r, "Bệnh Nhân Kín")          # tên bệnh nhân chỉ bệnh viện điều trị được xem
-        self.assertNotContains(r, "0905000333")             # không lộ số người nhà; chỉ số bệnh viện
-        self.assertContains(r, 'href="tel:0236111222"')
-        # Menu Quản trị có số việc khẩn
-        self.assertContains(r, '<span class="count" aria-label="1 chờ xử lý">1</span>')
+        # QT_001: bỏ trang Tổng quan quản trị — liên kết cảnh báo cũ (trong thông báo) chuyển tới danh sách bệnh viện
+        r = self.client.get(reverse("bloodbank:admin_alerts"))
+        self.assertRedirects(r, reverse("bloodbank:admin_hospitals"), fetch_redirect_response=False)
 
     def test_alerts_is_admin_only(self):
         self.client.force_login(f.staff(self.h))

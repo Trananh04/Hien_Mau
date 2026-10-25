@@ -1,12 +1,15 @@
 {% extends "layouts/workspace.html" %}
 {% load static %}
 {% block title %}{% if h %}{{ h.name }}{% else %}Thêm bệnh viện{% endif %}{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:admin_hospitals' %}">Bệnh viện</a>{% icon "chevron-right" 14 %}<span>{% if h %}{{ h.name }}{% else %}Thêm mới{% endif %}</span>{% endblock %}
+{% block back %}{% url 'bloodbank:admin_hospitals' %}{% endblock %}
 {% block ws_title %}{% if h %}{{ h.name }}{% else %}Thêm bệnh viện{% endif %}{% endblock %}
 {% block ws_sub %}{% if h %}<p class="ws-sub">{% status_badge h %} &nbsp;Mã {{ h.code }}</p>{% endif %}{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
 {% block ws_actions %}
-  {% if h %}
+  {% if h and h.status == "pending" %}
+  <form method="post" data-confirm="Duyệt {{ h.name }}?" data-confirm-detail="Quản lý bệnh viện đăng nhập được và tự cấp tài khoản nhân viên." data-confirm-label="Duyệt">{% csrf_token %}<input type="hidden" name="form" value="approve"><button class="btn success">Duyệt bệnh viện</button></form>
+  <button type="button" class="btn danger" data-open-dialog="reject-hospital">Từ chối</button>
+  {% elif h and h.status != "rejected" %}
   <form method="post" data-confirm="{% if h.status == 'active' %}Ngừng hoạt động {{ h.name }}?{% else %}Kích hoạt lại {{ h.name }}?{% endif %}" data-confirm-detail="{% if h.status == 'active' %}Nhân viên mất quyền thao tác; bệnh viện bị ẩn khỏi bản đồ và tra cứu. Chỉ thực hiện được khi không còn đề nghị đang giữ chỗ/vận chuyển và đợt hiến đang mở.{% endif %}" data-confirm-label="Xác nhận">{% csrf_token %}<input type="hidden" name="form" value="status"><input type="hidden" name="status" value="{% if h.status == 'active' %}inactive{% else %}active{% endif %}">
     <button class="btn {% if h.status == 'active' %}danger{% else %}success{% endif %}">{% if h.status == "active" %}{% icon "power-off" %} Ngừng hoạt động{% else %}{% icon "power" %} Kích hoạt lại{% endif %}</button></form>
   {% endif %}
@@ -19,23 +22,19 @@
     <div class="form-actions"><a href="{% url 'bloodbank:admin_hospitals' %}" class="btn secondary">Quay lại</a><button class="btn primary">{% icon "save" %} {% if h %}Lưu{% else %}Thêm bệnh viện{% endif %}</button></div>
   </div>
 </form>
+{% if h and h.status == "pending" %}
+<dialog class="modal-dialog" id="reject-hospital"><form class="u-d-flex u-fd-column u-w-100pct" method="post">{% csrf_token %}<input type="hidden" name="form" value="reject">
+  <div class="modal-header"><h3 class="modal-title">Từ chối đăng ký {{ h.name }}</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
+  <div class="modal-body"><div class="field"><label for="rj-reason">Lý do <span class="field-req">*</span></label><textarea id="rj-reason" name="reason" class="field-textarea" required maxlength="500"></textarea><p class="field-help">Người quản lý nhận thông báo kèm lý do.</p></div></div>
+  <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Từ chối</button></div>
+</form></dialog>
+{% endif %}
+{% if h and h.status == "rejected" and h.reject_reason %}<div class="notice danger u-mt-20">{% icon "circle-x" %}<div>Đăng ký đã bị từ chối. Lý do: {{ h.reject_reason }}</div></div>{% endif %}
 {% if h %}
 <div class="row between u-m-26-0-12"><h2 class="panel-title u-fs-17">{% icon "users" %} Tài khoản nhân viên bệnh viện</h2><button type="button" class="btn secondary" data-open-dialog="add-staff">{% icon "user-plus" %} Cấp tài khoản</button></div>
 <p class="muted small u-m-4-0-12">Nhân viên đăng nhập tại <a class="link" href="{% url 'accounts:hospital_login' %}">cổng Bệnh viện</a> và chỉ thấy các màn hình bệnh viện. Mọi nhân viên có cùng quyền.</p>
-{% include "partials/staff_table.html" with action_url=request.path admin_mode=True %}
-<dialog class="modal-dialog" id="add-staff"><form class="u-d-flex u-fd-column u-w-100pct" method="post" autocomplete="off">{% csrf_token %}<input type="hidden" name="form" value="staff_add">
-  <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "user-plus" %}</div><h3 class="modal-title">Cấp tài khoản nhân viên — {{ h.name }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body stack u-gap-14">
-    <p class="muted small">Nhập email của tài khoản nhân viên đã có để phân công thêm bệnh viện, hoặc email mới kèm họ tên và mật khẩu để tạo tài khoản. Tài khoản Người dùng / Quản trị không dùng làm tài khoản bệnh viện được.</p>
-    <div class="field"><label for="st-e">Email <span class="field-req">*</span></label><input id="st-e" type="email" name="email" required class="field-input" autocomplete="off"></div>
-    <div class="field"><label for="st-n">Họ tên <span class="muted small">(khi tạo mới)</span></label><input id="st-n" name="full_name" maxlength="150" class="field-input"></div>
-    <div class="form-grid">
-      <div class="field"><label for="st-p">Số điện thoại</label><input id="st-p" name="phone" inputmode="tel" class="field-input"></div>
-      <div class="field"><label for="st-pw">Mật khẩu ban đầu <span class="muted small">(khi tạo mới)</span></label><input id="st-pw" type="password" name="password" minlength="8" class="field-input" autocomplete="new-password"></div>
-    </div>
-  </div>
-  <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">{% icon "user-plus" %} Cấp tài khoản</button></div>
-</form></dialog>
+{% include "partials/staff_table.html" with action_url=request.path admin_mode=True admin_page=True %}
+{% include "partials/staff_add_dialog.html" with hospital_name=h.name %}
 {% endif %}
 </div>
 {% endblock %}

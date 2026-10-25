@@ -1,6 +1,5 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Phân quyền màn hình{% endblock %}
-{% block crumbs %}<span>Quản trị</span>{% icon "chevron-right" 14 %}<span>Phân quyền</span>{% endblock %}
 {% block ws_title %}Phân quyền màn hình{% endblock %}
 {% block content %}
 <p class="summary-line">{% for p in portals %}{{ p.label }}: <b>{{ p.count }}</b> màn hình, {{ user_counts|get_item:p.code|default:0 }} tài khoản (<a class="link" href="{% url p.login %}">trang đăng nhập</a>){% if not forloop.last %} · {% endif %}{% endfor %}</p>

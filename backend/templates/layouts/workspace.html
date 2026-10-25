@@ -12,7 +12,6 @@
       <div class="ws-context">
         <small>Khu vực</small>
         <strong>Quản trị hệ thống</strong>
-        <span class="ws-role">{% icon "shield-check" 14 %} Quản trị hệ thống</span>
       </div>
 {% with nav=admin_nav nav_label="quản trị" %}
       <nav class="ws-nav" aria-label="Menu {{ nav_label }}">
@@ -22,7 +21,7 @@
             <summary class="ws-group"><span>{{ group.name }}</span>{% if group.count %}<span class="ws-group-count" aria-label="{{ group.count }} việc chờ">{{ group.count }}</span>{% endif %}{% icon "chevron-down" 14 "ws-group-chev" %}</summary>
           {% endif %}
           {% for item in group.items %}
-            <a href="{{ item.href }}" title="{{ item.label }}" class="ws-link {% if not group.name %}{% active item.href exact=True %}{% else %}{% active item.href %}{% endif %}">
+            <a href="{{ item.href }}" title="{{ item.label }}" class="ws-link{% if item.active %} active{% endif %}">
               {% icon item.icon %} <span class="ws-link-label">{{ item.label }}</span>
               {% if item.count %}<span class="count" aria-label="{{ item.count }} chờ xử lý">{{ item.count }}</span>{% endif %}
             </a>
@@ -35,7 +34,6 @@
       <div class="ws-context">
         <small>Bệnh viện đang làm việc</small>
         <strong>{{ current_hospital.name }}</strong>
-        <span class="ws-role">{% icon "badge-check" 14 %} Nhân viên bệnh viện</span>
       </div>
 {% with nav=hospital_nav nav_label="bệnh viện" %}
       <nav class="ws-nav" aria-label="Menu {{ nav_label }}">
@@ -45,7 +43,7 @@
             <summary class="ws-group"><span>{{ group.name }}</span>{% if group.count %}<span class="ws-group-count" aria-label="{{ group.count }} việc chờ">{{ group.count }}</span>{% endif %}{% icon "chevron-down" 14 "ws-group-chev" %}</summary>
           {% endif %}
           {% for item in group.items %}
-            <a href="{{ item.href }}" title="{{ item.label }}" class="ws-link {% if not group.name %}{% active item.href exact=True %}{% else %}{% active item.href %}{% endif %}">
+            <a href="{{ item.href }}" title="{{ item.label }}" class="ws-link{% if item.active %} active{% endif %}">
               {% icon item.icon %} <span class="ws-link-label">{{ item.label }}</span>
               {% if item.count %}<span class="count" aria-label="{{ item.count }} chờ xử lý">{{ item.count }}</span>{% endif %}
             </a>
@@ -62,7 +60,7 @@
     <header class="ws-top">
       <button type="button" class="nav-icon-btn ws-menu-btn" data-ws-toggle aria-label="Mở menu">{% icon "menu" 22 %}</button>
       <button type="button" class="nav-icon-btn ws-collapse-btn" data-ws-collapse aria-label="{% if ws_collapsed %}Mở rộng menu{% else %}Thu gọn menu{% endif %}" aria-pressed="{% if ws_collapsed %}true{% else %}false{% endif %}" title="Thu gọn / mở rộng menu">{% icon "panel-left" 20 %}</button>
-      <div class="ws-top-title">{% block crumbs %}{% endblock %}</div>
+      <div class="ws-top-title"></div>
       <div class="ws-top-actions">
         <a href="{% url 'bloodbank:home' %}" class="nav-icon-btn" title="Trang chủ" aria-label="Trang chủ">{% icon "house" %}</a>
         <a href="{% url 'bloodbank:notifications' %}" class="nav-icon-btn" title="Thông báo" aria-label="Thông báo{% if unread_count %} ({{ unread_count }} chưa đọc){% endif %}">
@@ -71,7 +69,7 @@
         <div class="user-menu" data-menu>
           <button type="button" class="user-menu-trigger" data-menu-trigger aria-haspopup="true" aria-expanded="false">
             <span class="avatar">{{ user.full_name|initials }}</span>
-            <span class="nowrap">{{ user.short_name }}</span>
+            <span class="user-menu-name" title="{{ user.full_name }}">{{ user.full_name|default:user.email }}</span>
             {% icon "chevron-down" 16 %}
           </button>
           <div class="user-menu-panel" data-menu-panel hidden>{% include "partials/user_menu_items.html" %}</div>
@@ -81,6 +79,7 @@
     <main class="ws-content" id="noi-dung" tabindex="-1">
       <div class="ws-head">
         <div>
+          {% filter back_button %}{% block back %}{% endblock %}{% endfilter %}
           <h1 class="ws-title">{% block ws_title %}{% endblock %}</h1>
           {% block ws_sub %}{% endblock %}
         </div>

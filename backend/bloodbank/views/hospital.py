@@ -15,6 +15,7 @@ from bloodbank.models import (
 from bloodbank.permissions import current_staff, staff_required
 from bloodbank.services import admin as admin_service
 from bloodbank.services import forecast as fc
+from bloodbank.services import hospital_signup as signup
 from bloodbank.services import inventory as inv
 from bloodbank.services import lab
 from bloodbank.services import transfers as trf
@@ -114,24 +115,40 @@ def hospital_info(request):
                                                            **map_center(h)})
 
 
-# ---------------------------------------------------------------- SCR-38 Nhân viên (xem)
+# ---------------------------------------------------------------- SCR-38 Nhân viên
 @staff_required
 def hospital_staff(request):
-    """Danh sách đồng nghiệp tại bệnh viện. Tạo / thu hồi tài khoản nhân viên do Quản trị hệ thống thực hiện (SCR-51)."""
+    """Danh sách nhân viên. Quản lý bệnh viện cấp tài khoản mới / thu hồi / kích hoạt lại (BV_014); nhân viên chỉ xem."""
+    is_manager = request.staff.is_manager
+    if request.method == "POST":
+        action = request.POST.get("form")
+
+        def add():
+            signup.require_manager(request.staff)
+            return admin_service.assign_staff(request.user, request.hospital, request.POST, request)
+
+        def update():
+            signup.require_manager(request.staff)
+            target = signup.check_staff_target(request.staff, request.POST.get("staff_id"))
+            return admin_service.update_staff(request.user, request.hospital, target.pk,
+                                              request.POST.get("op") == "activate", request)
+
+        if action == "staff_add":
+            attempt(request, add, "Đã cấp tài khoản nhân viên.")
+        elif action == "staff_update":
+            attempt(request, update, "Đã cập nhật phân công.")
+        return redirect("bloodbank:hospital_staff")
     staffs = (Staff.objects.filter(hospital=request.hospital).select_related("user")
-              .order_by("-is_active", "user__full_name"))
-    return render(request, "hospital/staff.html", {"staffs": staffs})
+              .order_by("-is_active", "-staff_role", "user__full_name"))
+    return render(request, "hospital/staff.html", {"staffs": staffs, "is_manager": is_manager})
 
 
 # ---------------------------------------------------------------- SCR-40 Nhật ký bệnh viện
 @staff_required
 def hospital_audit(request):
-    qs, f = audit_filters(request, AuditLog.objects.filter(hospital=request.hospital).select_related("actor"))
-    return render(request, "shared/audit.html", {
-        "page": paginate(request, qs, 30), "f": f, "scope": "hospital",
-        "entities": AuditLog.objects.filter(hospital=request.hospital).values_list("entity_type", flat=True).distinct(),
-        "actions": AuditLog.objects.filter(hospital=request.hospital).values_list("action", flat=True).distinct(),
-    })
+    qs, f, actions = audit_filters(request, AuditLog.objects.filter(hospital=request.hospital).select_related("actor"))
+    return render(request, "shared/audit.html", {"page": paginate(request, qs, 50), "f": f, "scope": "hospital",
+                                                 "actions": actions})
 
 
 # ---------------------------------------------------------------- SCR-52 Danh mục chế phẩm (nhân viên xem, Admin sửa)

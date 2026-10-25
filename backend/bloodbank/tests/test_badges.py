@@ -38,7 +38,7 @@ class BadgeTests(TestCase):
         self.assertEqual((b["next"]["count"], b["next"]["remaining"], b["next"]["progress"]), (5, 1, 50))
         self.assertIsNone(badges_for(40)["next"])
 
-    def test_voided_donation_does_not_count_and_page_shows_badges(self):
+    def test_voided_donation_does_not_count_and_page_hides_badges(self):
         from bloodbank.services import donations as don
 
         d1 = donate(self.h, self.staff_user, self.donor, 200)
@@ -47,8 +47,8 @@ class BadgeTests(TestCase):
         don.void_donation(self.staff_user.staffs.get(), d1.pk, "Ghi nhầm", "not_donated")
         self.client.force_login(self.donor)
         r = self.client.get(reverse("bloodbank:my_history"))
-        self.assertEqual([x["count"] for x in r.context["badges"]["earned"]], [1])  # 2 lượt confirmed
-        self.assertContains(r, "Lần hiến đầu tiên")
+        self.assertEqual(r.context["summary"]["count"], 2)  # lượt đã hủy hiệu lực không tính
+        self.assertNotContains(r, "Huy hiệu của bạn")       # TT_007: bỏ mục huy hiệu
         e = r.context["eligible"]
         self.assertFalse(e["ready"])
         self.assertEqual(e["days_left"], 64)  # 84 − 20

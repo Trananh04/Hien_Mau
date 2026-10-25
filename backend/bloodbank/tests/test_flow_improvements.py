@@ -199,7 +199,8 @@ class ScheduledJobTests(TestCase):
 
         with self.captureOnCommitCallbacks(execute=True):
             prq = patients.submit(self.member, {"consent": True, "hospital_id": self.req_h.pk, "quantity_units": 2,
-                                                "blood_group": "O-", "contact_name": "A", "contact_phone": "0905000111"})
+                                                "blood_group": "O-", "blood_product_id": f.spec().product_id,
+                                                "contact_name": "A", "contact_phone": "0905000111"})
         self.assertEqual([m.to for m in mail.outbox], [[self.req_staff.user.email]])  # email ngay khi gửi
         self.assertNotIn("Lê", mail.outbox[0].body)
         # Chưa tới 15 phút → chưa nhắc
@@ -226,6 +227,7 @@ class ScheduledJobTests(TestCase):
         from bloodbank.services import patients
 
         patients.submit(self.member, {"consent": True, "hospital_id": self.req_h.pk, "quantity_units": 1,
+                                      "blood_group": "O+", "blood_product_id": f.spec().product_id,
                                       "contact_name": "A", "contact_phone": "0905000111"})
         self.client.force_login(self.req_staff.user)
         r = self.client.get(reverse("bloodbank:notifications"))

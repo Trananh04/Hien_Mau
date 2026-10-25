@@ -162,6 +162,7 @@ class UrgencyTests(TestCase):
                                     "needed_by": now + timedelta(days=5)})
         cls.requester = f.user()
         p = prq.submit(cls.requester, {"consent": True, "hospital_id": cls.h.pk, "quantity_units": 2, "blood_group": "B+",
+                                       "blood_product_id": f.spec().product_id,
                                        "contact_name": "Người nhà", "contact_phone": "0905123456"})
         cls.prq = prq.hospital_action(cls.staff, p.pk, "verify", {"blood_group": "B+"})
         # Người hiến O+: một người gần (~1 km) hiến 1 lần; một người xa (~20 km) đã hiến 5 lần

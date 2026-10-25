@@ -7,7 +7,7 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 
-from bloodbank.models import AuditLog, SystemSetting
+from bloodbank.models import AuditLog, Staff, SystemSetting
 from bloodbank.services.common import BusinessError, audit, business_transaction, snapshot
 
 from .models import AuthToken, User
@@ -85,6 +85,18 @@ def _recent_failures(user):
     ).count()
 
 
+def _hospital_not_approved(user):
+    """Bệnh viện tự đăng ký chưa được duyệt / bị từ chối → thông báo lý do thay vì cho vào rồi chặn 403 (BV_014)."""
+    staff = Staff.objects.filter(user=user, is_active=True).select_related("hospital").first()
+    if staff is None:
+        return None
+    if staff.hospital.status == "pending":
+        return f"{staff.hospital.name} đang chờ Quản trị hệ thống duyệt. Bạn sẽ nhận email khi được duyệt."
+    if staff.hospital.status == "rejected":
+        return f"Đăng ký {staff.hospital.name} không được duyệt. Lý do: {staff.hospital.reject_reason or '—'}"
+    return None
+
+
 def authenticate_user(email, password, request=None, role=None):
     """Trả về user hoặc raise BusinessError (ERR-AUTH-INVALID-CREDENTIALS / ERR-AUTH-LOCKED / ERR-AUTH-PORTAL).
 
@@ -114,6 +126,8 @@ def authenticate_user(email, password, request=None, role=None):
             audit(user, user, "login_wrong_portal", new={"portal": role}, request=request)
             error = BusinessError("ERR-AUTH-PORTAL")
             error.user_role = user.role
+        elif user.role == User.Role.HOSPITAL and (blocked := _hospital_not_approved(user)):
+            error = BusinessError("ERR-AUTH-HOSPITAL-PENDING", blocked)
         else:
             user.last_login = timezone.now()
             user.save(update_fields=["last_login", "updated_at"])

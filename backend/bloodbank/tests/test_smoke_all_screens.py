@@ -56,7 +56,7 @@ class SmokeAllScreens(TestCase):
             reverse("bloodbank:hospital_campaign_create"), reverse("bloodbank:hospital_campaign_edit", args=[today.pk]),
             reverse("bloodbank:checkin", args=[today.pk]), reverse("bloodbank:checkin", args=[today.pk]) + f"?reg={reg.pk}&status=attended",
             reverse("bloodbank:hospital_donation_detail", args=[don.pk]), reverse("bloodbank:donor_lookup") + "?q=a",
-            reverse("bloodbank:donor_lookup") + f"?q=a&donor={don.donor_id}", reverse("bloodbank:donation_report"),
+            reverse("bloodbank:donor_detail", args=[don.donor_id]), reverse("bloodbank:donation_report"),
             reverse("bloodbank:stock"), reverse("bloodbank:stock_txn", args=["nhap"]),
             reverse("bloodbank:stock_txn", args=["xuat"]), reverse("bloodbank:stock_txn", args=["dieu-chinh"]),
             reverse("bloodbank:stock_ledger"), reverse("bloodbank:demands"),
@@ -91,7 +91,7 @@ class SmokeAllScreens(TestCase):
     def test_admin_pages(self):
         self.client.force_login(self.admin)
         h = Staff.objects.filter(user=self.staff).first().hospital
-        for url in [reverse("bloodbank:admin_stats"), reverse("bloodbank:admin_users"), reverse("bloodbank:admin_hospitals"),
+        for url in [reverse("bloodbank:admin_users"), reverse("bloodbank:admin_hospitals"),
                     reverse("bloodbank:admin_hospital_create"), reverse("bloodbank:admin_hospital_edit", args=[h.pk]),
                     reverse("bloodbank:admin_audit"), reverse("bloodbank:admin_settings"), reverse("bloodbank:catalog"),
                     reverse("bloodbank:admin_permissions"), reverse("bloodbank:work_account"),

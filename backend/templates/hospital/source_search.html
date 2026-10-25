@@ -1,6 +1,5 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Tìm nguồn liên viện{% endblock %}
-{% block crumbs %}<span>Liên viện</span>{% icon "chevron-right" 14 %}<span>Tìm nguồn</span>{% endblock %}
 {% block ws_title %}Tìm nguồn liên viện{% endblock %}
 {% block content %}
 {% if patient_request %}<div class="notice info">{% icon "link" %}<div>Đang tìm nguồn cho yêu cầu người cần máu <strong>{{ patient_request.request_code }}</strong>; yêu cầu hỗ trợ tạo ra sẽ được liên kết.</div></div>{% endif %}

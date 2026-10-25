@@ -10,6 +10,9 @@ class Hospital(models.Model):
     class Status(models.TextChoices):
         ACTIVE = "active", "Đang hoạt động"
         INACTIVE = "inactive", "Ngừng hoạt động"
+        # Bệnh viện tự đăng ký → chờ Quản trị hệ thống duyệt (BV_014)
+        PENDING = "pending", "Chờ duyệt"
+        REJECTED = "rejected", "Bị từ chối"
 
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=255)
@@ -22,6 +25,7 @@ class Hospital(models.Model):
     phone = models.CharField(max_length=20, null=True, blank=True)
     email = models.CharField(max_length=255, null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    reject_reason = models.CharField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,7 +42,8 @@ class Hospital(models.Model):
                 name="chk_hospitals_lng",
             ),
             models.CheckConstraint(condition=LATLNG_PAIR, name="chk_hospitals_latlng_pair"),
-            models.CheckConstraint(condition=Q(status__in=["active", "inactive"]), name="chk_hospitals_status"),
+            models.CheckConstraint(condition=Q(status__in=["active", "inactive", "pending", "rejected"]),
+                                   name="chk_hospitals_status"),
         ]
 
     def __str__(self):
@@ -51,8 +56,9 @@ class Hospital(models.Model):
 
 class Staff(models.Model):
     class Role(models.TextChoices):
-        # Một vai trò chung cho mọi nhân viên bệnh viện
-        STAFF = "staff", "Nhân viên bệnh viện"
+        # Mọi nhân viên dùng chung các màn nghiệp vụ; Quản lý thêm quyền cấp / thu hồi tài khoản nhân viên (BV_014)
+        STAFF = "staff", "Nhân viên"
+        MANAGER = "manager", "Quản lý bệnh viện"
 
     hospital = models.ForeignKey(Hospital, on_delete=models.RESTRICT, related_name="staffs")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, related_name="staffs")
@@ -67,11 +73,15 @@ class Staff(models.Model):
             # BR-03, BR-04: mỗi nhân viên chỉ có một hồ sơ phân công, thuộc duy nhất một bệnh viện
             models.UniqueConstraint(fields=["user"], name="uq_staffs_user"),
             models.CheckConstraint(
-                condition=Q(staff_role__in=["staff"]),
+                condition=Q(staff_role__in=["staff", "manager"]),
                 name="chk_staffs_role",
             ),
         ]
 
     def __str__(self):
         return f"{self.user} @ {self.hospital}"
+
+    @property
+    def is_manager(self):
+        return self.staff_role == self.Role.MANAGER
 

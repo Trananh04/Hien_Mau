@@ -5,7 +5,9 @@ Menu chỉ hiện mục mà vai trò hiện tại mở được theo bảng `blo
 from django.urls import reverse
 
 from bloodbank import access
-from bloodbank.models import Campaign, Donation, Notification, PatientRequest, Registration, RequestOffer
+from bloodbank.models import (
+    Campaign, Donation, Hospital, Notification, PatientRequest, Registration, RequestOffer,
+)
 from bloodbank.permissions import current_staff
 
 # (nhóm, nhãn, url name, icon)
@@ -26,7 +28,6 @@ HOSPITAL_NAV = [
 ]
 
 ADMIN_NAV = [
-    ("Quản trị", "Tổng quan", "bloodbank:admin_stats", "layout-dashboard"),
     ("Quản trị", "Người dùng", "bloodbank:admin_users", "users"),
     ("Quản trị", "Bệnh viện", "bloodbank:admin_hospitals", "hospital"),
     ("Quản trị", "Danh mục chế phẩm", "bloodbank:catalog", "package"),
@@ -48,10 +49,16 @@ def _nav(user, items, counts=None, request=None):
                                     "count": (counts or {}).get(url)})
     closed = set(request.COOKIES.get("ws_closed", "").split(".")) if request else set()
     path = request.path if request else ""
+    # Chỉ một mục sáng: mục có đường dẫn khớp dài nhất ("/kho/lich-su/" thắng "/kho/"); mục không nhóm phải khớp đúng
+    matches = [i for g in groups for i in g["items"]
+               if path == i["href"] or (g["name"] and path.startswith(i["href"]))]
+    best = max(matches, key=lambda i: len(i["href"]), default=None)
     for g in groups:   # tổng số chờ xử lý của nhóm: hiện cạnh tên nhóm khi nhóm đang thu gọn
+        for i in g["items"]:
+            i["active"] = i is best
         g["count"] = sum(i["count"] or 0 for i in g["items"])
         g["key"] = _slug(g["name"] or "home")
-        has_active = any(path.startswith(i["href"]) for i in g["items"])
+        has_active = any(i["active"] for i in g["items"])
         g["open"] = has_active or g["key"] not in closed      # nhóm chứa trang hiện tại luôn mở
     return groups
 
@@ -95,7 +102,6 @@ def workspace(request):
         }
         ctx["hospital_nav"] = _nav(user, HOSPITAL_NAV, counts, request)
     if user.role == access.ADMIN:
-        from bloodbank.services.admin import urgent_alert_count
-
-        ctx["admin_nav"] = _nav(user, ADMIN_NAV, {"bloodbank:admin_stats": urgent_alert_count()}, request)
+        pending = Hospital.objects.filter(status=Hospital.Status.PENDING).count()   # bệnh viện chờ duyệt
+        ctx["admin_nav"] = _nav(user, ADMIN_NAV, {"bloodbank:admin_hospitals": pending}, request)
     return ctx

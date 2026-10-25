@@ -7,6 +7,7 @@ app_name = "accounts"
 urlpatterns = [
     path("dang-nhap/", views.login_view, name="login"),
     path("benh-vien/dang-nhap/", views.hospital_login_view, name="hospital_login"),
+    path("benh-vien/dang-ky/", views.hospital_register_view, name="hospital_register"),
     path(settings.ADMIN_LOGIN_PATH, views.admin_login_view, name="admin_login"),
     path("dang-ky/", views.register_view, name="register"),
     path("dang-xuat/", views.logout_view, name="logout"),

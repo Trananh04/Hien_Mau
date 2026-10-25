@@ -1,7 +1,8 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Nhân viên bệnh viện{% endblock %}
-{% block crumbs %}<span>Bệnh viện</span>{% icon "chevron-right" 14 %}<span>Nhân viên</span>{% endblock %}
 {% block ws_title %}Nhân viên bệnh viện{% endblock %}
+{% block ws_actions %}{% if is_manager %}<button type="button" class="btn primary" data-open-dialog="add-staff">{% icon "user-plus" %} Cấp tài khoản</button>{% endif %}{% endblock %}
 {% block content %}
-{% include "partials/staff_table.html" %}
+{% include "partials/staff_table.html" with action_url=request.path admin_mode=is_manager %}
+{% if is_manager %}{% include "partials/staff_add_dialog.html" with hospital_name=current_hospital.name %}{% endif %}
 {% endblock %}

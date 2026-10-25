@@ -1,11 +1,8 @@
 {% extends "layouts/public.html" %}
 {% block title %}Gửi yêu cầu cần máu{% endblock %}
-{% block band %}{% include "partials/band.html" with title="Phiếu yêu cầu máu" lead="Dành cho người nhà bệnh nhân. Vui lòng cung cấp chính xác thông tin để bệnh viện điều trị xác minh và hỗ trợ nhanh nhất." narrow=True %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Phiếu yêu cầu máu" narrow=True %}{% endblock %}
 {% block content %}
-<div class="container narrow page-body">
-  <div class="notice warn" role="note">{% icon "shield-alert" %}
-    <div><strong>Lưu ý quan trọng.</strong> Nền tảng chỉ kết nối thông tin; mọi quyết định truyền máu do bệnh viện điều trị đưa ra. Yêu cầu phải được bệnh viện xác minh trước khi điều phối. Trường hợp nguy kịch, hãy báo ngay cho bác sĩ đang điều trị.</div>
-  </div>
+<div class="container narrow page-body text-lg">
   {% include "partials/form_errors.html" %}
   <form method="post" novalidate class="custom-form-body">
     {% csrf_token %}
@@ -14,14 +11,14 @@
       <div class="stack u-gap-16">
         {% include "partials/field.html" with field=form.hospital_id %}
         <div class="field{% if form.blood_group.errors %} has-error{% endif %}">
-          <span class="field-label">{{ form.blood_group.label }}</span>
+          <span class="field-label">{{ form.blood_group.label }} <span class="field-req">*</span></span>
+          {% if form.blood_group.errors %}{% for e in form.blood_group.errors %}<p class="field-error">{% icon "circle-alert" 14 %} {{ e }}</p>{% endfor %}{% endif %}
           <div class="chip-select" role="radiogroup" aria-label="Nhóm máu">
             {% for value, label in form.blood_group.field.choices %}
               <input type="radio" name="blood_group" id="bg-{{ forloop.counter }}" value="{{ value }}" {% if form.blood_group.value|default:"" == value %}checked{% endif %}>
-              <label for="bg-{{ forloop.counter }}">{% if value %}{{ label }}{% else %}Chưa rõ{% endif %}</label>
+              <label for="bg-{{ forloop.counter }}">{{ label }}</label>
             {% endfor %}
           </div>
-          <p class="field-help">Không chắc chắn? Chọn “Chưa rõ”, bệnh viện sẽ xác minh.</p>
         </div>
         <div class="form-grid">
           {% include "partials/field.html" with field=form.quantity_units %}

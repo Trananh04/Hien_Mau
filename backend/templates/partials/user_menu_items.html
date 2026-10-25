@@ -3,7 +3,6 @@
 <div class="user-menu-head">
   <strong>{{ user.full_name }}</strong>
   <span>{{ user.email }}</span>
-  <div class="u-mt-6"><span class="badge {% if user.role == "admin" %}danger{% elif user.role == "hospital" %}info{% else %}neutral{% endif %} plain">{{ role_label }}</span></div>
 </div>
 {% endif %}
 {% if user.role == "member" %}
@@ -12,10 +11,10 @@
 <a href="{% url 'bloodbank:my_history' %}" class="menu-item">{% icon "droplet" %} Lịch sử hiến máu</a>
 <a href="{% url 'bloodbank:my_patient_requests' %}" class="menu-item">{% icon "heart-pulse" %} Yêu cầu cần máu</a>
 {% elif user.role == "hospital" %}
-<a href="{% url 'bloodbank:hospital_dashboard' %}" class="menu-item">{% icon "hospital" %} Khu vực bệnh viện</a>
+<a href="{% url 'bloodbank:hospital_dashboard' %}" class="menu-item">{% icon "hospital" %} Quản lý bệnh viện</a>
 <a href="{% url 'bloodbank:work_account' %}" class="menu-item">{% icon "user-cog" %} Tài khoản công tác</a>
 {% elif user.role == "admin" %}
-<a href="{% url 'bloodbank:admin_stats' %}" class="menu-item">{% icon "shield-check" %} Quản trị hệ thống</a>
+<a href="{% url 'bloodbank:admin_users' %}" class="menu-item">{% icon "shield-check" %} Quản trị hệ thống</a>
 <a href="{% url 'bloodbank:work_account' %}" class="menu-item">{% icon "user-cog" %} Tài khoản công tác</a>
 {% endif %}
 <div class="menu-sep"></div>

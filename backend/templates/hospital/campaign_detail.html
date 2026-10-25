@@ -1,6 +1,6 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}{{ c.name }}{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:hospital_campaigns' %}">Đợt hiến máu</a>{% icon "chevron-right" 14 %}<span>{{ c.name }}</span>{% endblock %}
+{% block back %}{% url 'bloodbank:hospital_campaigns' %}{% endblock %}
 {% block ws_title %}{{ c.name }}{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{% status_badge c %} &nbsp;{{ c.start_time|vn_dt }} – {{ c.end_time|vn_dt }} · {{ c.location_name }}</p>{% endblock %}
 {% block ws_actions %}
@@ -104,9 +104,9 @@
           </form></dialog>
         {% endif %}
         {% if r.status in "pending,approved" and c.status in "open,closed" %}
-          <a href="{% url 'bloodbank:checkin' c.pk %}?reg={{ r.pk }}&status=waiting" class="btn secondary sm">{% icon "scan-line" %} Check-in</a>
+          <a href="{% url 'bloodbank:checkin' c.pk %}?reg={{ r.pk }}&amp;status=waiting&amp;next={{ request.get_full_path|urlencode }}" class="btn secondary sm">Check-in</a>
         {% endif %}
-        {% if r.status == "attended" %}<a href="{% url 'bloodbank:checkin' c.pk %}?reg={{ r.pk }}&status=attended" class="btn primary sm">Ghi nhận kết quả</a>{% endif %}
+        {% if r.status == "attended" %}<a href="{% url 'bloodbank:checkin' c.pk %}?reg={{ r.pk }}&amp;status=attended&amp;next={{ request.get_full_path|urlencode }}" class="btn primary sm">Ghi nhận kết quả</a>{% endif %}
         {% if r.status == "donated" %}{% with d=r.donations.all|first %}{% if d %}<a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}" class="btn ghost sm">Lượt hiến</a>{% endif %}{% endwith %}{% endif %}
       </div></td>
       {% endif %}

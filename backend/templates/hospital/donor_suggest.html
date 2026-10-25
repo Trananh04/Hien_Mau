@@ -1,6 +1,6 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Gợi ý người hiến nhóm {{ blood_group }}{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:demands' %}">Dự báo thiếu hụt</a>{% icon "chevron-right" 14 %}<span>Gợi ý người hiến</span>{% endblock %}
+{% block back %}{% url 'bloodbank:demands' %}{% endblock %}
 {% block ws_title %}{% if mode == "urgent" %}Kêu gọi khẩn nhóm{% else %}Gợi ý người hiến nhóm{% endif %} {% blood blood_group "sm" %}{% endblock %}
 {% block content %}
 {% if mode == "urgent" %}

@@ -33,7 +33,7 @@ PORTALS = {
         "art_text": "Một tài khoản cho cả hai việc: đăng ký hiến máu và gửi yêu cầu khi người nhà cần máu.",
     },
     access.HOSPITAL: {
-        "title": "Đăng nhập bệnh viện", "lead": "Dành cho nhân viên bệnh viện đã được Quản trị hệ thống cấp tài khoản.",
+        "title": "Đăng nhập bệnh viện", "lead": "Dành cho quản lý và nhân viên của bệnh viện đã được duyệt.",
         "icon": "hospital", "greeting": "Cổng bệnh viện", "art_title": "KHU LÀM VIỆC BỆNH VIỆN",
         "art_text": "Quản lý đợt hiến, điểm hiến, kho máu, điều phối liên viện và yêu cầu cần máu của bệnh viện.",
     },
@@ -120,6 +120,27 @@ def register_view(request):
         _dev_link(request, "Liên kết xác thực email", link)
         return redirect(_safe_next(request, reverse("bloodbank:campaigns")))
     return render(request, "accounts/register.html", {"form": form, "next": request.GET.get("next", "")})
+
+
+def hospital_register_view(request):
+    """BV_014: bệnh viện tự đăng ký (kèm tài khoản Quản lý) → chờ Quản trị hệ thống duyệt."""
+    from accounts.provinces import center_of
+    from bloodbank.forms import HospitalSignupForm
+    from bloodbank.services import hospital_signup
+
+    if request.user.is_authenticated:
+        return redirect(_home_for(request.user))
+    form = HospitalSignupForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            hospital, _ = hospital_signup.register_hospital(form.cleaned_data, request)
+        except BusinessError as exc:
+            messages.error(request, exc.message)
+        else:
+            return render(request, "accounts/hospital_register_done.html", {"hospital": hospital,
+                                                                             "email": form.cleaned_data["manager_email"]})
+    lat, lng = center_of(form["province"].value() or "")
+    return render(request, "accounts/hospital_register.html", {"form": form, "center_lat": lat, "center_lng": lng})
 
 
 @require_POST

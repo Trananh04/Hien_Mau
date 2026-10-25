@@ -1,65 +1,16 @@
 """SCR-50..54: quản trị hệ thống (chỉ role = admin)."""
-from django.db.models import Count, Q, Sum
+from django.db.models import Case, Count, Q, When
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 
-from accounts.models import BLOOD_GROUP_VALUES, User
+from accounts.models import User
 from bloodbank import access
 from bloodbank.forms import HospitalForm
-from bloodbank.models import (
-    AuditLog, Campaign, Donation, Hospital, HospitalRequest, PatientRequest, Registration, RequestOffer, Stock,
-    SystemSetting,
-)
+from bloodbank.models import AuditLog, Hospital, SystemSetting
 from bloodbank.permissions import admin_required
 from bloodbank.services import admin as admin_service
-from bloodbank.services import donations as don
+from bloodbank.services import hospital_signup
 
 from .helpers import attempt, audit_filters, map_center, paginate
-
-
-@admin_required
-def stats(request):
-    """Tổng quan quản trị (gộp SCR-54 thống kê + SCR-57 cảnh báo): chỉ số, việc cần đôn đốc, tồn & lượt hiến.
-
-    Đây là trang tổng quan DUY NHẤT của khu quản trị; các trang khác không có khối chỉ số riêng.
-    """
-    a = admin_service.system_alerts()
-    summary = don.summarize(Donation.objects.all())
-    by_hospital = (
-        Hospital.objects.annotate(
-            donation_count=Count("donations", filter=Q(donations__status="confirmed"), distinct=True),
-            ml=Sum("donations__volume_ml", filter=Q(donations__status="confirmed", donations__donation_type="whole_blood")),
-        ).order_by("-donation_count", "name")
-    )
-    stock_by_group = {bg: {"on_hand": 0, "available": 0} for bg in BLOOD_GROUP_VALUES}
-    for s in Stock.objects.filter(hospital__status="active"):
-        stock_by_group[s.blood_group]["on_hand"] += s.quantity_on_hand
-        stock_by_group[s.blood_group]["available"] += s.available
-    max_avail = max([v["on_hand"] for v in stock_by_group.values()] or [0])
-    kpis = [
-        {"label": "Chờ xác minh quá hạn", "count": len(a["late_prq"]), "icon": "heart-pulse", "url": "#canh-bao",
-         "tone": "danger", "hint": f"quá {a['late_minutes']} phút chưa xác minh"},
-        {"label": "Bệnh viện đang thiếu máu", "count": len(a["shortages"]), "icon": "trending-down", "url": "#canh-bao",
-         "tone": "warn", "hint": "nhu cầu vượt tồn khả dụng"},
-        {"label": "Liên viện cần đôn đốc", "count": len(a["overdue_support"]) + len(a["stale_offers"]), "icon": "truck",
-         "url": "#canh-bao", "tone": "warn", "hint": "quá hạn hoặc sắp tự hủy"},
-        {"label": "Lượt hiến xác nhận", "count": summary["count"], "icon": "badge-check",
-         "url": "#luot-hien", "tone": "info", "hint": f"toàn phần {summary['whole_ml'] or 0:,} ml".replace(",", ".")},
-    ]
-    return render(request, "admin/stats.html", {
-        "a": a, "kpis": kpis, "has_alerts": any(k["count"] for k in kpis[:3]),
-        "summary": summary, "by_hospital": by_hospital, "stock_by_group": stock_by_group, "max_avail": max_avail,
-        "counts": {
-            "users": User.objects.exclude(status="deleted").count(),
-            "hospitals": Hospital.objects.filter(status="active").count(),
-            "open_campaigns": Campaign.objects.filter(status="open").count(),
-            "registrations": Registration.objects.count(),
-            "open_requests": HospitalRequest.objects.filter(status__in=HospitalRequest.OPEN_STATUSES,
-                                                            closed_at__isnull=True).count(),
-            "in_transit": RequestOffer.objects.filter(status="in_transit").count(),
-            "patient_waiting": PatientRequest.objects.filter(status__in=PatientRequest.WAITING_STATUSES).count(),
-        },
-    })
 
 
 @admin_required
@@ -87,11 +38,20 @@ def users(request):
 
 @admin_required
 def hospitals(request):
-    qs = Hospital.objects.annotate(staff_count=Count("staffs", filter=Q(staffs__is_active=True))).order_by("-status", "name")
+    # Bệnh viện tự đăng ký chờ duyệt lên đầu (BV_014)
+    qs = (Hospital.objects.annotate(staff_count=Count("staffs", filter=Q(staffs__is_active=True)),
+                                    pending_first=Case(When(status="pending", then=0), default=1))
+          .order_by("pending_first", "-status", "name"))
     q = request.GET.get("q") or ""
+    status = request.GET.get("status") if request.GET.get("status") in dict(Hospital.Status.choices) else ""
     if q:
         qs = qs.filter(Q(name__icontains=q) | Q(code__icontains=q) | Q(province__icontains=q))
-    return render(request, "admin/hospitals.html", {"page": paginate(request, qs, 25), "q": q})
+    if status:
+        qs = qs.filter(status=status)
+    return render(request, "admin/hospitals.html", {
+        "page": paginate(request, qs, 25), "q": q, "status": status,
+        "pending_count": Hospital.objects.filter(status="pending").count(),
+    })
 
 
 @admin_required
@@ -106,6 +66,14 @@ def hospital_form(request, pk=None):
                                                                              request=request), "Đã lưu bệnh viện.")
             if ok:
                 return redirect("bloodbank:admin_hospital_edit", pk=saved.pk)
+        elif action in ("approve", "reject") and hospital:
+            if action == "approve":
+                attempt(request, lambda: hospital_signup.approve(request.user, hospital.pk, request),
+                        "Đã duyệt bệnh viện. Quản lý bệnh viện đã nhận thông báo.")
+            else:
+                attempt(request, lambda: hospital_signup.reject(request.user, hospital.pk, request.POST.get("reason"),
+                                                                request), "Đã từ chối đăng ký bệnh viện.")
+            return redirect("bloodbank:admin_hospital_edit", pk=hospital.pk)
         elif action == "status" and hospital:
             attempt(request, lambda: admin_service.set_hospital_status(request.user, hospital.pk, request.POST.get("status"),
                                                                        request), "Đã cập nhật trạng thái bệnh viện.")
@@ -126,15 +94,15 @@ def hospital_form(request, pk=None):
 
 @admin_required
 def audit(request):
-    qs, f = audit_filters(request, AuditLog.objects.select_related("actor", "hospital"))
     hospital_id = request.GET.get("hospital") or ""
+    base = AuditLog.objects.select_related("actor", "hospital")
     if hospital_id:
-        qs = qs.filter(hospital_id=hospital_id)
+        base = base.filter(hospital_id=hospital_id)
+    qs, f, actions = audit_filters(request, base)
     f["hospital"] = hospital_id
     return render(request, "shared/audit.html", {
-        "page": paginate(request, qs, 30), "f": f, "scope": "system", "hospitals": Hospital.objects.all(),
-        "entities": AuditLog.objects.values_list("entity_type", flat=True).distinct().order_by("entity_type"),
-        "actions": AuditLog.objects.values_list("action", flat=True).distinct().order_by("action"),
+        "page": paginate(request, qs, 50), "f": f, "scope": "system", "hospitals": Hospital.objects.all(),
+        "actions": actions,
     })
 
 
@@ -167,8 +135,8 @@ def permissions_view(request):
 
 @admin_required
 def alerts(request):
-    """SCR-57: cảnh báo đã gộp vào trang Tổng quan quản trị — giữ địa chỉ cũ (liên kết trong thông báo) và chuyển tiếp."""
-    return redirect(reverse("bloodbank:admin_stats") + "#canh-bao")
+    """SCR-57: liên kết cũ trong thông báo nhắc quá hạn → danh sách bệnh viện (liên hệ bệnh viện chậm xử lý)."""
+    return redirect("bloodbank:admin_hospitals")
 
 
 @admin_required

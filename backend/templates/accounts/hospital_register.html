@@ -1,0 +1,38 @@
+{% extends "layouts/public.html" %}
+{% load static %}
+{% block title %}Đăng ký bệnh viện{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Đăng ký bệnh viện" lead="Sau khi Quản trị hệ thống duyệt, người quản lý đăng nhập cổng Bệnh viện và tự cấp tài khoản cho nhân viên." narrow=True %}{% endblock %}
+{% block content %}
+<div class="container narrow page-body" hx-boost="false">
+  <form method="post" novalidate class="form-page">
+    {% csrf_token %}
+    <div class="panel">
+      {% include "partials/hospital_form_body.html" %}
+      <section class="form-section">
+        <header class="form-section-head"><h2>Người quản lý</h2><p>Tài khoản đăng nhập cổng Bệnh viện, được cấp và thu hồi tài khoản nhân viên.</p></header>
+        <div class="form-section-body">
+          {% include "partials/field.html" with field=form.manager_name %}
+          <div class="form-row-2">
+            {% include "partials/field.html" with field=form.manager_email %}
+            {% include "partials/field.html" with field=form.manager_phone %}
+          </div>
+          <div class="form-row-2">
+            {% include "partials/field.html" with field=form.password %}
+            {% include "partials/field.html" with field=form.password2 %}
+          </div>
+          {% include "partials/field.html" with field=form.accept_terms %}
+        </div>
+      </section>
+      <div class="form-actions">
+        <a href="{% url 'accounts:hospital_login' %}" class="btn secondary">Quay lại đăng nhập</a>
+        <button type="submit" class="btn primary">Gửi đăng ký</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/maps.js' %}"></script>
+{% endblock %}

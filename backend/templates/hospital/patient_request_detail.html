@@ -1,13 +1,13 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Yêu cầu {{ prq.request_code }}{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:hospital_patient_requests' %}">Yêu cầu cần máu</a>{% icon "chevron-right" 14 %}<span>{{ prq.request_code }}</span>{% endblock %}
+{% block back %}{% url 'bloodbank:hospital_patient_requests' %}{% endblock %}
 {% block ws_title %}Yêu cầu {{ prq.request_code }}{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{% status_badge prq %} &nbsp;Gửi lúc {{ prq.created_at|vn_dt }}</p>{% endblock %}
 {% block content %}
 <div class="grid grid-main-side">
   <div class="stack">
     <section class="panel">
-      <div class="panel-head"><h2 class="panel-title">{% icon "file-heart" %} Thông tin yêu cầu</h2></div>
+      <div class="panel-head"><h2 class="panel-title">Thông tin yêu cầu</h2></div>
       <div class="panel-body">
         <div class="row u-mb-16">{% blood prq.blood_group "lg" %}<div><strong class="u-fs-17 u-c-ink">{{ prq.quantity_units }} đơn vị · {{ prq.blood_product.name|default:"chế phẩm chưa rõ" }}</strong><div class="muted small">{% if prq.blood_group %}Nhóm máu {{ prq.blood_group }}{% if not prq.verified_at %} (người gửi tự khai){% endif %}{% else %}Chưa rõ nhóm máu{% endif %}</div></div></div>
         <dl class="dl">
@@ -27,7 +27,7 @@
     </section>
     {% if issued %}
     <section class="panel">
-      <div class="panel-head"><h2 class="panel-title">{% icon "package-minus" %} Đã xuất kho cho yêu cầu</h2></div>
+      <div class="panel-head"><h2 class="panel-title">Đã xuất kho cho yêu cầu</h2></div>
       <div class="table-wrap"><table class="table"><thead><tr><th>Thời điểm</th><th>Chế phẩm</th><th class="num">Số lượng</th></tr></thead>
         <tbody>{% for t in issued %}<tr><td>{{ t.occurred_at|vn_dt }}</td><td>{% blood t.stock.blood_group "sm" %} {{ t.stock.product_spec }}</td><td class="num">{{ t.quantity_change|absval }}</td></tr>{% endfor %}</tbody></table></div>
     </section>
@@ -35,36 +35,30 @@
   </div>
 
   <aside class="panel">
-    <div class="panel-head"><h2 class="panel-title">{% icon "mouse-pointer-click" %} Xử lý</h2></div>
+    <div class="panel-head"><h2 class="panel-title">Xử lý</h2></div>
     <div class="panel-body stack u-gap-12">
       {% if not actions %}<p class="muted">Yêu cầu đã ở trạng thái cuối, không còn thao tác.</p>{% endif %}
-      {% if "start_verify" in actions %}
-        <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start_verify"><button class="btn secondary block">{% icon "clipboard-check" %} Nhận xác minh</button></form>
-      {% endif %}
       {% if "verify" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" data-confirm="Xác nhận yêu cầu {{ prq.request_code }} là hợp lệ?" data-confirm-detail="Sau khi xác minh, yêu cầu được phép điều phối và cấp phát." data-confirm-label="Xác minh">{% csrf_token %}<input type="hidden" name="action" value="verify">
           <div class="field"><label for="vbg">Nhóm máu đã xác minh <span class="field-req">*</span></label><select id="vbg" name="blood_group" class="field-select" required><option value="">-- Chọn --</option>{% for v, l in blood_groups %}<option value="{{ v }}" {% if prq.blood_group == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
-          <button class="btn success block u-mt-10">{% icon "shield-check" %} Xác minh</button>
+          <button class="btn success block u-mt-10">Xác minh</button>
         </form>
       {% endif %}
-      {% if "reject" in actions %}<button type="button" class="btn danger block" data-open-dialog="prq-reject">{% icon "x" %} Từ chối</button>{% endif %}
-      {% if "start_processing" in actions %}
-        <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start_processing"><button class="btn primary block">{% icon "play" %} Bắt đầu xử lý</button></form>
-      {% endif %}
+      {% if "reject" in actions %}<button type="button" class="btn danger block" data-open-dialog="prq-reject">Từ chối</button>{% endif %}
       {% if "issue" in actions %}
-        <a href="{% url 'bloodbank:stock_txn' 'xuat' %}?patient_request={{ prq.pk }}{% if stocks %}&stock={{ stocks.0.pk }}{% endif %}" class="btn secondary block">{% icon "package-minus" %} Xuất kho cho yêu cầu</a>
+        <a href="{% url 'bloodbank:stock_txn' 'xuat' %}?patient_request={{ prq.pk }}{% if stocks %}&stock={{ stocks.0.pk }}{% endif %}" class="btn secondary block">Xuất kho cho yêu cầu</a>
         {% if stocks %}<p class="field-help">Khả dụng nhóm {{ prq.blood_group }}: {% for s in stocks %}{{ s.product_spec.product.name }} {{ s.available }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% else %}<p class="field-help">Không có tồn nhóm {{ prq.blood_group }} phù hợp — hãy tìm nguồn liên viện.</p>{% endif %}
       {% endif %}
       {% if "support" in actions and not prq.linked_support_request %}
-        <a href="{% url 'bloodbank:emergency_new' %}?blood_group={{ prq.blood_group|urlencode }}{% if prq.blood_product_id %}&product={{ prq.blood_product_id }}{% endif %}&qty={{ prq.quantity_units }}{% if prq.needed_by %}&needed_by={{ prq.needed_by|date:"c"|urlencode }}{% endif %}&patient_request={{ prq.pk }}" class="btn primary block">{% icon "siren" %} Xử lý khẩn (kho → bệnh viện gần → người hiến)</a>
+        <a href="{% url 'bloodbank:emergency_new' %}?blood_group={{ prq.blood_group|urlencode }}{% if prq.blood_product_id %}&product={{ prq.blood_product_id }}{% endif %}&qty={{ prq.quantity_units }}{% if prq.needed_by %}&needed_by={{ prq.needed_by|date:"c"|urlencode }}{% endif %}&patient_request={{ prq.pk }}" class="btn primary block">Xử lý khẩn (kho → bệnh viện gần → người hiến)</a>
       {% endif %}
       {% if "link_campaign" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}" class="row u-fw-nowrap">{% csrf_token %}<input type="hidden" name="action" value="link_campaign">
           <select name="campaign_id" class="field-select" aria-label="Đợt hiến" required><option value="">Kết nối đợt hiến…</option>{% for c in campaigns %}<option value="{{ c.pk }}" {% if prq.linked_campaign_id == c.pk %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
-          <button class="btn secondary" title="Kết nối đợt hiến" aria-label="Kết nối với đợt hiến đã chọn">{% icon "link" %}</button>
+          <button class="btn secondary">Kết nối</button>
         </form>
       {% endif %}
-      {% if "fulfill" in actions %}<button type="button" class="btn success block" data-open-dialog="prq-fulfill">{% icon "flag" %} Hoàn tất</button>{% endif %}
+      {% if "fulfill" in actions %}<button type="button" class="btn success block" data-open-dialog="prq-fulfill">Hoàn tất</button>{% endif %}
       {% if "cancel" in actions %}<button type="button" class="btn ghost block" data-open-dialog="prq-cancel">Hủy yêu cầu</button>{% endif %}
     </div>
   </aside>

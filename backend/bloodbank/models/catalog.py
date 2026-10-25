@@ -27,6 +27,25 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    # Hiến thành phần (gạn tách) có 4 loại; nhãn ngắn dùng ở màn ghi nhận kết quả
+    APHERESIS = (("PLT", "Tiểu cầu"), ("FFP", "Huyết tương"), ("RBC2", "Hồng cầu đôi"), ("GRAN", "Bạch cầu hạt"))
+
+    @classmethod
+    def apheresis(cls, include_pk=None):
+        """Chế phẩm chọn được khi ghi nhận hiến thành phần, đúng thứ tự APHERESIS (gắn `short_label`).
+        `include_pk`: giữ chế phẩm của lượt hiến cũ dù không thuộc 4 loại (để sửa không mất giá trị)."""
+        labels = dict(cls.APHERESIS)
+        found = {p.code: p for p in cls.objects.filter(is_active=True, code__in=labels)}
+        out = [found[code] for code, _ in cls.APHERESIS if code in found]
+        for p in out:
+            p.short_label = labels[p.code]
+        if include_pk and include_pk not in {p.pk for p in out}:
+            extra = cls.objects.filter(pk=include_pk).first()
+            if extra:
+                extra.short_label = extra.name
+                out.append(extra)
+        return out
+
 
 class ProductSpec(models.Model):
     id = models.AutoField(primary_key=True)

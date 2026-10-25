@@ -19,7 +19,7 @@ WORKSPACE = (HOSPITAL, ADMIN)
 ROLES = [
     (MEMBER, "Người dùng", "accounts:login", "bloodbank:home", "user-round"),
     (HOSPITAL, "Nhân viên bệnh viện", "accounts:hospital_login", "bloodbank:hospital_dashboard", "hospital"),
-    (ADMIN, "Quản trị hệ thống", "accounts:admin_login", "bloodbank:admin_stats", "shield-check"),
+    (ADMIN, "Quản trị hệ thống", "accounts:admin_login", "bloodbank:admin_users", "shield-check"),
 ]
 ROLE_LABELS = {code: label for code, label, *_ in ROLES}
 LOGIN_URLS = {code: login for code, _, login, *_ in ROLES}
@@ -44,9 +44,11 @@ SCREENS = [
     S("SCR-02", "Danh sách đợt hiến", "Công khai", (PUBLIC,), ("bloodbank:campaigns",)),
     S("SCR-03", "Chi tiết đợt hiến (đăng ký hiến: chỉ Người dùng)", "Công khai", (PUBLIC,), ("bloodbank:campaign_detail",)),
     S("SCR-04", "Bản đồ điểm hiến", "Công khai", (PUBLIC,), ("bloodbank:map", "bloodbank:map_data")),
+    S("API-04", "Tra vị trí theo địa chỉ (ô chọn vị trí bản đồ)", "Công khai", (PUBLIC,), ("bloodbank:geocode",)),
     S("SCR-05", "Quy trình tham gia hiến máu", "Công khai", (PUBLIC,), ("bloodbank:process",)),
     S("SCR-06", "Đăng nhập, đăng ký, khôi phục mật khẩu", "Công khai", (PUBLIC,), (
         "accounts:login", "accounts:hospital_login", "accounts:admin_login", "accounts:register",
+        "accounts:hospital_register",
         "accounts:forgot_password", "accounts:reset_password", "accounts:verify_email")),
 
     # ---------------------------------------------------------------- Người dùng
@@ -78,7 +80,7 @@ SCREENS = [
         "bloodbank:checkin", "bloodbank:walk_in", "bloodbank:checkin_action", "bloodbank:record_donation")),
     S("SCR-25", "Lượt hiến (xem, hủy hiệu lực, sửa)", "Bệnh viện", (HOSPITAL,), (
         "bloodbank:hospital_donation_detail", "bloodbank:donation_manage")),
-    S("SCR-26", "Tra cứu người hiến", "Bệnh viện", (HOSPITAL,), ("bloodbank:donor_lookup",)),
+    S("SCR-26", "Tra cứu người hiến", "Bệnh viện", (HOSPITAL,), ("bloodbank:donor_lookup", "bloodbank:donor_detail")),
     S("SCR-27", "Báo cáo tiếp nhận", "Bệnh viện", (HOSPITAL,), ("bloodbank:donation_report",)),
     S("SCR-29", "Chờ xét nghiệm → nhập kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:lab_queue", "bloodbank:lab_result")),
     S("SCR-30", "Tồn kho", "Bệnh viện", (HOSPITAL,), ("bloodbank:stock", "bloodbank:stock_settings", "bloodbank:stock_threshold")),
@@ -104,7 +106,6 @@ SCREENS = [
     S("SCR-52", "Danh mục chế phẩm (bệnh viện xem, quản trị sửa)", "Bệnh viện / Quản trị", WORKSPACE, ("bloodbank:catalog",)),
 
     # ---------------------------------------------------------------- Quản trị hệ thống
-    S("SCR-54", "Thống kê toàn hệ thống", "Quản trị", (ADMIN,), ("bloodbank:admin_stats",)),
     S("SCR-57", "Cảnh báo toàn hệ thống", "Quản trị", (ADMIN,), ("bloodbank:admin_alerts",)),
     S("SCR-58", "Theo dõi trợ lý hỏi đáp", "Quản trị", (ADMIN,), ("bloodbank:admin_assistant",)),
     S("SCR-50", "Người dùng", "Quản trị", (ADMIN,), ("bloodbank:admin_users",)),

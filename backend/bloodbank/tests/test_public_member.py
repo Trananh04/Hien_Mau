@@ -238,7 +238,8 @@ class HistoryAndPatientRequestTests(TestCase):
                                    "quantity_units": 2})
         self.assertContains(r, "Bạn cần đồng ý")
         r = self.client.post(url, {"contact_name": "A", "contact_phone": "0905000111", "hospital_id": self.h.pk,
-                                   "quantity_units": 2, "blood_group": "O-", "consent": "on", "patient_name": "Lê C"})
+                                   "quantity_units": 2, "blood_group": "O-", "blood_product_id": f.spec().product_id,
+                                   "consent": "on", "patient_name": "Lê C"})
         prq = PatientRequest.objects.get(requester=self.donor)
         self.assertRedirects(r, reverse("bloodbank:my_patient_request_detail", args=[prq.pk]))
         self.assertRegex(prq.request_code, r"^PR-\d{8}-0001$")

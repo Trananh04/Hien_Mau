@@ -80,7 +80,7 @@ class Command(BaseCommand):
                                         district=district, latitude=Decimal(lat), longitude=Decimal(lng),
                                         phone=f"02439000{i:03d}", email=f"lienhe.{code.lower()}@demo.vn")
             u = self._user(f"Nhân viên {name.replace('Bệnh viện ', 'BV ')}", email, f"0912900{i:03d}", role="hospital")
-            Staff.objects.create(hospital=h, user=u)
+            Staff.objects.create(hospital=h, user=u, staff_role=Staff.Role.MANAGER)
             hospitals[code], staff[code] = h, u
         main, west = hospitals["BVM-HN1"], hospitals["BVM-HN2"]
 

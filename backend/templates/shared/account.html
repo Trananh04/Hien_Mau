@@ -1,6 +1,5 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Tài khoản công tác{% endblock %}
-{% block crumbs %}<span>Tài khoản</span>{% icon "chevron-right" 14 %}<span>Tài khoản công tác</span>{% endblock %}
 {% block ws_title %}Tài khoản công tác{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{{ user.get_role_display }} · đăng nhập tại cổng {% if user.role == "admin" %}Quản trị hệ thống{% else %}Bệnh viện{% endif %}.</p>{% endblock %}
 {% block content %}

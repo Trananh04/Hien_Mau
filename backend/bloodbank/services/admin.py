@@ -146,6 +146,8 @@ def set_hospital_status(actor, hospital_id, status, request=None):
     require(status in ("active", "inactive"), "ERR-VALIDATION")
     with business_transaction():
         h = Hospital.objects.select_for_update().get(pk=hospital_id)
+        require(h.status in ("active", "inactive"), "ERR-STATE-INVALID",
+                "Bệnh viện đang chờ duyệt hoặc đã bị từ chối: dùng Duyệt / Từ chối.")
         if status == "inactive":
             busy_offers = RequestOffer.objects.filter(
                 Q(supplier_hospital=h) | Q(request__requesting_hospital=h), status__in=["accepted", "in_transit"]

@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}{% if campaign %}Sửa đợt hiến{% else %}Tạo đợt hiến{% endif %}{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:hospital_campaigns' %}">Đợt hiến máu</a>{% icon "chevron-right" 14 %}<span>{% if campaign %}{{ campaign.name }}{% else %}Tạo mới{% endif %}</span>{% endblock %}
+{% block back %}{% if campaign %}{% url 'bloodbank:hospital_campaign_detail' campaign.pk %}{% else %}{% url 'bloodbank:hospital_campaigns' %}{% endif %}{% endblock %}
 {% block ws_title %}{% if campaign %}Sửa đợt hiến{% else %}Tạo đợt hiến mới{% endif %}{% endblock %}
 {% block content %}
 <form method="post" novalidate hx-boost="false" class="form-page">
@@ -26,15 +26,16 @@
     </section>
 
     <section class="form-section">
-      <header class="form-section-head"><h2>Địa điểm</h2><p>Ghim trên bản đồ để người hiến tìm đường và được gợi ý theo khoảng cách. Không ghim thì dùng vị trí bệnh viện.</p></header>
+      <header class="form-section-head"><h2>Địa điểm</h2><p>Nhập địa chỉ, hệ thống tự ghim trên bản đồ; bấm lên bản đồ để chỉnh lại. Không ghim thì dùng vị trí bệnh viện.</p></header>
       <div class="form-section-body">
         {% include "partials/field.html" with field=form.location_name %}
         {% include "partials/field.html" with field=form.address %}
         <div class="form-row-2">{% include "partials/field.html" with field=form.province %}</div>
         {{ form.latitude.as_hidden }}{{ form.longitude.as_hidden }}
-        <div class="map-pick" id="picker" data-map-picker data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ default_lat|stringformat:"f" }}" data-default-lng="{{ default_lng|stringformat:"f" }}" role="application" aria-label="Bản đồ chọn vị trí đợt hiến: bấm để ghim"></div>
+        <div class="map-pick" id="picker" data-map-picker data-geocode-url="{% url 'bloodbank:geocode' %}" data-address-input="{{ form.address.id_for_label }}" data-province-input="{{ form.province.id_for_label }}" data-lat-input="{{ form.latitude.id_for_label }}" data-lng-input="{{ form.longitude.id_for_label }}" data-default-lat="{{ default_lat|stringformat:"f" }}" data-default-lng="{{ default_lng|stringformat:"f" }}" role="application" aria-label="Bản đồ chọn vị trí đợt hiến: bấm để ghim"></div>
         <div class="pin-bar">
           <span class="pin-status" data-pin-status aria-live="polite"></span>
+          <button type="button" class="btn secondary sm" data-geocode>{% icon "map-pin" 14 %} Tìm theo địa chỉ</button>
           <button type="button" class="btn secondary sm" data-pin-default>{% icon "hospital" 14 %} Ghim tại bệnh viện</button>
           <button type="button" class="btn ghost sm" data-clear-pin>{% icon "x" 14 %} Xóa ghim</button>
         </div>

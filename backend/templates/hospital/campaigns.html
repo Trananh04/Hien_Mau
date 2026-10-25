@@ -1,6 +1,5 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Đợt hiến máu{% endblock %}
-{% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Đợt hiến máu</span>{% endblock %}
 {% block ws_title %}Đợt hiến máu{% endblock %}
 {% block ws_actions %}{% if can_edit %}<a href="{% url 'bloodbank:hospital_campaign_create' %}" class="btn primary">{% icon "calendar-plus" %} Tạo đợt hiến</a>{% endif %}{% endblock %}
 {% block content %}
@@ -13,18 +12,18 @@
     </form>
   </div>
   {% if page.object_list %}
-  <div class="table-wrap"><table class="table stack-mobile">
-    <thead><tr><th>Đợt hiến</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Đã hiến</th><th>Trạng thái</th><th class="num"></th></tr></thead>
+  <div class="table-wrap"><table class="table stack-mobile actions-left">
+    <thead><tr><th>Đợt hiến</th><th>Thời gian</th><th>Đăng ký</th><th>Đã hiến</th><th>Trạng thái</th><th></th></tr></thead>
     <tbody>
     {% for c in page %}
       <tr>
         <td data-label="Đợt hiến"><a href="{% url 'bloodbank:hospital_campaign_detail' c.pk %}" class="cell-title row-link">{{ c.name }}</a><span class="cell-sub">{{ c.location_name }}</span></td>
         <td data-label="Thời gian" class="nowrap">{{ c.start_time|vn_dt }}<span class="cell-sub">đến {{ c.end_time|vn_dt }}</span></td>
-        <td data-label="Đăng ký" class="num">{{ c.reg_count }}</td>
-        <td data-label="Đã hiến" class="num">{{ c.donated }}</td>
+        <td data-label="Đăng ký">{{ c.reg_count }}</td>
+        <td data-label="Đã hiến">{{ c.donated }}</td>
         <td data-label="Trạng thái">{% status_badge c %}</td>
         <td data-label="Thao tác"><div class="table-actions">
-          {% if can_edit and c.status in "open,closed" %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn secondary sm">{% icon "scan-line" %} Điểm hiến</a>{% endif %}
+          {% if can_edit and c.status in "open,closed" %}<a href="{% url 'bloodbank:checkin' c.pk %}" class="btn secondary sm">Điểm hiến</a>{% endif %}
         </div></td>
       </tr>
     {% endfor %}

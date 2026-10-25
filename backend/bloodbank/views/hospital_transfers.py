@@ -2,6 +2,7 @@
 from django.contrib import messages
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -208,13 +209,20 @@ def offer_action(request, pk):
 def patient_requests(request):
     qs = PatientRequest.objects.filter(hospital=request.hospital).select_related("blood_product")
     status = request.GET.get("status", "waiting")
+    # Số lượng cạnh tên tab (BV_004): "Chờ xác minh (2)", "Đang điều phối (1)"…
+    by_status = dict(qs.order_by().values_list("status").annotate(n=Count("id")))
+    counts = {"waiting": sum(by_status.get(s, 0) for s in PatientRequest.WAITING_STATUSES),
+              "active": sum(by_status.get(s, 0) for s in PatientRequest.ACTIVE_STATUSES),
+              **{s: by_status.get(s, 0) for s in ("fulfilled", "rejected", "cancelled")},
+              "all": sum(by_status.values())}
     if status == "waiting":
         qs = qs.filter(status__in=PatientRequest.WAITING_STATUSES)
     elif status == "active":
         qs = qs.filter(status__in=PatientRequest.ACTIVE_STATUSES)
     elif status:
         qs = qs.filter(status=status)
-    return render(request, "hospital/patient_requests.html", {"page": paginate(request, qs, 20), "status": status})
+    return render(request, "hospital/patient_requests.html", {"page": paginate(request, qs, 20), "status": status,
+                                                            "counts": counts})
 
 
 @staff_required
@@ -241,8 +249,7 @@ def patient_request_detail(request, pk):
 @require_POST
 def patient_request_action(request, pk):
     action = request.POST.get("action")
-    labels = {"start_verify": "Đã nhận xác minh.", "verify": "Đã xác minh yêu cầu.", "reject": "Đã từ chối yêu cầu.",
-              "start_processing": "Đã bắt đầu xử lý.", "link_campaign": "Đã kết nối với đợt hiến.",
+    labels = {"verify": "Đã xác minh yêu cầu.", "reject": "Đã từ chối yêu cầu.", "link_campaign": "Đã kết nối với đợt hiến.",
               "fulfill": "Đã hoàn tất yêu cầu.", "cancel": "Đã hủy yêu cầu."}
     attempt(request, lambda: prq_service.hospital_action(request.staff, pk, action, request.POST.dict(), request),
             labels.get(action))

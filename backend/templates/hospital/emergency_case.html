@@ -1,6 +1,5 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Ca khẩn #{{ d.pk }}{% endblock %}
-{% block crumbs %}<span>Khẩn cấp</span>{% icon "chevron-right" 14 %}<span>Ca khẩn #{{ d.pk }}</span>{% endblock %}
 {% block ws_title %}Ca khẩn #{{ d.pk }} · {% blood d.blood_group "sm" %} {{ d.required_quantity }} đơn vị{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{{ d.product_spec.product.name }} — {{ d.product_spec.name }} · cần trước <strong>{{ d.needed_by|vn_dt }}</strong>{% if d.patient_request %} · cho yêu cầu <a class="link" href="{% url 'bloodbank:hospital_patient_request_detail' d.patient_request_id %}">{{ d.patient_request.request_code }}</a>{% endif %}{% if d.note %} · {{ d.note }}{% endif %} · <a class="link" href="{{ request.path }}">Tải lại</a></p>{% endblock %}
 {% block ws_actions %}

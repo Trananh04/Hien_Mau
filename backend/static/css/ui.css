@@ -1331,3 +1331,34 @@ html.js .ws-shell .filter-submit { display: none; }
 .erp-entry-form .mode-field { order: 10; flex: 1 1 100%; }
 .mode-pick label { white-space: nowrap; }
 .erp-search .erp-filter { flex: 0 0 auto; width: auto; height: 32px; min-height: 32px; padding: 0 28px 0 10px; font-size: 13.5px; }
+.erp-grid .c-wrap { white-space: normal; min-width: 260px; }
+.erp-tabs a { min-height: 44px; }
+.erp-search input[type="date"].erp-filter { flex: 0 0 auto; width: 150px; padding: 0 8px; }
+.user-menu-name { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Khu vực người dùng (hồ sơ, đăng ký, yêu cầu cần máu): chữ lớn hơn khu làm việc của bệnh viện */
+.text-lg .field > label, .text-lg .field-label { font-size: 15px; }
+.text-lg .field-input, .text-lg .field-select, .text-lg .field-textarea { font-size: 16px; min-height: 46px; }
+.text-lg .check-row { font-size: 15px; }
+.text-lg .panel-title { font-size: 17.5px; }
+.text-lg .dl { font-size: 15.5px; }
+.text-lg .table { font-size: 15.5px; }
+.text-lg .btn { font-size: 15px; }
+.text-lg .member-tab { font-size: 15.5px; }
+.text-lg .small, .text-lg .cell-sub { font-size: 14px; }
+.text-lg .stat-label { font-size: 14.5px; }
+.text-lg .notice { font-size: 15px; }
+.text-lg p, .text-lg li { font-size: 15.5px; }
+.auth-card.text-lg h2 { font-size: 28px; }
+.profile-stack { gap: 22px; }
+.profile-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 18px; }
+.profile-stats dt { grid-row: 1; }
+.profile-stats dd { grid-row: 2; font-size: 20px; }
+@media (max-width: 640px) { .profile-stats { grid-template-columns: 1fr; } .profile-stats dt, .profile-stats dd { grid-row: auto; } }
+.table.actions-left .table-actions { justify-content: flex-start; }
+.ws-back { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-bottom: 6px; padding: 0 12px 0 8px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink-soft); font-size: 13.5px; font-weight: 600; }
+.ws-back:hover { border-color: var(--primary-border); color: var(--primary); }
+.donor-empty { padding: 14px 18px; }
+.donor-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 640px) { .donor-stats { grid-template-columns: 1fr; } }

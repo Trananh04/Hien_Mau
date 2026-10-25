@@ -1,6 +1,6 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Đề nghị {{ r.request_code }}{% endblock %}
-{% block crumbs %}<a href="{% url 'bloodbank:incoming_offers' %}">Đề nghị đến bệnh viện</a>{% icon "chevron-right" 14 %}<span>{{ r.request_code }}</span>{% endblock %}
+{% block back %}{% url 'bloodbank:incoming_offers' %}{% endblock %}
 {% block ws_title %}Đề nghị hỗ trợ {{ r.request_code }}{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{% status_badge o %} {% status_badge r field="priority" %} &nbsp;Từ {{ r.requesting_hospital.name }}</p>{% endblock %}
 {% block content %}

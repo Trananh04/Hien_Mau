@@ -30,7 +30,13 @@
 <div class="auth-or" role="presentation"><span>Chưa có tài khoản?</span></div>
 <a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="btn secondary lg block">{% icon "user-plus" %} Tạo tài khoản mới</a>
 {% else %}
+{% if role == "hospital" %}
+<div class="auth-or" role="presentation"><span>Bệnh viện chưa có tài khoản?</span></div>
+<a href="{% url 'accounts:hospital_register' %}" class="btn secondary lg block">{% icon "hospital" %} Đăng ký bệnh viện</a>
+<p class="auth-switch">Nhân viên: liên hệ Quản lý bệnh viện để được cấp tài khoản.</p>
+{% else %}
 <p class="auth-switch">Chưa có tài khoản? Liên hệ Quản trị hệ thống để được cấp.</p>
+{% endif %}
 {% endif %}
 {% if portals %}
 <nav class="portal-switch" aria-label="Cổng đăng nhập khác">

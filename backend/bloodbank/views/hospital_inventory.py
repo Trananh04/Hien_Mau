@@ -81,7 +81,8 @@ def stock_txn_form(request, kind):
     if mode == "issue":
         stocks = [s for s in stocks if s.available > 0] or list(stocks)
     initial_stock = request.GET.get("stock") or data.get("stock_id")
-    prqs = PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.ACTIVE_STATUSES).order_by("-created_at")
+    prqs = (PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.ACTIVE_STATUSES)
+            .select_related("blood_product").order_by("-created_at"))
     return render(request, "hospital/stock_txn_form.html", {
         "mode": mode, "kind": kind, "stocks": stocks, "specs": ProductSpec.objects.select_related("product").filter(
             is_active=True, product__is_active=True), "products": Product.objects.filter(is_active=True),

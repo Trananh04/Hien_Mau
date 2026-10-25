@@ -17,6 +17,8 @@
 
       <div class="nav-actions">
         {% if user.is_authenticated %}
+          {% if user.role == "hospital" %}<a href="{% url 'bloodbank:hospital_dashboard' %}" class="nav-cta-btn">Quản lý bệnh viện</a>
+          {% elif user.role == "admin" %}<a href="{% url 'bloodbank:admin_users' %}" class="nav-cta-btn">Quản trị hệ thống</a>{% endif %}
           <a href="{% url 'bloodbank:notifications' %}" class="nav-icon-btn" aria-label="Thông báo{% if unread_count %} ({{ unread_count }} chưa đọc){% endif %}" title="Thông báo">
             {% icon "bell" %}
             {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}

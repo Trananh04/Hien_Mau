@@ -1,0 +1,32 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{{ selected.full_name }} · Người hiến{% endblock %}
+{% block back %}{{ back }}{% endblock %}
+{% block ws_title %}{{ selected.full_name }}{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{{ selected.phone|phone|default:selected.email }}{% if selected.blood_group %} · Nhóm máu {{ selected.get_blood_group_display }}{% endif %}</p>{% endblock %}
+{% block content %}
+<div class="stack">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">Tại bệnh viện</h2></div>
+    <div class="panel-body">
+      <dl class="dl profile-stats donor-stats">
+        <dt>Lượt hiến</dt><dd class="num">{{ history.summary.count }}</dd>
+        <dt>Toàn phần</dt><dd class="num">{{ history.summary.whole_ml|vnum }} ml</dd>
+        <dt>Thành phần</dt><dd class="num">{{ history.summary.component_count }} lượt</dd>
+        <dt>Lần gần nhất</dt><dd>{{ history.summary.last|vn_date|default:"—" }}</dd>
+      </dl>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">Lượt hiến</h2></div>
+    <div class="list-select">{% for d in history.rows %}
+      <a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}"><div class="grow"><strong>{{ d.donated_at|vn_dt }}</strong><span class="sub">{{ d.get_donation_type_display }}{% if d.volume_ml %} · {{ d.volume_ml }} ml{% endif %} · {{ d.registration.campaign.name|default:"Ngoài đợt" }}</span></div>{% status_badge d %}</a>
+    {% empty %}<p class="muted donor-empty">Chưa có lượt hiến tại bệnh viện.</p>{% endfor %}</div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">Đơn đăng ký</h2></div>
+    <div class="list-select">{% for r in regs %}
+      <a href="{% url 'bloodbank:hospital_campaign_detail' r.campaign_id %}?tab=registrations"><div class="grow"><strong>{{ r.campaign.name }}</strong><span class="sub">{{ r.code }} · {{ r.registered_at|vn_dt }}</span></div>{% status_badge r %}</a>
+    {% empty %}<p class="muted donor-empty">Không có đơn.</p>{% endfor %}</div>
+  </section>
+</div>
+{% endblock %}

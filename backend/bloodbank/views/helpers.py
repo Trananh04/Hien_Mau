@@ -65,13 +65,25 @@ def parse_local_dt(value):
         return None
 
 
+# Nhóm nhật ký: "Nghiệp vụ" (mặc định) là thao tác thay đổi dữ liệu; "Bảo mật" là đăng nhập / truy cập;
+# câu hỏi trợ lý chỉ hiện ở "Tất cả".
+SECURITY_ACTIONS = ("login", "login_failed", "login_wrong_portal", "access_denied", "view_sensitive",
+                    "password_reset", "password_reset_requested", "password_changed", "email_verified")
+NOISE_ACTIONS = ("assistant_query",)
+AUDIT_TABS = ("nghiep-vu", "bao-mat", "tat-ca")
+
+
 def audit_filters(request, qs):
     """Bộ lọc màn hình nhật ký (bệnh viện SCR-40 / hệ thống) từ query string."""
     from django.db.models import Q
 
-    f = {k: request.GET.get(k) or "" for k in ("entity", "action", "actor", "from", "to")}
-    if f["entity"]:
-        qs = qs.filter(entity_type=f["entity"])
+    f = {k: request.GET.get(k) or "" for k in ("action", "actor", "from", "to")}
+    f["tab"] = request.GET.get("tab") if request.GET.get("tab") in AUDIT_TABS else "nghiep-vu"
+    if f["tab"] == "nghiep-vu":
+        qs = qs.exclude(action__in=SECURITY_ACTIONS + NOISE_ACTIONS)
+    elif f["tab"] == "bao-mat":
+        qs = qs.filter(action__in=SECURITY_ACTIONS)
+    tab_qs = qs
     if f["action"]:
         qs = qs.filter(action=f["action"])
     if f["actor"]:
@@ -80,17 +92,22 @@ def audit_filters(request, qs):
         qs = qs.filter(created_at__date__gte=date_or_none(f["from"]))
     if date_or_none(f["to"]):
         qs = qs.filter(created_at__date__lte=date_or_none(f["to"]))
-    return qs, f
+    actions = tab_qs.order_by().values_list("action", flat=True).distinct()
+    return qs, f, sorted(set(actions))
+
+
+def safe_next_url(request, default):
+    """Đường dẫn quay lại (?next=…) — chỉ chấp nhận đường dẫn nội bộ (chặn open redirect)."""
+    nxt = request.POST.get("next") or request.GET.get("next")
+    if nxt and nxt.startswith("/") and not nxt.startswith("//") and "\\" not in nxt:
+        return nxt
+    return default
 
 
 def safe_next(request, default):
-    """Chỉ chấp nhận đường dẫn nội bộ (chặn open redirect)."""
     from django.shortcuts import redirect
 
-    nxt = request.POST.get("next") or request.GET.get("next")
-    if nxt and nxt.startswith("/") and not nxt.startswith("//") and "\\" not in nxt:
-        return redirect(nxt)
-    return redirect(default)
+    return redirect(safe_next_url(request, default))
 
 
 def map_center(hospital=None, province=None):

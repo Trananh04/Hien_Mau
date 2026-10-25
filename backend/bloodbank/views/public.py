@@ -88,6 +88,23 @@ def map_view(request):
     return render(request, "public/map.html", {"provinces": PROVINCES})
 
 
+def geocode(request):
+    """GET ?address=…&province=… → {"lat", "lng", "label"} (404 nếu không tìm thấy). Dùng cho ô chọn vị trí bản đồ."""
+    from django.core.cache import cache
+
+    from bloodbank.services import geocode as geo
+
+    # Chặn lạm dụng: tối đa 30 lượt tra / phút / địa chỉ IP (dịch vụ Nominatim giới hạn tần suất)
+    rate_key = f"geocode-rate:{request.META.get('REMOTE_ADDR', '')}"
+    cache.add(rate_key, 0, 60)
+    if cache.incr(rate_key) > 30:
+        return JsonResponse({"error": "Tra cứu quá nhiều, thử lại sau ít phút."}, status=429)
+    found = geo.lookup(request.GET.get("address"), request.GET.get("province"))
+    if not found:
+        return JsonResponse({"error": "Không tìm thấy địa chỉ trên bản đồ. Hãy bấm lên bản đồ để ghim."}, status=404)
+    return JsonResponse(found)
+
+
 def map_data(request):
     """MAP-01: chỉ dữ liệu công khai; không lưu vị trí người dùng (khoảng cách "gần tôi" tính trên trình duyệt).
 

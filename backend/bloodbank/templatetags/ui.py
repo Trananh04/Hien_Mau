@@ -37,6 +37,15 @@ def icon(name, size=None, cls=""):
     return format_html('<i data-lucide="{}" class="{}" aria-hidden="true"></i>', name, classes)
 
 
+@register.filter
+def back_button(url):
+    """Nút "Quay lại" đầu trang khu làm việc; trang con khai báo `{% block back %}<url trang cha>{% endblock %}`."""
+    url = (url or "").strip()
+    if not url:
+        return ""
+    return format_html('<a href="{}" class="ws-back">{} Quay lại</a>', url, icon("arrow-left", 16))
+
+
 @register.simple_tag
 def blood(value, size=""):
     if not value:
@@ -201,6 +210,7 @@ ACTION_LABELS = {
     "role_change": "Đổi vai trò", "link_campaign": "Kết nối đợt hiến", "link_support_request": "Liên kết yêu cầu liên viện",
     "lab_result": "Kết quả xét nghiệm", "auto_cancel": "Tự hủy (quá hạn)", "escalate": "Nhắc khẩn",
     "donor_callout": "Kêu gọi người hiến", "login_wrong_portal": "Đăng nhập sai cổng",
+    "assistant_query": "Hỏi trợ lý", "emergency_start": "Báo ca khẩn",
 }
 
 ENTITY_LABELS = {
@@ -208,7 +218,54 @@ ENTITY_LABELS = {
     "registrations": "Đơn đăng ký", "donations": "Lượt hiến", "products": "Chế phẩm", "product_specs": "Quy cách",
     "stocks": "Tồn kho", "stock_txns": "Sổ kho", "demands": "Nhu cầu", "hospital_requests": "Yêu cầu hỗ trợ",
     "request_offers": "Đề nghị", "patient_requests": "Yêu cầu cần máu", "system_settings": "Cấu hình", "route": "Đường dẫn",
+    "donor_callouts": "Lời mời người hiến", "assistant": "Trợ lý",
 }
+
+# Cột "Nội dung" của nhật ký: chỉ những trường có ý nghĩa nghiệp vụ, bỏ mã nội bộ / dấu thời gian kỹ thuật
+AUDIT_FIELDS = {
+    "status": "Trạng thái", "lab_status": "Xét nghiệm", "blood_group": "Nhóm máu", "lab_blood_group": "Nhóm máu XN",
+    "volume_ml": "Thể tích (ml)", "quantity_change": "Số lượng", "quantity_after": "Tồn sau", "quantity_needed": "Cần",
+    "quantity_requested": "Xin", "required_quantity": "Cần", "quantity_units": "Số đơn vị", "priority": "Ưu tiên",
+    "txn_type": "Loại phiếu", "reason": "Lý do", "reason_note": "Ghi chú", "void_reason": "Lý do hủy",
+    "reject_reason": "Lý do từ chối", "failure_reason": "Lý do", "lab_note": "Ghi chú XN", "role": "Vai trò",
+    "level": "Nhắc tới", "min_stock_level": "Tồn tối thiểu", "shareable_quantity": "Có thể chia sẻ", "recipients": "Số người nhận",
+    "request_code": "Mã yêu cầu", "path": "Đường dẫn", "portal": "Cổng", "fields": "Trường đã xem", "full_name": "Họ tên",
+    "value": "Giá trị", "setting_key": "Cấu hình", "mode": "Chế độ",
+}
+AUDIT_VALUES = {
+    "pending": "chờ", "approved": "đã duyệt", "rejected": "từ chối", "cancelled": "đã hủy", "expired": "hết hạn",
+    "confirmed": "đã xác nhận", "voided": "đã hủy", "passed": "đạt", "failed": "không đạt", "active": "đang mở",
+    "closed": "đã đóng", "fulfilled": "đã đủ", "verified": "đã xác minh", "receive": "nhập", "issue": "xuất",
+    "adjust": "điều chỉnh", "urgent": "khẩn", "high": "cao", "normal": "thường", "response_timeout": "quá hạn phản hồi",
+    "open": "đang mở", "completed": "hoàn tất", "partially_fulfilled": "đáp ứng một phần", "in_progress": "đang xử lý",
+    "member": "người dùng", "staff": "nhân viên", "admin": "quản trị", "hospital": "bệnh viện", "stock": "bổ sung kho",
+    "online": "trực tuyến", "walk_in": "tại chỗ", "True": "có", "False": "không",
+}
+
+
+def _audit_val(v):
+    if v is None or v == "":
+        return "—"
+    if isinstance(v, list):
+        return ", ".join(str(x) for x in v)
+    v = str(v)
+    return AUDIT_VALUES.get(v, v if len(v) <= 60 else v[:57] + "…")
+
+
+@register.filter
+def audit_summary(log):
+    """Danh sách "Trường: cũ → mới" (cập nhật) hoặc "Trường: giá trị" (tạo mới / sự kiện)."""
+    old, new = log.old_values or {}, log.new_values or {}
+    out = []
+    for k, label in AUDIT_FIELDS.items():
+        if k in old and k in new:
+            if old[k] != new[k]:
+                out.append(f"{label}: {_audit_val(old[k])} → {_audit_val(new[k])}")
+        elif k in new and new[k] not in (None, ""):
+            out.append(f"{label}: {_audit_val(new[k])}")
+        elif k in old and old[k] not in (None, ""):
+            out.append(f"{label}: {_audit_val(old[k])}")
+    return out
 
 
 @register.filter

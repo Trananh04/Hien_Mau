@@ -14,6 +14,7 @@ urlpatterns = [
     path("ban-do/", public.map_view, name="map"),
     path("quy-trinh-hien-mau/", public.process, name="process"),
     path("ban-do/du-lieu/", public.map_data, name="map_data"),
+    path("dia-chi/vi-tri/", public.geocode, name="geocode"),
     path("api/chatbot/", public.chatbot, name="chatbot"),
     # API trợ lý & dữ liệu cá nhân (JSON)
     path("api/chatbot/message", api.chat_message, name="api_chat_message"),
@@ -55,6 +56,7 @@ urlpatterns = [
     path("benh-vien/luot-hien/<int:pk>/", hc.donation_detail, name="hospital_donation_detail"),
     path("benh-vien/luot-hien/<int:pk>/quan-ly/", hc.donation_manage, name="donation_manage"),
     path("benh-vien/nguoi-hien/", hc.donor_lookup, name="donor_lookup"),
+    path("benh-vien/nguoi-hien/<int:pk>/", hc.donor_detail, name="donor_detail"),
     path("benh-vien/bao-cao-tiep-nhan/", hc.donation_report, name="donation_report"),
 
     path("benh-vien/cho-xet-nghiem/", hi.lab_queue, name="lab_queue"),
@@ -94,7 +96,6 @@ urlpatterns = [
     path("danh-muc/", hospital.catalog, name="catalog"),
 
     # Quản trị (SCR-50..54)
-    path("quan-tri/thong-ke/", admin.stats, name="admin_stats"),
     path("quan-tri/canh-bao/", admin.alerts, name="admin_alerts"),
     path("quan-tri/tro-ly/", admin.assistant_monitor, name="admin_assistant"),
     path("quan-tri/nguoi-dung/", admin.users, name="admin_users"),

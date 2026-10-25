@@ -1,14 +1,12 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Tra cứu người hiến{% endblock %}
-{% block crumbs %}<span>{{ current_hospital.name }}</span>{% icon "chevron-right" 14 %}<span>Tra cứu người hiến</span>{% endblock %}
 {% block ws_title %}Tra cứu người hiến{% endblock %}
 {% block content %}
-<div class="{% if selected %}grid grid-main-side{% endif %}">
 <div class="erp">
   <div class="erp-toolbar">
     <nav class="erp-tabs" aria-label="Phạm vi">
+      <a href="?tab=tat-ca{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}" class="{% if tab == 'tat-ca' %}is-active{% endif %}">Tất cả <span class="erp-count">{{ total_all }}</span></a>
       <a href="?tab=da-hien{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}" class="{% if tab == 'da-hien' %}is-active{% endif %}">Đã hiến <span class="erp-count">{{ total_donated }}</span></a>
-      <a href="?tab=tat-ca{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}" class="{% if tab == 'tat-ca' %}is-active{% endif %}">Cả người chỉ đăng ký</a>
     </nav>
     <form method="get" class="erp-search" role="search" data-autosubmit>
       <input type="hidden" name="tab" value="{{ tab }}">
@@ -20,9 +18,9 @@
     <table class="erp-grid">
       <thead><tr><th class="c-stt">#</th><th>Họ tên</th><th>Điện thoại</th><th>Nhóm máu</th><th class="c-num">Số lần hiến</th><th class="c-num">Tổng ml</th><th>Lần gần nhất</th></tr></thead>
       <tbody>{% for u in page %}
-        <tr class="{% if selected and selected.pk == u.pk %}is-selected{% endif %}">
+        <tr>
           <td class="c-stt">{{ page.start_index|add:forloop.counter0 }}</td>
-          <td class="c-code"><a class="erp-row-link" href="?tab={{ tab }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if group %}&amp;nhom={{ group|urlencode }}{% endif %}{% if page.number > 1 %}&amp;page={{ page.number }}{% endif %}&amp;donor={{ u.pk }}">{{ u.full_name }}</a></td>
+          <td class="c-code"><a class="erp-row-link" href="{% url 'bloodbank:donor_detail' u.pk %}?next={{ request.get_full_path|urlencode }}">{{ u.full_name }}</a></td>
           <td>{{ u.phone|phone|default:"—" }}</td>
           <td>{{ u.get_blood_group_display|default:"—" }}</td>
           <td class="c-num">{{ u.n }}</td>
@@ -38,26 +36,4 @@
   </div>
 </div>
 
-{% if selected %}
-<section class="panel" id="nguoi-hien">
-  <div class="panel-head"><div class="person-card"><span class="avatar">{{ selected.full_name|initials }}</span><div><strong>{{ selected.full_name }}</strong><span class="muted small">{{ selected.phone|phone|default:selected.email }}</span></div></div></div>
-  <div class="panel-body">
-    <dl class="dl u-cols-1fr-auto">
-      <dt>Lượt hiến tại bệnh viện</dt><dd class="num">{{ history.summary.count }}</dd>
-      <dt>Toàn phần</dt><dd class="num">{{ history.summary.whole_ml|vnum }} ml</dd>
-      <dt>Thành phần</dt><dd class="num">{{ history.summary.component_count }} lượt</dd>
-      <dt>Lần gần nhất</dt><dd>{{ history.summary.last|vn_date|default:"—" }}</dd>
-    </dl>
-    <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Lượt hiến</h3>
-    <div class="list-select">{% for d in history.rows %}
-      <a href="{% url 'bloodbank:hospital_donation_detail' d.pk %}"><div class="grow"><strong>{{ d.donated_at|vn_dt }}</strong><span class="sub">{{ d.get_donation_type_display }}{% if d.volume_ml %} · {{ d.volume_ml }} ml{% endif %} · {{ d.registration.campaign.name|default:"Ngoài đợt" }}</span></div>{% status_badge d %}</a>
-    {% empty %}<p class="muted small">Chưa có lượt hiến tại bệnh viện.</p>{% endfor %}</div>
-    <h3 class="u-fs-14 u-m-18-0-8 u-c-ink">Đơn đăng ký</h3>
-    <div class="list-select">{% for r in regs %}
-      <a href="{% url 'bloodbank:hospital_campaign_detail' r.campaign_id %}?tab=registrations"><div class="grow"><strong>{{ r.campaign.name }}</strong><span class="sub">{{ r.code }} · {{ r.registered_at|vn_dt }}</span></div>{% status_badge r %}</a>
-    {% empty %}<p class="muted small">Không có đơn.</p>{% endfor %}</div>
-  </div>
-</section>
-{% endif %}
-</div>
 {% endblock %}

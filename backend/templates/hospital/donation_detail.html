@@ -1,6 +1,6 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Lượt hiến {{ d.code }}{% endblock %}
-{% block crumbs %}{% if d.registration %}<a href="{% url 'bloodbank:hospital_campaign_detail' d.registration.campaign_id %}?tab=registrations">{{ d.registration.campaign.name }}</a>{% icon "chevron-right" 14 %}{% endif %}<span>Lượt hiến {{ d.code }}</span>{% endblock %}
+{% block back %}{% url 'bloodbank:hospital_campaign_detail' d.registration.campaign_id %}?tab=registrations{% endblock %}
 {% block ws_title %}Lượt hiến {{ d.code }}{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{% status_badge d %} &nbsp;{{ d.donor.full_name }} · {{ d.donated_at|vn_dt }}</p>{% endblock %}
 {% block ws_actions %}
@@ -91,7 +91,7 @@
         <div class="field"><label>Hình thức</label><select name="donation_type" class="field-select"><option value="whole_blood" {% if d.donation_type == "whole_blood" %}selected{% endif %}>Toàn phần</option><option value="component" {% if d.donation_type == "component" %}selected{% endif %}>Thành phần</option><option value="other" {% if d.donation_type == "other" %}selected{% endif %}>Khác</option></select></div>
         <div class="field"><label>Thời điểm hiến</label><input type="datetime-local" name="donated_at" class="field-input" value="{{ d.donated_at|dt_input }}" required></div>
         <div class="field"><label>Thể tích (ml)</label><input type="number" name="volume_ml" min="1" class="field-input" value="{{ d.volume_ml|default:'' }}"></div>
-        <div class="field"><label>Loại thành phần</label><select name="component_product_id" class="field-select"><option value="">—</option>{% for p in products %}<option value="{{ p.pk }}" {% if d.component_product_id == p.pk %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Loại thành phần</label><select name="component_product_id" class="field-select"><option value="">—</option>{% for p in products %}<option value="{{ p.pk }}" {% if d.component_product_id == p.pk %}selected{% endif %}>{{ p.short_label }}</option>{% endfor %}</select></div>
         <div class="field"><label>Số lượng</label><input type="number" step="0.01" min="0.01" name="component_quantity" class="field-input" value="{{ d.component_quantity|default:''|stringformat:'s' }}"></div>
         <div class="field"><label>Đơn vị</label><select name="component_unit" class="field-select"><option value="">—</option>{% for v, l in d.ComponentUnit.choices %}<option value="{{ v }}" {% if d.component_unit == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
         <div class="field span-2"><label>Ghi chú</label><textarea name="note" class="field-textarea" rows="2">{{ d.note|default:'' }}</textarea></div>

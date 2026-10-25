@@ -109,17 +109,17 @@ class RoleMatrixTests(TestCase):
     def test_menus_only_list_own_screens(self):
         self.client.force_login(self.users[access.HOSPITAL])
         r = self.client.get(reverse("bloodbank:hospital_dashboard"))
-        self.assertNotContains(r, reverse("bloodbank:admin_stats"))
+        self.assertNotContains(r, reverse("bloodbank:admin_users"))
         self.assertNotContains(r, reverse("bloodbank:my_history"))
         self.client.force_login(self.users[access.ADMIN])
-        r = self.client.get(reverse("bloodbank:admin_stats"))
+        r = self.client.get(reverse("bloodbank:admin_users"))
         self.assertContains(r, reverse("bloodbank:admin_permissions"))
         self.assertNotContains(r, f'href="{reverse("bloodbank:hospital_dashboard")}"')
         self.assertNotContains(r, f'href="{reverse("bloodbank:profile")}"')
         self.client.force_login(self.users[access.MEMBER])
         r = self.client.get(reverse("bloodbank:profile"))
         self.assertNotContains(r, f'href="{reverse("bloodbank:hospital_dashboard")}"')
-        self.assertNotContains(r, reverse("bloodbank:admin_stats"))
+        self.assertNotContains(r, reverse("bloodbank:admin_users"))
 
     def test_permission_screen_shows_matrix(self):
         self.client.force_login(self.users[access.ADMIN])
@@ -142,7 +142,7 @@ class LoginPortalTests(TestCase):
     def test_each_portal_accepts_only_its_role(self):
         cases = [("accounts:login", self.member, "bloodbank:home"),
                  ("accounts:hospital_login", self.staff, "bloodbank:hospital_dashboard"),
-                 ("accounts:admin_login", self.admin, "bloodbank:admin_stats")]
+                 ("accounts:admin_login", self.admin, "bloodbank:admin_users")]
         for portal, owner, home in cases:
             for user in (self.member, self.staff, self.admin):
                 self.client.logout()
@@ -204,9 +204,9 @@ class LoginPortalTests(TestCase):
     def test_admin_ip_allowlist(self):
         self.assertEqual(self.client.get(reverse("accounts:admin_login")).status_code, 404)
         self.client.force_login(self.admin)
-        self.assertEqual(self.client.get(reverse("bloodbank:admin_stats")).status_code, 404)   # đúng tài khoản, sai IP
+        self.assertEqual(self.client.get(reverse("bloodbank:admin_users")).status_code, 404)   # đúng tài khoản, sai IP
         self.assertTrue(AuditLog.objects.filter(action="access_denied", new_values__reason="admin_ip_not_allowed").exists())
-        self.assertEqual(self.client.get(reverse("bloodbank:admin_stats"), REMOTE_ADDR="10.9.8.7").status_code, 200)
+        self.assertEqual(self.client.get(reverse("bloodbank:admin_users"), REMOTE_ADDR="10.9.8.7").status_code, 200)
         self.client.logout()
         self.assertEqual(self.client.get(reverse("accounts:admin_login"), REMOTE_ADDR="10.9.8.7").status_code, 200)
 

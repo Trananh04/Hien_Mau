@@ -30,13 +30,11 @@ def check_password_strength(password, user=None):
 class RegisterForm(BaseForm):
     full_name = forms.CharField(label="Họ và tên", max_length=150)
     email = forms.EmailField(label="Email", max_length=255)
-    phone = forms.CharField(label="Số điện thoại", max_length=20, required=False,
-                            help_text="Dùng để bệnh viện liên hệ khi bạn đăng ký đợt hiến.")
+    phone = forms.CharField(label="Số điện thoại", max_length=20, required=False)
     blood_group = forms.ChoiceField(label="Nhóm máu (tự khai, nếu biết)", required=False,
                                     choices=[("", "Chưa rõ")] + BLOOD_GROUPS)
     province = forms.ChoiceField(label="Tỉnh/thành", required=False, choices=[("", "-- Chọn --")] + [(p, p) for p in PROVINCES])
-    password = forms.CharField(label="Mật khẩu", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
-                               help_text="Tối thiểu 8 ký tự, không quá phổ biến, không toàn số.")
+    password = forms.CharField(label="Mật khẩu", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
     password2 = forms.CharField(label="Nhập lại mật khẩu", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
     accept_terms = forms.BooleanField(
         label="Tôi đồng ý với điều khoản sử dụng và việc xử lý dữ liệu cá nhân theo Chính sách bảo mật.",
@@ -129,7 +127,6 @@ class ProfileForm(forms.ModelForm):
         self.fields["province"] = forms.ChoiceField(
             label="Tỉnh/thành", required=False, choices=[("", "-- Chọn --")] + [(p, p) for p in PROVINCES]
         )
-        self.fields["blood_group"].help_text = "Chỉ để bạn tự theo dõi; không dùng cho quyết định y khoa nào."
         for field in self.fields.values():
             css = "field-select" if isinstance(field.widget, forms.Select) else "field-input"
             field.widget.attrs.setdefault("class", css)

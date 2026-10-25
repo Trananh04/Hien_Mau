@@ -329,6 +329,7 @@ class PatientRequestHospitalTests(TestCase):
         from bloodbank.services import patients
 
         cls.prq = patients.submit(cls.member, {"consent": True, "hospital_id": cls.h.pk, "quantity_units": 2,
+                                               "blood_group": "B+", "blood_product_id": f.spec().product_id,
                                                "contact_name": "A", "contact_phone": "0905999888",
                                                "patient_name": "Nguyễn Bệnh Nhân"})
 
@@ -352,7 +353,7 @@ class PatientRequestHospitalTests(TestCase):
         self.assertEqual(ctx.exception.code, "ERR-PRQ-NOT-VERIFIED")
         self.client.force_login(self.im)
         url = reverse("bloodbank:hospital_patient_request_action", args=[self.prq.pk])
-        self.client.post(url, {"action": "verify"})  # thiếu nhóm máu
+        self.client.post(url, {"action": "verify", "blood_group": "X+"})  # nhóm máu không hợp lệ
         self.prq.refresh_from_db()
         self.assertEqual(self.prq.status, "submitted")
         self.client.post(url, {"action": "verify", "blood_group": "B+"})

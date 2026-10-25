@@ -24,7 +24,7 @@ class SchemaShapeTests(TestCase):
         self.assertTrue(expected.issubset(set(connection.introspection.table_names())))
 
     def test_seeded_catalog_and_settings(self):
-        self.assertEqual(Product.objects.count(), 5)
+        self.assertEqual(Product.objects.count(), 7)     # 5 chế phẩm gốc + hồng cầu đôi, bạch cầu hạt (gạn tách)
         for product in Product.objects.all():
             self.assertEqual(product.specs.filter(is_default=True).count(), 1)
         self.assertEqual(SystemSetting.get("login_max_failed_attempts"), 5)

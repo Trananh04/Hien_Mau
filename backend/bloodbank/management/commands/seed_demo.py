@@ -68,7 +68,7 @@ class Command(BaseCommand):
             if u is None:
                 u = self._user(f"Nhân viên {h.name.replace('Bệnh viện ', 'BV ')}", email, f"0912000{i:03d}", role="hospital")
                 created += 1
-            Staff.objects.get_or_create(user=u, defaults={"hospital": h})
+            Staff.objects.get_or_create(user=u, defaults={"hospital": h, "staff_role": Staff.Role.MANAGER})
         return created
 
     def _seed(self):
@@ -181,12 +181,15 @@ class Command(BaseCommand):
 
         # ---- Người cần máu
         prq.submit(donors[1], {"consent": True, "hospital_id": h1.pk, "quantity_units": 2, "blood_group": "A+",
+                               "blood_product_id": rbc.product_id,
                                "contact_name": "Trần Thị Bình", "contact_phone": "0905100002",
                                "patient_name": "Trần Văn Mẫu", "note": "Bệnh nhân sau tai nạn giao thông (mẫu)",
                                "needed_by": now + timedelta(hours=10)})
         p2 = prq.submit(donors[2], {"consent": True, "hospital_id": h1.pk, "quantity_units": 3, "blood_group": "O-",
+                                    "blood_product_id": rbc.product_id,
                                     "contact_name": "Lê Hoàng Cường", "contact_phone": "0905100003",
                                     "patient_name": "Lê Thị Mẫu"})
         prq.hospital_action(s1, p2.pk, "verify", {"blood_group": "O-"})
-        prq.submit(donors[0], {"consent": True, "hospital_id": h2.pk, "quantity_units": 1, "contact_name": "Nguyễn Văn An",
+        prq.submit(donors[0], {"consent": True, "hospital_id": h2.pk, "quantity_units": 1, "blood_group": "B+",
+                               "blood_product_id": plt.product_id, "contact_name": "Nguyễn Văn An",
                                "contact_phone": "0905100001"})

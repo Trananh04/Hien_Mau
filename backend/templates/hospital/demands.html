@@ -1,6 +1,5 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Dự báo thiếu hụt{% endblock %}
-{% block crumbs %}<span>Kho máu</span>{% icon "chevron-right" 14 %}<span>Dự báo thiếu hụt</span>{% endblock %}
 {% block ws_title %}Dự báo thiếu hụt{% endblock %}
 {% block ws_sub %}<p class="ws-sub">Theo lượng xuất cho người bệnh {{ window }} ngày gần nhất và nhu cầu có kế hoạch, dự báo {{ horizon }} ngày tới. Cần máu trong vài giờ: dùng nút <strong>Khẩn cấp</strong>.</p>{% endblock %}
 {% block ws_actions %}<button type="button" class="btn secondary" data-open-dialog="demand-form">{% icon "calendar-plus" %} Khai nhu cầu có kế hoạch</button>{% endblock %}

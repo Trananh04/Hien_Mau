@@ -6,6 +6,7 @@ from django.db.models import Count, F, Max, Q, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -18,7 +19,9 @@ from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services.common import BusinessError
 
-from .helpers import apply_field_errors, attempt, date_or_none, int_or_none, paginate, parse_local_dt, safe_next
+from .helpers import (
+    apply_field_errors, attempt, date_or_none, int_or_none, paginate, parse_local_dt, safe_next, safe_next_url,
+)
 
 
 
@@ -161,12 +164,16 @@ def checkin(request, pk):
     if reg_id:
         selected = campaign.registrations.select_related("donor").filter(pk=reg_id).first()
     counts = dict(campaign.registrations.values_list("status").annotate(n=Count("id")))
+    # Chọn một người → trang chỉ còn form của người đó; "Quay lại" về trang đã mở (?next=) hoặc danh sách điểm hiến
+    nxt = safe_next_url(request, "")
+    back = nxt or _checkin_url(campaign.pk, status=status) + ("&" + urlencode({"q": q}) if q else "")
     now = timezone.localtime()
     default_time = min(max(now, timezone.localtime(campaign.start_time)), timezone.localtime(campaign.end_time))
     return render(request, "hospital/checkin.html", {
         "c": campaign, "regs": regs[:200], "q": q, "status": status, "selected": selected, "counts": counts,
+        "next": nxt, "back": back,
         "waiting_count": counts.get("pending", 0) + counts.get("approved", 0),
-        "products": Product.objects.filter(is_active=True, kind="component"), "default_time": default_time,
+        "products": Product.apheresis(), "default_time": default_time,
         "started": timezone.now() >= campaign.start_time, "form_data": request.session.pop("donation_form", None),
         "needs_confirm": request.session.pop("donation_needs_confirm", None),
         "selected_donation": selected.donations.filter(status="confirmed").first() if selected else None,
@@ -175,14 +182,16 @@ def checkin(request, pk):
     })
 
 
-def _checkin_url(campaign_id, reg_id=None, status=None):
+def _checkin_url(campaign_id, reg_id=None, status=None, nxt=None):
     url = reverse("bloodbank:checkin", args=[campaign_id])
-    params = []
+    params = {}
     if reg_id:
-        params.append(f"reg={reg_id}")
+        params["reg"] = reg_id
     if status:
-        params.append(f"status={status}")
-    return url + ("?" + "&".join(params) if params else "")
+        params["status"] = status
+    if nxt:
+        params["next"] = nxt
+    return url + ("?" + urlencode(params) if params else "")
 
 
 @staff_required
@@ -198,9 +207,9 @@ def record_donation(request, pk):
         request.session["donation_form"] = {k: v for k, v in request.POST.items() if k != "csrfmiddlewaretoken"}
         if exc.field_errors.get("_needs_confirm"):
             request.session["donation_needs_confirm"] = exc.message
-        return redirect(_checkin_url(reg.campaign_id, reg.pk, "attended"))
+        return redirect(_checkin_url(reg.campaign_id, reg.pk, "attended", safe_next_url(request, "")))
     messages.success(request, f"Đã ghi nhận lượt hiến của {reg.donor.full_name}. Lượt hiến đã vào hàng Chờ xét nghiệm.")
-    return redirect(_checkin_url(reg.campaign_id, None, "attended"))
+    return safe_next(request, _checkin_url(reg.campaign_id, None, "attended"))
 
 
 @staff_required
@@ -219,7 +228,10 @@ def checkin_action(request, pk):
         if warn:
             messages.warning(request, f"Lưu ý {reg.donor.full_name}: {warn['text']}")
     status = "attended" if action == "checkin" and ok else request.POST.get("status")
-    return redirect(_checkin_url(reg.campaign_id, reg.pk if action == "checkin" and ok else None, status))
+    nxt = safe_next_url(request, "")
+    if action == "checkin" and ok:   # vừa check-in → mở luôn form ghi nhận kết quả của người đó
+        return redirect(_checkin_url(reg.campaign_id, reg.pk, status, nxt))
+    return redirect(nxt or _checkin_url(reg.campaign_id, None, status))
 
 
 @staff_required
@@ -251,7 +263,7 @@ def donation_detail(request, pk):
     summary_before = don.summarize(Donation.objects.filter(donor=d.donor))
     return render(request, "hospital/donation_detail.html", {
         "d": d, "logs": logs, "can_manage": d.status == Donation.Status.CONFIRMED, "summary": summary_before,
-        "products": Product.objects.filter(is_active=True, kind="component"),
+        "products": Product.apheresis(include_pk=d.component_product_id),
     })
 
 
@@ -277,8 +289,13 @@ def donation_manage(request, pk):
 def donor_lookup(request):
     """Sổ người hiến của bệnh viện: mặc định liệt kê mọi người đã hiến / đăng ký tại đây, ô tìm để lọc."""
     h = request.hospital
+    if request.GET.get("donor"):   # liên kết cũ ?donor=… → trang chi tiết riêng
+        donor_id = int_or_none(request.GET["donor"])
+        if donor_id is None:
+            raise Http404
+        return redirect("bloodbank:donor_detail", pk=donor_id)
     q = (request.GET.get("q") or "").strip()
-    tab = request.GET.get("tab") if request.GET.get("tab") in ("da-hien", "tat-ca") else "da-hien"
+    tab = request.GET.get("tab") if request.GET.get("tab") in ("da-hien", "tat-ca") else "tat-ca"
     group = request.GET.get("nhom") if request.GET.get("nhom") in BLOOD_GROUP_VALUES else ""
     donated = Q(donations__hospital=h, donations__status="confirmed")
     scope = Q(pk__in=Donation.objects.filter(hospital=h).values("donor_id"))
@@ -298,21 +315,30 @@ def donor_lookup(request):
     if tab == "da-hien":
         donors = donors.filter(n__gt=0)
     page = paginate(request, donors.order_by(F("last").desc(nulls_last=True), "full_name"), 50)
-
-    selected = history = regs = None
-    if request.GET.get("donor"):
-        donor_id = int_or_none(request.GET["donor"])
-        scope = Q(donations__hospital=h) | Q(registrations__campaign__hospital=h)
-        selected = User.objects.filter(scope).filter(pk=donor_id).distinct().first() if donor_id else None
-        if selected is None:
-            raise Http404
-        hd = Donation.objects.filter(donor=selected, hospital=h).select_related("registration__campaign")
-        history = {"summary": don.summarize(hd), "rows": hd.order_by("-donated_at")}
-        regs = Registration.objects.filter(donor=selected, campaign__hospital=h).select_related("campaign")
+    everyone = (Q(pk__in=Donation.objects.filter(hospital=h).values("donor_id"))
+                | Q(pk__in=Registration.objects.filter(campaign__hospital=h).values("donor_id")))
     return render(request, "hospital/donor_lookup.html", {
-        "q": q, "tab": tab, "group": group, "page": page, "selected": selected, "history": history, "regs": regs,
+        "q": q, "tab": tab, "group": group, "page": page,
         "blood_groups": User._meta.get_field("blood_group").choices,
+        "total_all": User.objects.filter(everyone).count(),
         "total_donated": Donation.objects.filter(hospital=h, status="confirmed").values("donor_id").distinct().count(),
+    })
+
+
+@staff_required
+def donor_detail(request, pk):
+    """Hồ sơ một người hiến tại bệnh viện (trang riêng, mở từ danh sách tra cứu)."""
+    h = request.hospital
+    scope = Q(donations__hospital=h) | Q(registrations__campaign__hospital=h)
+    selected = User.objects.filter(scope).filter(pk=pk).distinct().first()
+    if selected is None:
+        raise Http404
+    hd = Donation.objects.filter(donor=selected, hospital=h).select_related("registration__campaign")
+    history = {"summary": don.summarize(hd), "rows": hd.order_by("-donated_at")}
+    regs = Registration.objects.filter(donor=selected, campaign__hospital=h).select_related("campaign")
+    return render(request, "hospital/donor_detail.html", {
+        "selected": selected, "history": history, "regs": regs,
+        "back": safe_next_url(request, reverse("bloodbank:donor_lookup")),
     })
 
 
