@@ -20,8 +20,11 @@ class SecurityHeadersMiddleware:
         "script-src 'self'",
         "style-src 'self' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
-        "img-src 'self' data: https://tile.openstreetmap.org",
-        "connect-src 'self'",
+        # Bản đồ: ô bản đồ / kiểu / font chữ của Goong (dự phòng OSM); MapLibre chạy web worker từ blob
+        "img-src 'self' data: blob: https://tiles.goong.io https://tile.openstreetmap.org",
+        "connect-src 'self' https://tiles.goong.io https://tile.openstreetmap.org",
+        "worker-src 'self' blob:",
+        "child-src blob:",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

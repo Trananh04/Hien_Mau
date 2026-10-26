@@ -2,7 +2,10 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.test import TestCase
+from unittest import mock
+
+from django.core.cache import cache
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -72,7 +75,9 @@ class SuggestTests(TestCase):
         self.assertEqual([r["user_id"] for r in rows], [regular.pk, newcomer.pk])
         top = rows[0]
         self.assertIsNotNone(top["distance_km"])
-        self.assertIn("nhóm máu đã xét nghiệm", top["reasons"])
+        self.assertEqual(top["reasons"][0], "Đúng nhóm A+ (đã xét nghiệm)")
+        self.assertIn("đã nghỉ đủ 150 ngày", top["reasons"])
+        self.assertIn("(đường chim bay)", top["reasons"][1])           # chưa cấu hình Goong → đường chim bay
         self.assertIn("từng hiến tại bệnh viện này", top["reasons"])
         self.assertTrue(rows[1]["first_time"])
         # Lọc 10 km: người chưa có vị trí bị loại
@@ -82,6 +87,70 @@ class SuggestTests(TestCase):
         u = self.mk()
         self.assertEqual(donor_match.donor_code(self.h, u.pk), donor_match.donor_code(self.h, u.pk))
         self.assertNotEqual(donor_match.donor_code(self.h, u.pk), donor_match.donor_code(self.other_h, u.pk))
+
+
+class FairRankingTests(TestCase):
+    """Quãng đường đi thật, ưu tiên người từng nhận lời kêu gọi, chia đều lượt gọi."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.h = f.hospital(province="Đà Nẵng", latitude=Decimal("16.054"), longitude=Decimal("108.202"))
+        cls.staff_user = f.staff(cls.h)
+
+    def mk(self, **kw):
+        return f.user(**{"blood_group": "A+", "province": "Đà Nẵng", **kw})
+
+    def invite(self, user, days_ago, hospital=None):
+        c = DonorCallout.objects.create(hospital=hospital or self.h, blood_group="A+", created_by=self.staff_user,
+                                        recipient_count=1)
+        n = Notification.objects.create(user=user, type="donor_callout", title="Cần máu", entity_type="donor_callouts",
+                                        entity_id=c.pk)
+        Notification.objects.filter(pk=n.pk).update(created_at=timezone.now() - timedelta(days=days_ago))
+        return c
+
+    def test_donor_who_answered_callouts_ranks_above_one_who_ignored(self):
+        answered, ignored = self.mk(), self.mk()
+        for u in (answered, ignored):
+            donate(u, self.h, self.staff_user, 200)
+            self.invite(u, 120)
+        # Người thứ nhất đăng ký đợt hiến của bệnh viện 2 ngày sau lời mời → tính là đã nhận lời
+        camp = f.campaign(self.h, status="completed", start_offset_h=-24 * 110)
+        reg = f.registration(camp, answered, status="donated")
+        reg.__class__.objects.filter(pk=reg.pk).update(registered_at=timezone.now() - timedelta(days=118))
+        rows = {r["user_id"]: r for r in donor_match.suggest(self.h, "A+")}
+        self.assertEqual((rows[answered.pk]["asked"], rows[answered.pk]["answered"]), (1, 1))
+        self.assertEqual((rows[ignored.pk]["asked"], rows[ignored.pk]["answered"]), (1, 0))
+        self.assertIn("nhận lời 1/1 lần kêu gọi", rows[answered.pk]["reasons"])
+        self.assertGreater(rows[answered.pk]["score"], rows[ignored.pk]["score"])
+
+    def test_calls_are_spread_out(self):
+        often, never = self.mk(), self.mk()
+        for u in (often, never):
+            donate(u, self.h, self.staff_user, 200)
+        for days in (20, 40, 60):
+            self.invite(often, days)
+        rows = donor_match.suggest(self.h, "A+")
+        self.assertEqual([r["user_id"] for r in rows], [never.pk, often.pk])     # ít bị gọi → lên trước
+        self.assertIn("được gọi 3 lần trong 90 ngày", rows[1]["reasons"])
+        self.invite(often, 80)                                                     # lần thứ 4 trong 90 ngày → tạm loại
+        self.assertEqual([r["user_id"] for r in donor_match.suggest(self.h, "A+")], [never.pk])
+
+    @override_settings(GOONG_API_KEY="test-api")
+    def test_uses_road_distance_and_caches_it(self):
+        cache.clear()
+        u = self.mk()
+        spot = f.campaign(self.h, status="completed", start_offset_h=-24 * 200,
+                          latitude=Decimal("16.060"), longitude=Decimal("108.210"))
+        donate(u, self.h, self.staff_user, 200, campaign=spot)
+        road = [{"meters": 3240, "seconds": 600, "distance": "3.24 km", "duration": "10 phút"}]
+        with mock.patch("bloodbank.services.geocode.distances", return_value=road) as call:
+            row = donor_match.suggest(self.h, "A+")[0]
+            donor_match.suggest(self.h, "A+")
+        self.assertEqual(call.call_count, 1)                     # điểm đợt hiến công khai → lưu cache
+        self.assertEqual(row["distance_km"], 3.2)
+        self.assertTrue(row["road"])
+        self.assertIn("cách 3,2 km đường đi", row["reasons"])
+        self.assertEqual(row["parts"][0]["label"], "Gần bệnh viện (đường đi)")
 
 
 class ResponseStatsTests(TestCase):

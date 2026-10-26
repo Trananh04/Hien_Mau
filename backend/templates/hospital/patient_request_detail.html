@@ -66,12 +66,12 @@
 
 <dialog class="modal-dialog" id="prq-reject"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reject">
   <div class="modal-header"><h3 class="modal-title">Từ chối yêu cầu</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea><p class="field-help">Người gửi nhận thông báo kèm lý do.</p></div></div>
+  <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea></div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Từ chối</button></div>
 </form></dialog>
 <dialog class="modal-dialog" id="prq-fulfill"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="fulfill">
   <div class="modal-header"><h3 class="modal-title">Hoàn tất yêu cầu</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-  <div class="modal-body"><div class="field"><label>Kết quả xử lý <span class="field-req">*</span></label><textarea name="resolution_note" class="field-textarea" required></textarea><p class="field-help">Không ghi bệnh án hay kết quả xét nghiệm.</p></div></div>
+  <div class="modal-body"><div class="field"><label>Kết quả xử lý <span class="field-req">*</span></label><textarea name="resolution_note" class="field-textarea" required></textarea></div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Hoàn tất</button></div>
 </form></dialog>
 <dialog class="modal-dialog" id="prq-cancel"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:hospital_patient_request_action' prq.pk %}">{% csrf_token %}<input type="hidden" name="action" value="cancel">

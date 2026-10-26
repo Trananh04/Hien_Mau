@@ -6,7 +6,6 @@
   <div class="notice ok" role="status">{% icon "mail-check" %}<div>Nếu email này đã đăng ký, chúng tôi vừa gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (kể cả mục Spam).</div></div>
   <a href="{% url 'accounts:login' %}" class="btn secondary block">{% icon "arrow-left" %} Quay lại đăng nhập</a>
 {% else %}
-  <p class="lead">Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.</p>
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "partials/field.html" with field=form.email %}

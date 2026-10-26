@@ -7,7 +7,6 @@
 {% block card %}
 {% if role != "member" %}<span class="portal-chip">{% icon portal.icon 16 %} {% if role == "hospital" %}Cổng bệnh viện{% else %}Cổng quản trị{% endif %}</span>{% endif %}
 <h2>{{ portal.title }}</h2>
-<p class="lead">{{ portal.lead }}</p>
 {% if user.is_authenticated %}
 <div class="notice info">{% icon "info" %}<div>Bạn đang đăng nhập với tài khoản <strong>{{ user.email }}</strong> ({{ user.get_role_display }}). Đăng nhập tại đây sẽ thay phiên hiện tại.</div></div>
 {% endif %}

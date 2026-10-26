@@ -88,21 +88,115 @@ def map_view(request):
     return render(request, "public/map.html", {"provinces": PROVINCES})
 
 
-def geocode(request):
-    """GET ?address=…&province=… → {"lat", "lng", "label"} (404 nếu không tìm thấy). Dùng cho ô chọn vị trí bản đồ."""
+def _geo_rate_limited(request, per_minute=60):
+    """Chặn lạm dụng các API bản đồ (Goong tính phí theo lượt): tối đa `per_minute` lượt / phút / địa chỉ IP."""
     from django.core.cache import cache
 
+    key = f"geo-rate:{request.META.get('REMOTE_ADDR', '')}"
+    cache.add(key, 0, 60)
+    return cache.incr(key) > per_minute
+
+
+def _float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+TOO_MANY = {"error": "Tra cứu quá nhiều, thử lại sau ít phút."}
+
+
+def geocode(request):
+    """GET ?address=…&province=… → {"lat", "lng", "label"} (404 nếu không tìm thấy). Dùng cho ô chọn vị trí bản đồ."""
     from bloodbank.services import geocode as geo
 
-    # Chặn lạm dụng: tối đa 30 lượt tra / phút / địa chỉ IP (dịch vụ Nominatim giới hạn tần suất)
-    rate_key = f"geocode-rate:{request.META.get('REMOTE_ADDR', '')}"
-    cache.add(rate_key, 0, 60)
-    if cache.incr(rate_key) > 30:
-        return JsonResponse({"error": "Tra cứu quá nhiều, thử lại sau ít phút."}, status=429)
+    if _geo_rate_limited(request):
+        return JsonResponse(TOO_MANY, status=429)
     found = geo.lookup(request.GET.get("address"), request.GET.get("province"))
     if not found:
         return JsonResponse({"error": "Không tìm thấy địa chỉ trên bản đồ. Hãy bấm lên bản đồ để ghim."}, status=404)
     return JsonResponse(found)
+
+
+def geo_suggest(request):
+    """GET ?q=…[&lat=&lng=] → {"items": [{place_id, main, secondary, label}]} — gợi ý khi gõ địa chỉ."""
+    from bloodbank.services import geocode as geo
+
+    if _geo_rate_limited(request, 120):
+        return JsonResponse(TOO_MANY, status=429)
+    lat, lng = _float(request.GET.get("lat")), _float(request.GET.get("lng"))
+    return JsonResponse({"items": geo.suggest(request.GET.get("q"), (lat, lng) if lat is not None and lng is not None
+                                              else None)})
+
+
+def geo_place(request):
+    """GET ?id=<place_id> → {"lat", "lng", "label", "name"} của gợi ý đã chọn."""
+    from bloodbank.services import geocode as geo
+
+    if _geo_rate_limited(request):
+        return JsonResponse(TOO_MANY, status=429)
+    found = geo.place(request.GET.get("id"))
+    if not found:
+        return JsonResponse({"error": "Không lấy được vị trí địa điểm."}, status=404)
+    return JsonResponse(found)
+
+
+def geo_reverse(request):
+    """GET ?lat=&lng= → {"label", "street"}: bấm ghim trên bản đồ thì gợi ý địa chỉ tương ứng."""
+    from bloodbank.services import geocode as geo
+
+    if _geo_rate_limited(request):
+        return JsonResponse(TOO_MANY, status=429)
+    lat, lng = _float(request.GET.get("lat")), _float(request.GET.get("lng"))
+    if lat is None or lng is None or not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return JsonResponse({"error": "Tọa độ không hợp lệ."}, status=400)
+    found = geo.reverse(lat, lng)
+    if not found:
+        return JsonResponse({"error": "Không tìm được địa chỉ tại điểm này."}, status=404)
+    return JsonResponse(found)
+
+
+def geo_distances(request):
+    """GET ?from=lat,lng&to=lat,lng|lat,lng…[&vehicle=] → {"items": [{meters, seconds, distance, duration} | null]}:
+    quãng đường đi thật để xếp "Tìm nơi gần tôi" từ gần đến xa. Vị trí người dùng không lưu."""
+    from bloodbank.services import geocode as geo
+
+    if _geo_rate_limited(request, 30):
+        return JsonResponse(TOO_MANY, status=429)
+    pts = []
+    for raw in [request.GET.get("from") or ""] + (request.GET.get("to") or "").split("|")[:geo.MAX_DESTINATIONS]:
+        parts = raw.split(",")
+        lat, lng = (_float(parts[0]), _float(parts[1])) if len(parts) == 2 else (None, None)
+        if lat is None or lng is None or not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            return JsonResponse({"error": "Tọa độ không hợp lệ."}, status=400)
+        pts.append((lat, lng))
+    if len(pts) < 2:
+        return JsonResponse({"error": "Thiếu điểm đến."}, status=400)
+    items = geo.distances(pts[0], pts[1:], request.GET.get("vehicle") or "car")
+    if items is None:
+        return JsonResponse({"error": "Không tính được quãng đường."}, status=503)
+    return JsonResponse({"items": items})
+
+
+def geo_route(request):
+    """GET ?from=lat,lng&to=lat,lng[&vehicle=car|bike] → quãng đường, thời gian, polyline. Vị trí xuất phát của người
+    dùng chỉ dùng cho lượt hỏi này, không lưu."""
+    from bloodbank.services import geocode as geo
+
+    if _geo_rate_limited(request, 30):
+        return JsonResponse(TOO_MANY, status=429)
+    pts = []
+    for name in ("from", "to"):
+        parts = (request.GET.get(name) or "").split(",")
+        lat, lng = (_float(parts[0]), _float(parts[1])) if len(parts) == 2 else (None, None)
+        if lat is None or lng is None or not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            return JsonResponse({"error": "Tọa độ không hợp lệ."}, status=400)
+        pts.append((lat, lng))
+    route = geo.directions(pts[0], pts[1], request.GET.get("vehicle") or "car")
+    if not route:
+        return JsonResponse({"error": "Không tìm được đường đi."}, status=404)
+    return JsonResponse(route)
 
 
 def map_data(request):

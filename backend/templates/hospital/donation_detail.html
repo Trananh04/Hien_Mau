@@ -58,7 +58,7 @@
         <dt>Toàn phần</dt><dd class="num">{{ summary.whole_ml|vnum }} ml</dd>
         <dt>Thành phần</dt><dd class="num">{{ summary.component_count }} lượt</dd>
       </dl>
-      {% if can_manage %}<p class="field-help u-mt-12">Hủy ghi nhận sẽ trừ lượt này khỏi các tổng trên{% if d.volume_ml and d.donation_type == "whole_blood" %} (−1 lượt, −{{ d.volume_ml }} ml){% endif %}.</p>{% endif %}
+      
     </div>
   </aside>
 </div>
@@ -86,7 +86,6 @@
     {% csrf_token %}<input type="hidden" name="action" value="edit">
     <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "pencil" %}</div><h3 class="modal-title" id="ed-title">Sửa số liệu lượt hiến</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
     <div class="modal-body">
-      <p class="muted u-mb-14">Không sửa được người hiến, đơn, bệnh viện, người xác nhận. Mọi thay đổi được ghi nhật ký kèm lý do.</p>
       <div class="form-grid">
         <div class="field"><label>Hình thức</label><select name="donation_type" class="field-select"><option value="whole_blood" {% if d.donation_type == "whole_blood" %}selected{% endif %}>Toàn phần</option><option value="component" {% if d.donation_type == "component" %}selected{% endif %}>Thành phần</option><option value="other" {% if d.donation_type == "other" %}selected{% endif %}>Khác</option></select></div>
         <div class="field"><label>Thời điểm hiến</label><input type="datetime-local" name="donated_at" class="field-input" value="{{ d.donated_at|dt_input }}" required></div>

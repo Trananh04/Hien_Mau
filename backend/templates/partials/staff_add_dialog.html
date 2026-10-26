@@ -2,7 +2,6 @@
 <dialog class="modal-dialog" id="add-staff"><form class="u-d-flex u-fd-column u-w-100pct" method="post" autocomplete="off">{% csrf_token %}<input type="hidden" name="form" value="staff_add">
   <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "user-plus" %}</div><h3 class="modal-title">Cấp tài khoản nhân viên — {{ hospital_name }}</h3></div><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body stack u-gap-14">
-    <p class="muted small">Nhập email mới kèm họ tên và mật khẩu ban đầu để tạo tài khoản, hoặc email của tài khoản nhân viên đã bị thu hồi để phân công lại. Tài khoản Người dùng / Quản trị không dùng làm tài khoản bệnh viện được.</p>
     <div class="field"><label for="st-e">Email <span class="field-req">*</span></label><input id="st-e" type="email" name="email" required class="field-input" autocomplete="off"></div>
     <div class="field"><label for="st-n">Họ tên <span class="muted small">(khi tạo mới)</span></label><input id="st-n" name="full_name" maxlength="150" class="field-input"></div>
     <div class="form-grid">

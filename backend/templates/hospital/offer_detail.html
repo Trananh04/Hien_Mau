@@ -20,7 +20,6 @@
         {% if o.reject_reason %}<dt>Lý do từ chối</dt><dd>{{ o.reject_reason }}</dd>{% endif %}
         {% if o.failure_reason %}<dt>Lý do thất bại</dt><dd>{{ o.failure_reason }}</dd>{% endif %}
       </dl>
-      <p class="field-help u-mt-14">Bạn không thấy đề nghị của bệnh viện khác cho cùng yêu cầu.</p>
     </div>
   </section>
 
@@ -43,7 +42,7 @@
       <div class="panel-body stack u-gap-12">
         {% if "accept" in actions %}
         <form method="post" action="{% url 'bloodbank:offer_action' o.pk %}" novalidate>{% csrf_token %}<input type="hidden" name="action" value="accept">
-          <div class="field"><label for="aq">Số lượng chấp thuận <span class="field-req">*</span></label><input id="aq" type="number" name="quantity" min="1" max="{{ suggested }}" value="{{ suggested }}" required class="field-input"><p class="field-help">Tối đa {{ suggested }} — MIN(số đề nghị, khả dụng {{ available }}, còn thiếu {{ remaining }}).</p></div>
+          <div class="field"><label for="aq">Số lượng chấp thuận <span class="field-req">*</span></label><input id="aq" type="number" name="quantity" min="1" max="{{ suggested }}" value="{{ suggested }}" required class="field-input"><p class="field-help">Tối đa {{ suggested }}.</p></div>
           <div class="field u-mt-10"><label for="an">Ghi chú</label><input id="an" name="note" class="field-input" maxlength="300"></div>
           <button class="btn success block u-mt-12" {% if suggested < 1 %}disabled{% endif %}>{% icon "check" %} Chấp thuận &amp; giữ chỗ</button>
         </form>
@@ -74,7 +73,7 @@
   <div class="modal-header"><h3 class="modal-title">Báo giao nhận thất bại</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body stack u-gap-14">
     <div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea></div>
-    <div class="field"><label>Số đơn vị đã quay về kho của bạn</label><input type="number" name="returned_qty" min="0" max="{{ o.quantity }}" value="0" class="field-input"><p class="field-help">Phần quay về được cộng lại vào kho (transfer_return).</p></div>
+    <div class="field"><label>Số đơn vị đã quay về kho của bạn</label><input type="number" name="returned_qty" min="0" max="{{ o.quantity }}" value="0" class="field-input"></div>
     <div class="consequence">Không hoàn tác được.</div>
   </div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Ghi nhận thất bại</button></div>

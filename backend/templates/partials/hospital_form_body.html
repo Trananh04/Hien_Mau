@@ -1,21 +1,21 @@
 {# Hồ sơ bệnh viện chia nhóm (dùng chung: bệnh viện tự sửa / quản trị). Vị trí ghim trên bản đồ thay cho ô vĩ độ, kinh độ. #}
 {% include "partials/form_errors.html" %}
 <section class="form-section">
-  <header class="form-section-head"><h2>Định danh</h2><p>{% if staff_view %}Mã, tên và tỉnh/thành do Quản trị hệ thống quản lý.{% else %}Mã cơ sở là duy nhất, dùng trong báo cáo và mã yêu cầu.{% endif %}</p></header>
+  <header class="form-section-head"><h2>Định danh</h2></header>
   <div class="form-section-body">
     <div class="form-row-2">{% include "partials/field.html" with field=form.code %}</div>
     {% include "partials/field.html" with field=form.name %}
   </div>
 </section>
 <section class="form-section">
-  <header class="form-section-head"><h2>Liên hệ</h2><p>Hiện cho người hiến và bệnh viện khác khi cần liên lạc.</p></header>
+  <header class="form-section-head"><h2>Liên hệ</h2></header>
   <div class="form-section-body form-row-2">
     {% include "partials/field.html" with field=form.phone %}
     {% include "partials/field.html" with field=form.email %}
   </div>
 </section>
 <section class="form-section">
-  <header class="form-section-head"><h2>Địa chỉ &amp; vị trí</h2><p>Vị trí dùng cho bản đồ công khai, tìm nguồn liên viện gần nhất và gợi ý người hiến theo khoảng cách.</p></header>
+  <header class="form-section-head"><h2>Địa chỉ &amp; vị trí</h2></header>
   <div class="form-section-body">
     {% include "partials/field.html" with field=form.address %}
     <div class="form-row-2">

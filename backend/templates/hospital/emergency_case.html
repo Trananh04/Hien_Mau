@@ -19,7 +19,7 @@
       <h2>Kho bệnh viện</h2>
       <p>Khả dụng <b>{{ s.available }}</b> / cần {{ d.required_quantity }} đơn vị
         {% if d.status == "active" %}{% if s.short_now %} · còn thiếu <b class="t-danger">{{ s.short_now }}</b>{% else %} · <b class="t-ok">đủ</b>{% endif %}{% endif %}</p>
-      {% if s.can_issue %}<p class="muted small">Máu bệnh viện khác giao tới cũng vào kho này; xuất cho người bệnh khi sẵn sàng.</p>{% endif %}
+      
     </div>
     <div class="case-act">{% if s.can_issue %}<a class="btn {% if s.step == 'issue' %}primary{% else %}secondary{% endif %} sm" href="{% url 'bloodbank:stock_txn' 'xuat' %}?stock={{ s.stock_id }}{% if d.patient_request_id %}&patient_request={{ d.patient_request_id }}{% endif %}">{% icon "package-minus" 14 %} Xuất {{ s.can_issue }} đơn vị</a>{% endif %}</div>
   </li>
@@ -58,7 +58,6 @@
       <h2>Kêu gọi người hiến</h2>
       {% if s.step == "donors" %}
       <p>Các bệnh viện chưa đủ: còn <b class="t-danger">{{ s.donors_needed }}</b> đơn vị chưa có nguồn. Mời người hiến ở gần đến hiến hôm nay.</p>
-      <p class="muted small">Máu hiến mới cần xét nghiệm trước khi dùng — chủ yếu để bù lại kho, trừ nhóm máu hiếm.</p>
       {% elif d.status == "active" and s.short_now %}
       <p class="muted">Chưa cần — đang chờ bệnh viện trả lời / giao hàng.</p>
       {% else %}<p class="muted">Không cần.</p>{% endif %}

@@ -1,8 +1,8 @@
 {% extends "layouts/public.html" %}
 {% load static %}
 {% block title %}Bản đồ điểm hiến máu{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
-{% block band %}{% include "partials/band.html" with title="Bản đồ bệnh viện & điểm hiến" lead="Tìm bệnh viện và đợt hiến gần bạn. Vị trí của bạn chỉ dùng trên trình duyệt, không gửi lên hệ thống." %}{% endblock %}
+{% block extra_head %}{% map_head %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Bản đồ bệnh viện & điểm hiến" lead="Tìm bệnh viện và đợt hiến gần bạn. Vị trí của bạn chỉ dùng để xếp khoảng cách và chỉ đường, hệ thống không lưu lại." %}{% endblock %}
 {% block content %}
 <div class="container page-body">
   <div class="map-toggle" role="tablist" aria-label="Chế độ xem">
@@ -33,11 +33,13 @@
         <div class="empty"><span class="skeleton u-w-60pct"></span><span class="skeleton u-w-40pct"></span></div>
       </div>
     </div>
-    <div id="map" data-map-src="{% url 'bloodbank:map_data' %}" role="region" aria-label="Bản đồ"></div>
+    <div class="map-main">
+      <div class="map-route" data-map-route hidden aria-live="polite"></div>
+      <div id="map" data-map-src="{% url 'bloodbank:map_data' %}" role="region" aria-label="Bản đồ"></div>
+    </div>
   </div>
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script src="{% static 'js/maps.js' %}"></script>
+{% map_scripts %}
 {% endblock %}

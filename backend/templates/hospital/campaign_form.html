@@ -1,7 +1,7 @@
 {% extends "layouts/workspace.html" %}
 {% load static %}
 {% block title %}{% if campaign %}Sửa đợt hiến{% else %}Tạo đợt hiến{% endif %}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block extra_head %}{% map_head %}{% endblock %}
 {% block back %}{% if campaign %}{% url 'bloodbank:hospital_campaign_detail' campaign.pk %}{% else %}{% url 'bloodbank:hospital_campaigns' %}{% endif %}{% endblock %}
 {% block ws_title %}{% if campaign %}Sửa đợt hiến{% else %}Tạo đợt hiến mới{% endif %}{% endblock %}
 {% block content %}
@@ -10,7 +10,7 @@
   {% include "partials/form_errors.html" %}
   <div class="panel">
     <section class="form-section">
-      <header class="form-section-head"><h2>Thông tin đợt</h2><p>Tên hiển thị cho người hiến trên trang công khai.</p></header>
+      <header class="form-section-head"><h2>Thông tin đợt</h2></header>
       <div class="form-section-body">
         {% include "partials/field.html" with field=form.name %}
         {% include "partials/field.html" with field=form.description %}
@@ -18,7 +18,7 @@
     </section>
 
     <section class="form-section">
-      <header class="form-section-head"><h2>Thời gian</h2><p>Người hiến đăng ký trước giờ bắt đầu; điểm hiến mở trước 12 giờ.</p></header>
+      <header class="form-section-head"><h2>Thời gian</h2></header>
       <div class="form-section-body form-row-2">
         {% include "partials/field.html" with field=form.start_time %}
         {% include "partials/field.html" with field=form.end_time %}
@@ -26,7 +26,7 @@
     </section>
 
     <section class="form-section">
-      <header class="form-section-head"><h2>Địa điểm</h2><p>Nhập địa chỉ, hệ thống tự ghim trên bản đồ; bấm lên bản đồ để chỉnh lại. Không ghim thì dùng vị trí bệnh viện.</p></header>
+      <header class="form-section-head"><h2>Địa điểm</h2></header>
       <div class="form-section-body">
         {% include "partials/field.html" with field=form.location_name %}
         {% include "partials/field.html" with field=form.address %}
@@ -46,12 +46,10 @@
     <div class="form-actions">
       <a href="{% if campaign %}{% url 'bloodbank:hospital_campaign_detail' campaign.pk %}{% else %}{% url 'bloodbank:hospital_campaigns' %}{% endif %}" class="btn secondary">Hủy</a>
       <button type="submit" class="btn primary">{% icon "save" %} {% if campaign %}Lưu thay đổi{% else %}Tạo đợt (bản nháp){% endif %}</button>
-      {% if not campaign %}<span class="muted small">Đợt mới ở trạng thái nháp, công bố sau ở trang chi tiết.</span>{% endif %}
     </div>
   </div>
 </form>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script src="{% static 'js/maps.js' %}"></script>
+{% map_scripts %}
 {% endblock %}

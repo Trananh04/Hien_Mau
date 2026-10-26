@@ -73,7 +73,6 @@
 <dialog class="modal-dialog" id="demand-form"{% if demand or form.errors %} data-open-on-load{% endif %}><form class="u-d-flex u-fd-column u-w-100pct" method="post" novalidate action="{% if demand %}{% url 'bloodbank:demand_edit' demand.pk %}{% else %}{% url 'bloodbank:demands' %}{% endif %}">{% csrf_token %}
   <div class="modal-header"><div class="modal-title-row"><div class="modal-badge-icon">{% icon "calendar-plus" %}</div><h3 class="modal-title">{% if demand %}Sửa nhu cầu có kế hoạch{% else %}Khai nhu cầu có kế hoạch{% endif %}</h3></div>{% if demand %}<a href="{% url 'bloodbank:demands' %}" class="modal-close-btn" aria-label="Đóng">{% icon "x" 20 %}</a>{% else %}<button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button>{% endif %}</div>
   <div class="modal-body stack u-gap-14">
-    <p class="field-help">Nhu cầu biết trước (ca mổ lên lịch, bệnh nhân điều trị định kỳ) được cộng vào dự báo. Cần máu trong vài giờ: dùng nút Khẩn cấp.</p>
     {% include "partials/field.html" with field=form.blood_group %}
     {% include "partials/field.html" with field=form.product_spec_id %}
     <div class="form-grid">

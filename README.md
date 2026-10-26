@@ -4,7 +4,7 @@ Hệ thống kết nối người hiến máu, người nhà bệnh nhân cần 
 quản lý kho máu, điều phối máu giữa các bệnh viện và xử lý yêu cầu cần máu.
 
 - **Backend:** Django 5.2 · PostgreSQL 16 · pgAdmin 4 · tác vụ định kỳ (scheduler), chạy toàn bộ bằng Docker
-- **Giao diện:** Django template kết xuất phía máy chủ + **HTMX 2** (chuyển trang, gửi form, lọc không tải lại trang) · CSS riêng · icon Lucide · bản đồ Leaflet. Không cần Node.js, an toàn với CSP chặt (không script/style nội tuyến)
+- **Giao diện:** Django template kết xuất phía máy chủ + **HTMX 2** (chuyển trang, gửi form, lọc không tải lại trang) · CSS riêng · icon Lucide · bản đồ **Goong Maps** (MapLibre GL). Không cần Node.js, an toàn với CSP chặt (không script/style nội tuyến)
 - **Đặc tả:** BLOOD-SRS-001 v1.1 (*Tài liệu thiết kế CSDL hiến máu*)
 
 > Dự án học tập. Mọi bệnh viện, người dùng và số liệu đều là **dữ liệu mẫu**.
@@ -28,6 +28,8 @@ cd Hien_Mau
 
 # Tạo file cấu hình từ mẫu
 cp .env.example .env          # Windows PowerShell: Copy-Item .env.example .env
+# Bản đồ: điền GOONG_MAP_KEY (hiển thị bản đồ) và GOONG_API_KEY (tra địa chỉ, gợi ý, chỉ đường)
+# lấy tại https://account.goong.io/keys. Để trống thì bản đồ dùng OpenStreetMap, không có gợi ý / chỉ đường.
 
 # Build và khởi động
 docker compose up -d --build
@@ -222,7 +224,7 @@ Bộ test (170 test) chạy trên PostgreSQL thật, gồm:
 | Container `web` báo `/bin/sh^M` hoặc `entrypoint.sh: not found` | File `.sh` bị đổi sang CRLF. Repo đã có `.gitattributes`; clone lại, hoặc chạy `git add --renormalize .` |
 | Trang không có CSS sau khi sửa | Chạy `collectstatic` (mục 5) rồi tải lại trang bằng Ctrl+F5 |
 | Muốn làm lại dữ liệu từ đầu | `docker compose down -v` rồi `docker compose up -d` |
-| Bản đồ hoặc phông chữ không hiện | Cần có internet (ô bản đồ OpenStreetMap, Google Fonts) |
+| Bản đồ hoặc phông chữ không hiện | Cần có internet (Goong Maps, Google Fonts). Kiểm tra `GOONG_MAP_KEY` trong `.env`, rồi chạy `docker compose up -d` để nạp lại |
 
 ## 9. Cấu trúc thư mục
 
@@ -250,7 +252,7 @@ backend/
     tests/                  bộ kiểm thử
   templates/                giao diện (công khai / cá nhân / khu làm việc bệnh viện, quản trị)
   static/                   css (site.css: trang công khai, ui.css: thành phần dùng chung), js (app.js: tương tác +
-                            khởi tạo lại sau mỗi lần HTMX thay nội dung, maps.js), ảnh, vendor (htmx, lucide, leaflet)
+                            khởi tạo lại sau mỗi lần HTMX thay nội dung, maps.js), ảnh, vendor (htmx, lucide, maplibre)
 ```
 
 ### Giao diện với HTMX

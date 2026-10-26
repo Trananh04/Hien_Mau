@@ -39,7 +39,7 @@
               <ul>{% for p in r.parts %}<li><span>{{ p.label }}</span><strong class="num">{{ p.points }}/{{ p.max }}</strong></li>{% endfor %}</ul>
             </details>
           </td>
-          <td data-label="Lý do">{{ r.reasons|join:" · " }}</td>
+          <td data-label="Lý do"><ul class="reason-list">{% for x in r.reasons %}<li>{{ x }}</li>{% endfor %}</ul></td>
         </tr>
       {% endfor %}</tbody>
     </table></div>

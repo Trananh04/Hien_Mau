@@ -10,8 +10,13 @@ vị trí gần đúng của người hiến = địa điểm đợt hiến gầ
    - đủ thời gian nghỉ THEO LOẠI của lần hiến gần nhất (toàn phần / thành phần);
    - không nhận lời kêu gọi nào trong `donor_invite_cooldown_days` ngày (khẩn: `donor_invite_urgent_cooldown_days`),
      tính trên mọi bệnh viện;
+   - chia đều lượt gọi: đã nhận `donor_invite_max_90_days` lời kêu gọi trong 90 ngày (mọi bệnh viện) → tạm không gợi ý;
    - nếu chọn bán kính: chỉ người có vị trí gần đúng nằm trong bán kính.
-2) Điểm phù hợp 0–100 kèm lý do, để nhân viên hiểu vì sao người đó được gợi ý.
+2) Điểm phù hợp 0–100 kèm lý do, để nhân viên hiểu vì sao người đó được gợi ý:
+   - khoảng cách là QUÃNG ĐƯỜNG ĐI THẬT từ bệnh viện (Goong Distance Matrix, lưu cache vì điểm đến là địa điểm đợt
+     hiến công khai); dịch vụ lỗi / chưa cấu hình → đường chim bay;
+   - ưu tiên người TỪNG NHẬN LỜI KÊU GỌI (tỷ lệ hưởng ứng của chính người đó), không phải số lần hiến;
+   - người ít bị kêu gọi gần đây được cộng điểm và xếp trước khi bằng điểm → lượt gọi chia đều.
 
 Bảo mật: nhân viên chỉ thấy MÃ ẩn danh + đặc điểm, không thấy tên / liên hệ. Mã là HMAC theo bệnh viện; khi gửi, máy chủ
 tính lại danh sách và chỉ chấp nhận mã nằm trong đó. Hàm `suggest` chỉ đọc — mở trang không ghi gì vào CSDL.
@@ -26,6 +31,8 @@ from django.db.models import Count, Max, Q
 from django.utils import timezone
 
 from accounts.models import BLOOD_GROUP_VALUES, User
+from django.core.cache import cache
+
 from bloodbank.models import Donation, DonorCallout, Notification, Registration, SystemSetting
 
 # Hai chế độ (tổng trọng số mỗi chế độ = 100):
@@ -33,10 +40,10 @@ from bloodbank.models import Donation, DonorCallout, Notification, Registration,
 # - "urgent" (khẩn, vài giờ): người GẦN quan trọng nhất, bán kính mặc định nhỏ, thời gian chờ giữa 2 lời mời ngắn hơn.
 # Thời gian nghỉ giữa 2 lần hiến và độ tuổi KHÔNG BAO GIỜ được nới ở bất kỳ chế độ nào.
 MODES = {
-    "stock": {"near": 20, "verified": 15, "experience": 20, "reliable": 20, "local": 10, "rested": 15,
+    "stock": {"near": 20, "verified": 15, "experience": 10, "reliable": 15, "responsive": 15, "local": 10, "rested": 15,
               "near_full_km": 50, "default_radius": None, "rate_factor": 1.0,
               "cooldown_setting": "donor_invite_cooldown_days"},
-    "urgent": {"near": 40, "verified": 15, "experience": 10, "reliable": 20, "local": 5, "rested": 10,
+    "urgent": {"near": 40, "verified": 15, "experience": 5, "reliable": 10, "responsive": 15, "local": 5, "rested": 10,
                "near_full_km": 25, "default_radius": 10, "rate_factor": 0.5,
                "cooldown_setting": "donor_invite_urgent_cooldown_days"},
 }
@@ -80,6 +87,73 @@ def _latest(qs, field):
     return out
 
 
+ROAD_TTL = 30 * 24 * 3600
+
+
+def road_km(hospital, points):
+    """{(lat, lng): km đường đi từ bệnh viện} cho các điểm (địa điểm đợt hiến). Điểm không tra được → không có trong kết quả.
+
+    Điểm đến là địa điểm đợt hiến công khai (không phải địa chỉ người hiến) nên lưu cache dài được."""
+    from bloodbank.services import geocode as geo
+
+    if hospital.latitude is None or not points or not settings.GOONG_API_KEY:
+        return {}
+    origin = (float(hospital.latitude), float(hospital.longitude))
+
+    def key(pt):
+        return f"road-km:{origin[0]:.5f},{origin[1]:.5f}:{pt[0]:.5f},{pt[1]:.5f}"
+
+    pts = list(dict.fromkeys((float(la), float(ln)) for la, ln in points))
+    out, missing = {}, []
+    for pt in pts:
+        hit = cache.get(key(pt))
+        if hit is not None:
+            out[pt] = hit
+        else:
+            missing.append(pt)
+    for i in range(0, len(missing), geo.MAX_DESTINATIONS):
+        chunk = missing[i:i + geo.MAX_DESTINATIONS]
+        res = geo.distances(origin, chunk)
+        if res is None:
+            break                                    # dịch vụ lỗi → các điểm còn lại dùng đường chim bay
+        for pt, r in zip(chunk, res):
+            if r:
+                out[pt] = round(r["meters"] / 1000, 1)
+                cache.set(key(pt), out[pt], ROAD_TTL)
+    return out
+
+
+def callout_responses(ids, now):
+    """{user_id: (số lời kêu gọi đã hết thời gian theo dõi, số lần hưởng ứng)} trong 365 ngày, mọi bệnh viện.
+
+    Hưởng ứng = trong `donor_invite_response_days` ngày sau lời mời, người đó đăng ký đợt hiến (không tự hủy) hoặc hiến
+    máu tại chính bệnh viện đã mời (cùng định nghĩa với `response_stats`)."""
+    window = timedelta(days=SystemSetting.get("donor_invite_response_days"))
+    since = now - timedelta(days=365)
+    invites = list(Notification.objects.filter(type="donor_callout", channel="in_app", entity_type="donor_callouts",
+                                               user_id__in=ids, created_at__gte=since, created_at__lte=now - window)
+                   .values_list("user_id", "entity_id", "created_at"))
+    if not invites:
+        return {}
+    hosp = dict(DonorCallout.objects.filter(pk__in={e for _, e, _ in invites}).values_list("pk", "hospital_id"))
+    users = {u for u, _, _ in invites}
+    acts = {}
+    for uid, h, at in (Registration.objects.filter(donor_id__in=users, registered_at__gte=since)
+                       .exclude(status=Registration.Status.CANCELLED)
+                       .values_list("donor_id", "campaign__hospital_id", "registered_at")):
+        acts.setdefault((uid, h), []).append(at)
+    for uid, h, at in (Donation.objects.filter(donor_id__in=users, status=Donation.Status.CONFIRMED, donated_at__gte=since)
+                       .values_list("donor_id", "hospital_id", "donated_at")):
+        acts.setdefault((uid, h), []).append(at)
+    out = {}
+    for uid, callout_id, at in invites:
+        h = hosp.get(callout_id)
+        hit = any(at <= t < at + window for t in acts.get((uid, h), []))
+        sent, came = out.get(uid, (0, 0))
+        out[uid] = (sent + 1, came + (1 if hit else 0))
+    return out
+
+
 def mode_of(value):
     return "urgent" if value == "urgent" else "stock"
 
@@ -108,6 +182,7 @@ def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
     if not ids:
         return []
 
+    max_90d = max(1, int(SystemSetting.get("donor_invite_max_90_days")))
     since_invite = now - timedelta(days=SystemSetting.get(m["cooldown_setting"]))
     invites = Notification.objects.filter(type="donor_callout", channel="in_app", user_id__in=ids)
     invited = set(invites.filter(created_at__gte=since_invite).values_list("user_id", flat=True))
@@ -126,11 +201,14 @@ def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
                   .order_by("donor_id", "-campaign__start_time")
                   .values("donor_id", "campaign__latitude", "campaign__longitude")):
             spots.setdefault(r["donor_id"], (r["campaign__latitude"], r["campaign__longitude"]))
+    roads = road_km(hospital, spots.values())
+    answered = callout_responses(ids, now)
 
     rows = []
     for uid in ids:
         dob = people[uid]["date_of_birth"]
-        if uid in invited or (dob and not min_age <= _age(dob, today) <= max_age):
+        recent = invites_90d.get(uid, 0)
+        if uid in invited or recent >= max_90d or (dob and not min_age <= _age(dob, today) <= max_age):
             continue
         s = stats.get(uid)
         days_since = (now - s["last"]).days if s else None
@@ -138,7 +216,8 @@ def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
         if days_since is not None and days_since < need:
             continue                                     # chưa đủ thời gian nghỉ theo loại lần hiến gần nhất
         spot = spots.get(uid)
-        dist = _km(hospital.latitude, hospital.longitude, *spot) if spot else None
+        road = roads.get((float(spot[0]), float(spot[1]))) if spot else None
+        dist = road if road is not None else (_km(hospital.latitude, hospital.longitude, *spot) if spot else None)
         if radius_km and (dist is None or dist > radius_km):
             continue
 
@@ -147,30 +226,33 @@ def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
         seen = r["came"] + r["missed"]
         show_rate = r["came"] / seen if seen else None
         verified = uid in lab
-        recent = invites_90d.get(uid, 0)
+        asked, came_back = answered.get(uid, (0, 0))
 
-        reasons = []
+        # Lý do hiện cạnh mỗi người — chỉ nhân viên bệnh viện thấy (không kèm tên / liên hệ)
+        reasons = [f"Đúng nhóm {blood_group} ({'đã xét nghiệm' if verified else 'tự khai'})"]
         if dist is not None:
-            reasons.append(f"cách khoảng {dist:g} km")
-        if verified:
-            reasons.append("nhóm máu đã xét nghiệm")
-        reasons.append(f"đã hiến {n} lần, lần gần nhất {days_since} ngày trước" if n else "chưa hiến lần nào")
+            km = f"{dist:g}".replace(".", ",")
+            reasons.append(f"cách {km} km đường đi" if road is not None else f"cách khoảng {km} km (đường chim bay)")
+        reasons.append(f"đã nghỉ đủ {days_since} ngày" if days_since is not None else "chưa hiến lần nào")
+        if asked:
+            reasons.append(f"nhận lời {came_back}/{asked} lần kêu gọi")
         if seen >= 2:
             reasons.append(f"đến {r['came']}/{seen} lần hẹn")
         if s and s["here"]:
             reasons.append("từng hiến tại bệnh viện này")
-        if recent:
-            reasons.append(f"được kêu gọi {recent} lần trong 90 ngày")
+        reasons.append(f"được gọi {recent} lần trong 90 ngày" if recent else "chưa được gọi trong 90 ngày")
         # Điểm từng tiêu chí (nhãn, điểm đạt, tối đa) — hiện cho nhân viên xem vì sao người này được xếp hạng
         parts = [
             # chưa rõ vị trí nhưng cùng tỉnh/thành → 30%
-            ("Gần bệnh viện", m["near"] * (max(0.0, 1 - dist / m["near_full_km"]) if dist is not None else 0.3),
-             m["near"]),
-            ("Kinh nghiệm hiến", m["experience"] * min(n, 5) / 5, m["experience"]),
-            # chưa có lịch hẹn → trung lập
+            ("Gần bệnh viện (đường đi)" if road is not None else "Gần bệnh viện",
+             m["near"] * (max(0.0, 1 - dist / m["near_full_km"]) if dist is not None else 0.3), m["near"]),
+            # chưa từng được kêu gọi → trung lập
+            ("Từng nhận lời kêu gọi", m["responsive"] * (came_back / asked if asked else 0.5), m["responsive"]),
             ("Đến đúng hẹn", m["reliable"] * (0.5 if show_rate is None else show_rate), m["reliable"]),
+            ("Kinh nghiệm hiến", m["experience"] * min(n, 5) / 5, m["experience"]),
             ("Nhóm máu đã xét nghiệm", m["verified"] if verified else 0, m["verified"]),
-            ("Ít bị kêu gọi gần đây", m["rested"] * (1.0 if recent == 0 else 0.4 if recent == 1 else 0.0), m["rested"]),
+            # chia đều lượt gọi: càng ít bị gọi trong 90 ngày càng được ưu tiên
+            ("Ít bị kêu gọi gần đây", m["rested"] * max(0.0, 1 - recent / max_90d), m["rested"]),
             ("Từng hiến tại bệnh viện này", m["local"] if s and s["here"] else 0, m["local"]),
         ]
         score = round(sum(p[1] for p in parts))
@@ -178,10 +260,13 @@ def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
             "user_id": uid, "code": donor_code(hospital, uid), "score": score,
             "level": "high" if score >= 70 else "medium" if score >= 45 else "low",
             "reasons": reasons, "verified": verified, "donations": n, "days_since": days_since,
-            "distance_km": dist, "first_time": n == 0,
+            "distance_km": dist, "road": road is not None, "first_time": n == 0, "recent_invites": recent,
+            "asked": asked, "answered": came_back,
             "parts": [{"label": label, "points": round(got), "max": top} for label, got, top in parts],
         })
-    rows.sort(key=lambda x: (-x["score"], x["distance_km"] if x["distance_km"] is not None else 1e9, x["code"]))
+    # Bằng điểm: người ít bị gọi gần đây trước (chia đều lượt gọi), rồi người gần hơn
+    rows.sort(key=lambda x: (-x["score"], x["recent_invites"],
+                             x["distance_km"] if x["distance_km"] is not None else 1e9, x["code"]))
     return rows
 
 

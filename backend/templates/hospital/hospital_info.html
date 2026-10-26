@@ -1,7 +1,7 @@
 {% extends "layouts/workspace.html" %}
 {% load static %}
 {% block title %}Thông tin bệnh viện{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block extra_head %}{% map_head %}{% endblock %}
 {% block ws_title %}{{ h.name }}{% endblock %}
 {% block ws_sub %}<p class="ws-sub">{% status_badge h %} &nbsp;Mã cơ sở {{ h.code }} · {{ staff_count }} nhân viên đang hoạt động</p>{% endblock %}
 {% block content %}
@@ -14,6 +14,5 @@
 </form>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script src="{% static 'js/maps.js' %}"></script>
+{% map_scripts %}
 {% endblock %}

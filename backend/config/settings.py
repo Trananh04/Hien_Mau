@@ -147,6 +147,14 @@ CSRF_COOKIE_HTTPONLY = False
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 if "test" in sys.argv[1:2]:
     ANTHROPIC_API_KEY = ""  # bộ test không bao giờ gọi API thật (tốn phí, không ổn định) — test LLM dùng client giả lập
+# Bản đồ Goong (https://help.goong.io): Map key hiển thị bản đồ trên trình duyệt (bắt buộc lộ ra trang — giới hạn
+# theo tên miền ở account.goong.io); API key chỉ dùng trên máy chủ (tra địa chỉ, gợi ý địa điểm, chỉ đường).
+GOONG_MAP_KEY = os.environ.get("GOONG_MAP_KEY", "")
+GOONG_API_KEY = os.environ.get("GOONG_API_KEY", "")
+# Chạy test: không gọi dịch vụ bản đồ thật (test tự giả lập khi cần)
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    GOONG_MAP_KEY = GOONG_API_KEY = ""
+
 CHATBOT_USE_LLM = os.environ.get("CHATBOT_USE_LLM", "1") == "1"
 CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "claude-haiku-5-5")
 # Địa chỉ API tương thích Claude Messages (để trống = API chính thức của Anthropic). Dịch vụ trung gian sẽ nhận

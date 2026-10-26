@@ -35,13 +35,13 @@
             <div class="radio-card"><input type="radio" id="d3" name="direction" value="count" {% if data.direction == "count" %}checked{% endif %}><label for="d3"><strong>Theo số đếm thực tế</strong><span>Kiểm kê</span></label></div>
           </div></div>
         <div class="field"><label for="qty">Số đơn vị</label><input id="qty" type="number" name="quantity" min="1" step="1" class="field-input" value="{{ data.quantity|default:'' }}"><p class="field-help" data-available-hint></p></div>
-        <div class="field"><label for="cnt">Số đếm thực tế</label><input id="cnt" type="number" name="counted" min="0" step="1" class="field-input" value="{{ data.counted|default:'' }}"><p class="field-help">Chỉ dùng khi chọn “Theo số đếm thực tế”.</p></div>
+        <div class="field"><label for="cnt">Số đếm thực tế</label><input id="cnt" type="number" name="counted" min="0" step="1" class="field-input" value="{{ data.counted|default:'' }}"></div>
         <div class="field"><label for="rsn">Lý do <span class="field-req">*</span></label><select id="rsn" name="reason" class="field-select" required><option value="">-- Chọn --</option>{% for v, l in reasons %}<option value="{{ v }}" {% if data.reason == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
         <div class="field"><label for="nt">Ghi chú <span class="muted small">(bắt buộc khi lý do Khác)</span></label><input id="nt" name="note" maxlength="500" class="field-input" value="{{ data.note|default:'' }}"></div>
         {% else %}
         <div class="field"><label for="qty">Số đơn vị <span class="field-req">*</span></label><input id="qty" type="number" name="quantity" min="1" step="1" required class="field-input" value="{{ data.quantity|default:'' }}"><p class="field-help" data-available-hint></p></div>
         <div class="field"><label for="pp">Mục đích</label><input id="pp" name="purpose" maxlength="500" class="field-input" value="{{ data.purpose|default:'' }}" placeholder="VD: Cấp cho khoa Hồi sức"></div>
-        <div class="field span-2"><label for="pr">Yêu cầu người cần máu (đã xác minh)</label><select id="pr" name="patient_request_id" class="field-select"><option value="">Không liên kết</option>{% for p in patient_requests %}<option value="{{ p.pk }}" {% if initial_prq == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.request_code }} · {{ p.blood_group }} · {{ p.blood_product.name|default:"chưa rõ chế phẩm" }} · {{ p.quantity_units }} đơn vị</option>{% endfor %}</select><p class="field-help">Chỉ hiển thị yêu cầu đã xác minh/đang xử lý tại bệnh viện này.</p></div>
+        <div class="field span-2"><label for="pr">Yêu cầu người cần máu (đã xác minh)</label><select id="pr" name="patient_request_id" class="field-select"><option value="">Không liên kết</option>{% for p in patient_requests %}<option value="{{ p.pk }}" {% if initial_prq == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.request_code }} · {{ p.blood_group }} · {{ p.blood_product.name|default:"chưa rõ chế phẩm" }} · {{ p.quantity_units }} đơn vị</option>{% endfor %}</select></div>
         {% endif %}
       {% endif %}
       </div></div>
@@ -55,8 +55,6 @@
           <div><small>Thay đổi</small><b data-change>0</b></div>
           <div><small>Tồn sau</small><b data-after>0</b></div>
         </div>
-        <p class="field-help u-mt-12">{% if mode == "receive" %}Tồn trước được tính lại theo dòng tồn khi ghi phiếu.{% else %}Giữ chỗ không bị ảnh hưởng; số giảm không được vượt khả dụng.{% endif %}</p>
-        <p class="field-help">Mã thao tác: <code>{{ key|slice:":12" }}…</code> — gửi lại cùng mã sẽ không ghi trùng.</p>
       </div>
     </aside>
   </div>

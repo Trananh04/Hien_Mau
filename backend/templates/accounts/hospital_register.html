@@ -1,7 +1,7 @@
 {% extends "layouts/public.html" %}
 {% load static %}
 {% block title %}Đăng ký bệnh viện{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block extra_head %}{% map_head %}{% endblock %}
 {% block band %}{% include "partials/band.html" with title="Đăng ký bệnh viện" lead="Sau khi Quản trị hệ thống duyệt, người quản lý đăng nhập cổng Bệnh viện và tự cấp tài khoản cho nhân viên." narrow=True %}{% endblock %}
 {% block content %}
 <div class="container narrow page-body" hx-boost="false">
@@ -10,7 +10,7 @@
     <div class="panel">
       {% include "partials/hospital_form_body.html" %}
       <section class="form-section">
-        <header class="form-section-head"><h2>Người quản lý</h2><p>Tài khoản đăng nhập cổng Bệnh viện, được cấp và thu hồi tài khoản nhân viên.</p></header>
+        <header class="form-section-head"><h2>Người quản lý</h2></header>
         <div class="form-section-body">
           {% include "partials/field.html" with field=form.manager_name %}
           <div class="form-row-2">
@@ -33,6 +33,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script src="{% static 'js/maps.js' %}"></script>
+{% map_scripts %}
 {% endblock %}

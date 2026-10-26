@@ -44,7 +44,9 @@ SCREENS = [
     S("SCR-02", "Danh sách đợt hiến", "Công khai", (PUBLIC,), ("bloodbank:campaigns",)),
     S("SCR-03", "Chi tiết đợt hiến (đăng ký hiến: chỉ Người dùng)", "Công khai", (PUBLIC,), ("bloodbank:campaign_detail",)),
     S("SCR-04", "Bản đồ điểm hiến", "Công khai", (PUBLIC,), ("bloodbank:map", "bloodbank:map_data")),
-    S("API-04", "Tra vị trí theo địa chỉ (ô chọn vị trí bản đồ)", "Công khai", (PUBLIC,), ("bloodbank:geocode",)),
+    S("API-04", "Bản đồ: tra / gợi ý địa chỉ, chỉ đường (Goong)", "Công khai", (PUBLIC,), (
+        "bloodbank:geocode", "bloodbank:geo_suggest", "bloodbank:geo_place", "bloodbank:geo_reverse",
+        "bloodbank:geo_route", "bloodbank:geo_distances")),
     S("SCR-05", "Quy trình tham gia hiến máu", "Công khai", (PUBLIC,), ("bloodbank:process",)),
     S("SCR-06", "Đăng nhập, đăng ký, khôi phục mật khẩu", "Công khai", (PUBLIC,), (
         "accounts:login", "accounts:hospital_login", "accounts:admin_login", "accounts:register",

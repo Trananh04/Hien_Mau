@@ -220,7 +220,8 @@ class ProductForm(BaseForm):
 
 
 class SpecForm(BaseForm):
-    code = forms.CharField(label="Mã quy cách", max_length=30, help_text="VD: 250ML, 350ML, STANDARD")
+    code = forms.CharField(label="Mã quy cách", max_length=30,
+                           widget=forms.TextInput(attrs={"placeholder": "VD: 250ML"}))
     name = forms.CharField(label="Tên quy cách", max_length=150)
     unit_volume_ml = forms.IntegerField(label="Thể tích/đơn vị (ml)", required=False, min_value=1)
     is_default = forms.BooleanField(label="Quy cách mặc định", required=False)
@@ -232,7 +233,7 @@ class EmergencyForm(FutureDatesForm):
     blood_group = forms.ChoiceField(label="Nhóm máu", choices=[("", "-- Chọn --")] + list(BLOOD_GROUPS))
     product_spec_id = forms.ChoiceField(label="Chế phẩm / quy cách", choices=())
     quantity = forms.IntegerField(label="Số đơn vị cần", min_value=1, max_value=100)
-    needed_by = dt_field("Cần trước", required=False, future=True, help_text="Bỏ trống: trong 6 giờ tới.")
+    needed_by = dt_field("Cần trước", required=False, future=True)
     note = forms.CharField(label="Ghi chú", required=False, max_length=500,
                            widget=forms.TextInput(attrs={"placeholder": "VD: mổ cấp cứu, khoa Hồi sức"}))
 

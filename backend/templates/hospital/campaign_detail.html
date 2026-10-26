@@ -41,7 +41,6 @@
       {% endif %}
       {% if "close" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="btn secondary block">{% icon "lock" %} Ngừng nhận đăng ký</button></form>
-        <p class="field-help">Sau khi ngừng nhận đăng ký vẫn check-in và ghi nhận lượt hiến được.</p>
       {% endif %}
       {% if "reopen" in actions %}
         <form method="post" action="{% url 'bloodbank:hospital_campaign_action' c.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reopen"><button class="btn secondary block">{% icon "lock-open" %} Mở lại đăng ký</button></form>
@@ -99,7 +98,7 @@
           <button type="button" class="btn danger sm" data-open-dialog="reject-{{ r.pk }}">Từ chối</button>
           <dialog class="modal-dialog" id="reject-{{ r.pk }}"><form class="u-d-flex u-fd-column u-w-100pct" method="post" action="{% url 'bloodbank:registration_action' r.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="next" value="{{ request.get_full_path }}">
             <div class="modal-header"><h3 class="modal-title">Từ chối đơn của {{ r.donor.full_name }}</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
-            <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea><p class="field-help">Người đăng ký sẽ nhận thông báo kèm lý do. Không ghi kết quả khám.</p></div></div>
+            <div class="modal-body"><div class="field"><label>Lý do <span class="field-req">*</span></label><textarea name="reason" class="field-textarea" required maxlength="500"></textarea></div></div>
             <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Từ chối đơn</button></div>
           </form></dialog>
         {% endif %}

@@ -1,7 +1,7 @@
 {% extends "layouts/public.html" %}
 {% load static %}
 {% block title %}{{ c.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block extra_head %}{% map_head %}{% endblock %}
 {% block band %}{% include "partials/band.html" with title=c.name lead=c.hospital.name %}{% endblock %}
 {% block content %}
 <div class="container page-body">
@@ -59,7 +59,6 @@
                   <div class="radio-card">{{ radio.tag }}<label for="{{ radio.id_for_label }}"><strong>{{ radio.choice_label }}</strong></label></div>
                   {% endfor %}
                 </div>
-                <p class="field-help">Hình thức thực tế do bệnh viện quyết định khi khám sàng lọc.</p>
               </div>
               <div class="u-mt-14">{% include "partials/field.html" with field=form.note %}</div>
               <button type="submit" class="btn primary lg block u-mt-18">{% icon "calendar-plus" %} {% if state.rereg %}Đăng ký lại{% else %}Đăng ký tham gia{% endif %}</button>
@@ -81,6 +80,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script src="{% static 'js/maps.js' %}"></script>
+{% map_scripts %}
 {% endblock %}

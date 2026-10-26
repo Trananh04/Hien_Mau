@@ -37,6 +37,32 @@ def icon(name, size=None, cls=""):
     return format_html('<i data-lucide="{}" class="{}" aria-hidden="true"></i>', name, classes)
 
 
+@register.simple_tag
+def map_head():
+    """CSS bản đồ + cấu hình Goong cho maps.js (Map key chỉ dùng hiển thị bản đồ; giới hạn tên miền ở account.goong.io).
+    Chưa cấu hình GOONG_MAP_KEY → maps.js dùng ô bản đồ OpenStreetMap."""
+    from django.conf import settings
+    from django.templatetags.static import static
+    from django.urls import reverse
+
+    return format_html(
+        '<link rel="stylesheet" href="{}">'
+        '<meta name="map-config" data-map-key="{}" data-suggest-url="{}" data-place-url="{}" data-reverse-url="{}" '
+        'data-route-url="{}" data-distances-url="{}">',
+        static("vendor/maplibre/maplibre-gl.css"), settings.GOONG_MAP_KEY, reverse("bloodbank:geo_suggest"),
+        reverse("bloodbank:geo_place"), reverse("bloodbank:geo_reverse"), reverse("bloodbank:geo_route"),
+        reverse("bloodbank:geo_distances"),
+    )
+
+
+@register.simple_tag
+def map_scripts():
+    from django.templatetags.static import static
+
+    return format_html('<script src="{}"></script><script src="{}"></script>',
+                       static("vendor/maplibre/maplibre-gl.js"), static("js/maps.js"))
+
+
 @register.filter
 def back_button(url):
     """Nút "Quay lại" đầu trang khu làm việc; trang con khai báo `{% block back %}<url trang cha>{% endblock %}`."""

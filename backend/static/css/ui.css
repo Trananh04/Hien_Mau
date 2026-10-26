@@ -467,7 +467,7 @@ dialog.modal-dialog[open] { display: flex; }
 .auth-art p { margin-top: 12px; color: var(--secondary-dark); font-size: 15.5px; line-height: 1.65; max-width: 46ch; font-weight: 500; }
 .auth-panel { display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: #fff; }
 .auth-card { width: 100%; max-width: 440px; }
-.auth-card h2 { font-size: 24px; color: var(--ink); font-weight: 800; }
+.auth-card h2 { font-size: 24px; color: var(--ink); font-weight: 800; margin-bottom: 22px; }
 .auth-card .lead { color: var(--ink-muted); margin: 6px 0 24px; font-size: 14.5px; }
 .auth-card .field + .field { margin-top: 14px; }
 .auth-card .form-grid > .field + .field { margin-top: 0; }
@@ -493,7 +493,7 @@ dialog.modal-dialog[open] { display: flex; }
 .map-item strong { display: block; font-size: 14px; color: var(--ink); }
 .map-item span { display: block; font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
 #map { min-height: 620px; width: 100%; z-index: 1; }
-.leaflet-popup-content { font-family: var(--font-main); font-size: 13px; }
+.maplibregl-popup-content { font-family: var(--font-main); font-size: 13px; line-height: 1.5; padding: 12px 14px; border-radius: 10px; }
 
 /* Chatbot nổi */
 .bot-fab {
@@ -1056,13 +1056,13 @@ a, button, [role="button"] { -webkit-tap-highlight-color: rgba(217, 4, 41, 0.12)
 
 /* ---------- Bản đồ công khai: gần tôi, chuyển Danh sách / Bản đồ trên điện thoại */
 .map-item .mi-body { display: block; min-width: 0; }
-.map-item .mi-dist { font-size: 12px; font-weight: 600; color: var(--primary); margin-left: 4px; }
+.map-item .mi-dist { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 700; color: var(--primary); }
 .map-item .live-tag { font-style: normal; font-weight: 700; color: var(--ok); }
 .map-status { width: 100%; margin: 0; }
 .map-toggle { display: none; gap: 8px; margin-bottom: 12px; }
 @media (max-width: 1100px) {
   .map-toggle { display: flex; }
-  .map-layout[data-view="list"] #map { display: none; }
+  .map-layout[data-view="list"] .map-main { display: none; }
   .map-layout[data-view="map"] .map-side .map-list { display: none; }
   .map-side { max-height: none; }
 }
@@ -1265,15 +1265,15 @@ html.js .ws-shell .filter-submit { display: none; }
    BIỂU MẪU NHẬP (tạo / sửa): KHÔNG kéo hết màn như sổ kế toán. Cột ~900px, chia nhóm theo ý nghĩa — tên nhóm + giải
    thích bên trái, ô nhập bên phải; ô rộng theo nội dung; thanh Lưu / Hủy dính đáy màn hình.
    ===================================================================================================== */
-.form-page { max-width: 920px; }
-.form-section { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 8px 28px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+.form-page { max-width: 1240px; }
+.form-section { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 8px 32px; padding: 22px 28px; border-bottom: 1px solid var(--line); }
 .form-section-head h2 { font-size: 14.5px; font-weight: 700; color: var(--ink); }
 .form-section-head p { margin-top: 4px; font-size: 12.5px; line-height: 1.5; color: var(--ink-muted); }
 .form-section-body { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .form-row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .form-actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 22px; background: #f6f1f1; border-top: 1px solid var(--line-strong); border-radius: 0 0 6px 6px; }
 .form-actions .muted { margin-left: 4px; }
-.map-pick { height: 320px; border: 1px solid var(--line-strong); border-radius: 6px; z-index: 0; }
+.map-pick { height: 420px; border: 1px solid var(--line-strong); border-radius: 6px; z-index: 0; }
 .pin-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: -4px; }
 .pin-status { flex: 1 1 220px; font-size: 13px; color: var(--ink-muted); }
 .pin-status.is-set { color: var(--ok); font-weight: 600; }
@@ -1349,7 +1349,9 @@ html.js .ws-shell .filter-submit { display: none; }
 .text-lg .stat-label { font-size: 14.5px; }
 .text-lg .notice { font-size: 15px; }
 .text-lg p, .text-lg li { font-size: 15.5px; }
+.text-lg .chip-select label, .text-lg .form-card-legend { font-size: 15px; }
 .auth-card.text-lg h2 { font-size: 28px; }
+.page-shell .menu-item { font-size: 15px; }
 .profile-stack { gap: 22px; }
 .profile-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 18px; }
 .profile-stats dt { grid-row: 1; }
@@ -1362,3 +1364,45 @@ html.js .ws-shell .filter-submit { display: none; }
 .donor-empty { padding: 14px 18px; }
 .donor-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 640px) { .donor-stats { grid-template-columns: 1fr; } }
+
+/* Bản đồ MapLibre + Goong */
+.map-main { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.map-main #map { flex: 1; }
+.map-route { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--line);
+  background: #fff; font-size: 14px; }
+.map-route .route-modes { display: inline-flex; gap: 6px; }
+.map-pin { width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: inline-flex;
+  align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 3px 8px rgba(31, 20, 22, 0.3); cursor: pointer;
+  background: var(--primary); color: #fff; padding: 0; }
+.map-pin .lucide { transform: rotate(45deg); width: 16px; height: 16px; }
+.map-pin.is-campaign { background: #0369a1; }
+.map-pin.is-live { box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.35), 0 3px 8px rgba(31, 20, 22, 0.3); }
+.map-pin:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.me-dot { width: 18px; height: 18px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2); }
+.me-pin { display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
+.me-pin-label { padding: 3px 9px; border-radius: 999px; background: #2563eb; color: #fff; font-size: 12px; font-weight: 700;
+  white-space: nowrap; box-shadow: 0 2px 6px rgba(31, 20, 22, 0.25); }
+.me-pin .me-dot { animation: me-pulse 2s ease-out infinite; }
+@keyframes me-pulse { 0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); } 100% { box-shadow: 0 0 0 16px rgba(37, 99, 235, 0); } }
+@media (prefers-reduced-motion: reduce) { .me-pin .me-dot { animation: none; box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2); } }
+.map-popup-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.map-popup-actions a, .map-popup-actions .link { color: var(--primary); font-weight: 600; }
+.map-style-switch { display: flex; }
+.maplibregl-ctrl-group.map-style-switch button { width: auto; height: 30px; padding: 0 12px; font-size: 12.5px; font-weight: 600;
+  color: var(--ink-soft); font-family: var(--font-main); }
+.maplibregl-ctrl-group.map-style-switch button + button { border-top: 0; border-left: 1px solid #ddd; }
+.map-style-switch button[aria-pressed="true"] { color: var(--primary); background: var(--primary-light); }
+.addr-suggest-host { position: relative; }
+.addr-suggest { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); background: #fff; border: 1px solid var(--line-strong);
+  border-radius: 10px; box-shadow: 0 12px 28px rgba(31, 20, 22, 0.14); overflow: hidden; max-height: 300px; overflow-y: auto; }
+.addr-suggest-item { display: block; width: 100%; text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.addr-suggest-item:last-child { border-bottom: 0; }
+.addr-suggest-item strong { display: block; font-size: 14px; color: var(--ink); }
+.addr-suggest-item span { display: block; font-size: 12.5px; color: var(--ink-muted); }
+.addr-suggest-item:hover, .addr-suggest-item.is-active { background: var(--ground); }
+.map-item .mi-rank { flex: 0 0 22px; height: 22px; margin-top: 7px; border-radius: 50%; background: var(--ground-strong);
+  color: var(--ink-soft); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.map-item:first-child .mi-rank { background: var(--primary); color: #fff; }
+.reason-list { display: flex; flex-wrap: wrap; gap: 4px 6px; list-style: none; margin: 0; padding: 0; }
+.reason-list li { padding: 2px 8px; border-radius: 999px; background: var(--ground); color: var(--ink-soft); font-size: 12.5px; white-space: nowrap; }
+.reason-list li:first-child { background: var(--primary-light); color: var(--primary); font-weight: 600; }

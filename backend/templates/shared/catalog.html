@@ -81,7 +81,7 @@
   <div class="modal-header"><h3 class="modal-title">Thêm chế phẩm</h3><button type="button" class="modal-close-btn" data-close-dialog aria-label="Đóng">{% icon "x" 20 %}</button></div>
   <div class="modal-body"><div class="form-grid">
     {% for field in product_form %}{% include "partials/field.html" with field=field %}{% endfor %}
-  </div><p class="field-help u-mt-12">Sau khi tạo, thêm ít nhất một quy cách (quy cách đầu tiên tự là mặc định).</p></div>
+  </div></div>
   <div class="modal-footer"><button type="button" class="btn secondary" data-close-dialog>Quay lại</button><button class="btn primary">Thêm</button></div>
 </form></dialog>
 {% endif %}

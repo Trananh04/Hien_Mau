@@ -15,6 +15,11 @@ urlpatterns = [
     path("quy-trinh-hien-mau/", public.process, name="process"),
     path("ban-do/du-lieu/", public.map_data, name="map_data"),
     path("dia-chi/vi-tri/", public.geocode, name="geocode"),
+    path("dia-chi/goi-y/", public.geo_suggest, name="geo_suggest"),
+    path("dia-chi/dia-diem/", public.geo_place, name="geo_place"),
+    path("dia-chi/tu-toa-do/", public.geo_reverse, name="geo_reverse"),
+    path("dia-chi/chi-duong/", public.geo_route, name="geo_route"),
+    path("dia-chi/khoang-cach/", public.geo_distances, name="geo_distances"),
     path("api/chatbot/", public.chatbot, name="chatbot"),
     # API trợ lý & dữ liệu cá nhân (JSON)
     path("api/chatbot/message", api.chat_message, name="api_chat_message"),
