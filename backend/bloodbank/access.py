@@ -40,7 +40,7 @@ SCREENS = [
     # ---------------------------------------------------------------- Công khai
     S("SCR-01", "Trang chủ & chatbot", "Công khai", (PUBLIC,), ("bloodbank:home", "bloodbank:chatbot")),
     S("API-01", "API trợ lý: gửi câu hỏi, tìm đợt hiến", "Công khai", (PUBLIC,), (
-        "bloodbank:api_chat_message", "bloodbank:api_campaigns")),
+        "bloodbank:api_chat_message", "bloodbank:api_chat_stream", "bloodbank:api_campaigns")),
     S("SCR-02", "Danh sách đợt hiến", "Công khai", (PUBLIC,), ("bloodbank:campaigns",)),
     S("SCR-03", "Chi tiết đợt hiến (đăng ký hiến: chỉ Người dùng)", "Công khai", (PUBLIC,), ("bloodbank:campaign_detail",)),
     S("SCR-04", "Bản đồ điểm hiến", "Công khai", (PUBLIC,), ("bloodbank:map", "bloodbank:map_data")),

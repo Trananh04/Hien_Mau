@@ -37,7 +37,10 @@ def search(qs, q):
     if not q:
         return qs
     digits = q.upper().removeprefix("LH-").lstrip("0")
-    cond = Q(donor__full_name__icontains=q) | Q(donor__phone__icontains=q)
+    cond = Q(donor__full_name__icontains=q)
+    # Số điện thoại: chỉ khớp khi gõ từ 4 chữ số — gõ mã lượt hiến ngắn ("13") không lẫn người có số 13 trong SĐT
+    if len(q) >= 4:
+        cond |= Q(donor__phone__icontains=q)
     if digits.isdigit():
         cond |= Q(pk=int(digits))
     return qs.filter(cond)

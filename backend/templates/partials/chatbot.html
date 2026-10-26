@@ -2,7 +2,7 @@
 <button type="button" class="bot-fab" id="bot-fab" hx-preserve data-bot-toggle aria-label="Mở trợ lý hỏi đáp" aria-expanded="false" aria-controls="bot-panel">
   {% icon "message-circle-heart" %}
 </button>
-<section class="bot-panel" id="bot-panel" hx-preserve hidden aria-label="Trợ lý hỏi đáp hiến máu" data-bot-url="{% url 'bloodbank:chatbot' %}"{% if user.is_authenticated %} data-bot-conv-url="{% url 'bloodbank:api_conversations' %}"{% endif %}>
+<section class="bot-panel" id="bot-panel" hx-preserve hidden aria-label="Trợ lý hỏi đáp hiến máu" data-bot-url="{% url 'bloodbank:chatbot' %}" data-bot-stream-url="{% url 'bloodbank:api_chat_stream' %}"{% if user.is_authenticated %} data-bot-conv-url="{% url 'bloodbank:api_conversations' %}"{% endif %}>
   <div class="bot-head">
     <img src="{% static 'assets/png/logo-mark-white.png' %}" alt="">
     <div>
@@ -26,6 +26,6 @@ Mình không đưa ra kết luận y khoa. Bạn có hiến được hay không 
     {% csrf_token %}
     <label class="sr-only" for="bot-input">Câu hỏi</label>
     <input id="bot-input" name="q" autocomplete="off" maxlength="300" placeholder="Hỏi về đợt hiến, ngày hiến lại, quy trình…" required>
-    <button type="submit" class="btn primary" aria-label="Gửi câu hỏi">{% icon "send-horizontal" %}</button>
+    <button type="submit" class="btn primary" aria-label="Gửi câu hỏi"><span class="bot-send-icon">{% icon "send-horizontal" %}</span><span class="bot-stop-icon">{% icon "square" %}</span></button>
   </form>
 </section>

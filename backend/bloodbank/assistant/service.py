@@ -1,7 +1,10 @@
 """Điểm vào của trợ lý:
 
-    câu hỏi → chặn trước (guard) → truy xuất tài liệu (RAG) → Claude (nếu bật) → KIỂM TRA câu trả lời (verify)
+    câu hỏi → chặn trước (guard) → truy xuất tài liệu (RAG) → mô hình Ollama (nếu bật) → KIỂM TRA câu trả lời (verify)
             → nếu AI lỗi / không qua kiểm tra: chế độ từ khóa → lưu hội thoại → trả lời + nguồn/liên kết
+
+- `answer()` trả JSON một lần; `answer_events()` sinh sự kiện cho streaming (SSE). Cả hai dùng chung `_run()`.
+- Hội thoại chỉ được lưu khi đã có câu trả lời cuối (kể cả câu dự phòng); người dùng hủy giữa chừng → không lưu dở.
 
 - Giới hạn tần suất theo người dùng / phiên (CHATBOT_RATE_LIMIT câu / 5 phút).
 - Ghi nhớ hội thoại:
@@ -50,6 +53,8 @@ def rate_limited(request):
 
 # ---------------------------------------------------------------- Bảo vệ khi nhiều người hỏi cùng lúc
 LLM_LOCK_CLASS = 7311
+# Câu trả lời dùng các công cụ này nói về điều kiện / thời điểm hiến → luôn kèm nhắc bác sĩ khám sàng lọc quyết định
+MEDICAL_TOOLS = ("my_eligibility", "preliminary_check")
 # Công cụ đọc dữ liệu của chính người hỏi → ý định tương ứng trong chế độ từ khóa
 PERSONAL_TOOLS = {"my_donation_history": "history", "my_eligibility": "eligibility",
                   "my_registrations": "my_registrations", "my_patient_requests": "my_patient_requests"}   # không gian khóa advisory riêng của trợ lý
@@ -74,14 +79,13 @@ def llm_calls_today():
 
 
 def _llm_slot():
-    """Giữ 1 trong CHATBOT_MAX_CONCURRENT suất gọi AI; trả về số suất, hoặc None nếu hết suất / hết hạn mức ngày
-    → khi đó trả lời bằng chế độ từ khóa ngay (nhanh, miễn phí) thay vì xếp hàng chờ dịch vụ AI.
+    """Giữ 1 trong CHATBOT_MAX_CONCURRENT suất gọi AI; trả về số suất, hoặc None nếu hết suất → trả lời ngay bằng
+    chế độ từ khóa thay vì xếp hàng chờ GPU.
 
     Suất = khóa advisory của PostgreSQL: nguyên tử trên mọi worker/luồng, và tự nhả khi kết nối đóng
-    (worker chết không làm kẹt suất). Hạn mức ngày đếm trên cache — gần đúng, đủ để chặn chi phí bất thường."""
+    (worker chết không làm kẹt suất). Bộ đếm lượt gọi AI trong ngày chỉ để thống kê ở trang Quản trị."""
     day = llm_day_key()
-    if llm_calls_today() >= settings.CHATBOT_DAILY_LIMIT:
-        return None
+    llm_calls_today()               # khởi tạo bộ đếm từ nhật ký nếu cache mất
     with connection.cursor() as cur:
         for slot in range(settings.CHATBOT_MAX_CONCURRENT):
             cur.execute("SELECT pg_try_advisory_lock(%s, %s)", [LLM_LOCK_CLASS, slot])
@@ -176,15 +180,21 @@ def purge_old_conversations(now=None):
 
 
 # ---------------------------------------------------------------- Trả lời
-def answer(request, question, lat=None, lng=None, conversation_id=None):
+def _reply(text, mode, conv):
+    return {"answer": text, "links": [], "cards": [], "source": None, "mode": mode,
+            "conversation_id": conv.pk if conv else None}
+
+
+def _run(request, question, lat=None, lng=None, conversation_id=None):
+    """Sinh ("delta", chữ) / ("reset", None) trong lúc AI trả lời, cuối cùng ("done", kết quả JSON)."""
     question = (question or "").strip()[:300]
     conv = own_conversation(request.user, conversation_id) if request.user.is_authenticated else None
     if not question:
-        return {"answer": "Bạn muốn hỏi gì về hiến máu?", "links": [], "cards": [], "source": None, "mode": "rules",
-                "conversation_id": conv.pk if conv else None}
+        yield "done", _reply("Bạn muốn hỏi gì về hiến máu?", "rules", conv)
+        return
     if rate_limited(request):
-        return {"answer": "Bạn hỏi hơi nhanh — vui lòng đợi vài phút rồi thử lại.", "links": [], "cards": [],
-                "source": None, "mode": "limit", "conversation_id": conv.pk if conv else None}
+        yield "done", _reply("Bạn hỏi hơi nhanh, vui lòng đợi vài phút rồi thử lại.", "limit", conv)
+        return
     ctx = Ctx(request.user, *location(lat, lng))
 
     result = None
@@ -198,10 +208,18 @@ def answer(request, question, lat=None, lng=None, conversation_id=None):
         need_login = bool(pre and pre[2].get("login_required"))
         slot = _llm_slot() if llm.enabled() and not need_login else None
         if slot is not None:
+            streamed = False
             try:
-                res = llm.ask(question, ctx, _history(request, conv), docs=docs,
-                              prefetched=pre[1:] if pre else None)
-                res["answer"] = verify.check(res["answer"], res["evidence"])
+                res = None
+                for kind, payload in llm.stream(question, ctx, _history(request, conv), docs=docs,
+                                                prefetched=pre[1:] if pre else None):
+                    if kind == "result":
+                        res = payload
+                    else:
+                        streamed = kind == "delta" or streamed
+                        yield kind, payload
+                medical = any(t in MEDICAL_TOOLS for t in res["tools_used"])
+                res["answer"] = verify.check(res["answer"], res["evidence"], remind_doctor=medical)
                 personal = [PERSONAL_TOOLS[t] for t in res["tools_used"] if t in PERSONAL_TOOLS]
                 if personal and not ctx.member:
                     # AI tự tra dữ liệu cá nhân khi chưa có tài khoản Người dùng → dùng câu trả lời cố định
@@ -214,8 +232,10 @@ def answer(request, question, lat=None, lng=None, conversation_id=None):
                 log.warning("Câu trả lời AI không qua kiểm tra (%s) — dùng chế độ từ khóa", exc)
             finally:
                 _llm_release(slot)
+            if result is None and streamed:
+                yield "reset", None            # bỏ phần chữ AI đã hiện, thay bằng câu trả lời dự phòng
         elif llm.enabled() and not need_login:
-            log.info("Chatbot: AI đang bận / hết hạn mức ngày — trả lời bằng chế độ từ khóa")
+            log.info("Chatbot: AI đang bận — trả lời bằng chế độ từ khóa")
         if result is None:
             result = {**rules.answer(question, ctx, docs=docs, pre=pre), "mode": "rules"}
 
@@ -232,7 +252,19 @@ def answer(request, question, lat=None, lng=None, conversation_id=None):
         log.exception("Không ghi được nhật ký trợ lý")
     out = {k: result[k] for k in ("answer", "links", "cards", "source", "mode")}
     out["conversation_id"] = conv.pk if conv else None
-    return out
+    yield "done", out
+
+
+def answer(request, question, lat=None, lng=None, conversation_id=None):
+    """Trả lời một lần (JSON). BusinessError (hội thoại không phải của mình) được raise trước khi xử lý."""
+    for kind, payload in _run(request, question, lat, lng, conversation_id):
+        if kind == "done":
+            return payload
+
+
+def answer_events(request, question, lat=None, lng=None, conversation_id=None):
+    """Như answer() nhưng sinh sự kiện để stream: ("delta", chữ), ("reset", None), ("done", JSON)."""
+    yield from _run(request, question, lat, lng, conversation_id)
 
 
 def reset(request):

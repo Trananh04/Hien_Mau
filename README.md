@@ -124,8 +124,8 @@ Nút tròn góc phải mọi trang. Luồng xử lý:
 ```
 Câu hỏi → chặn trước (khẩn cấp / y khoa cá nhân / dữ liệu người khác / mua bán / câu lệnh lạ)
         → truy xuất tài liệu đã duyệt (RAG) + tra cứu sẵn dữ liệu theo ý định (chỉ đọc, đúng người đăng nhập)
-        → Claude tổng hợp (nếu có API key) → KIỂM TRA (mã DK-/PR- phải có trong dữ liệu thật; câu khẳng định
-          "đủ điều kiện" luôn kèm nhắc bác sĩ) → không qua / AI lỗi → chế độ từ khóa
+        → mô hình AI chạy tại chỗ (Ollama) trả lời dần dần → KIỂM TRA (mã DK-/PR- phải có trong dữ liệu thật;
+          không lẫn chữ Trung; câu khẳng định "đủ điều kiện" luôn kèm nhắc bác sĩ) → không qua / AI lỗi → chế độ từ khóa
         → lưu hội thoại → trả lời + nguồn (tiêu đề tài liệu, phiên bản) + thẻ đợt hiến / nút liên kết
 ```
 
@@ -155,7 +155,8 @@ hội thoại của người khác → 404):
 
 | API | Quyền | Chức năng |
 |---|---|---|
-| `POST /api/chatbot/message` | Công khai | Gửi câu hỏi `{message, conversation_id?, lat?, lng?}` |
+| `POST /api/chatbot/message` | Công khai | Gửi câu hỏi `{message, conversation_id?, lat?, lng?}`, trả JSON một lần |
+| `POST /api/chatbot/stream` | Công khai | Như trên nhưng trả lời dần dần (Server-Sent Events: `delta`, `reset`, `done`) — khung chat dùng API này |
 | `GET /api/chatbot/conversations` | Đã đăng nhập | Danh sách hội thoại của chính mình |
 | `GET` / `DELETE /api/chatbot/conversations/{id}` | Đã đăng nhập | Xem / xóa một hội thoại của chính mình |
 | `GET /api/donations/me/history` | Người dùng | Lịch sử hiến (đã xác nhận) |
@@ -163,9 +164,23 @@ hội thoại của người khác → 404):
 | `GET /api/donation-campaigns?area=&date_from=&date_to=&time_of_day=&limit=&lat=&lng=` | Công khai | Tìm đợt hiến |
 | `GET /api/donation-registrations/me` | Người dùng | Lịch đăng ký và trạng thái |
 
-**Hai chế độ:** không có `ANTHROPIC_API_KEY` → chế độ từ khóa (miễn phí). Có key → Claude (mặc định
-`claude-haiku-5-5`; dùng dịch vụ trung gian tương thích `/v1/messages` bằng `CHATBOT_BASE_URL`). Trợ lý chỉ đọc —
-không đăng ký/hủy thay người dùng; nếu sau này thêm, bắt buộc có bước xác nhận rõ ràng trước khi thực hiện.
+**AI chạy tại chỗ (Ollama):** câu hỏi và dữ liệu người dùng **không rời máy chủ** — không gửi tới dịch vụ AI bên
+ngoài. Mô hình mặc định `qwen3:4b-instruct-2507-q4_K_M` — Qwen3 4B bản *instruct* (không "suy nghĩ" dài dòng), 2,5 GB, nằm gọn trong card 4 GB, có gọi công cụ, tiếng Việt tốt. Không dùng tag `qwen3:4b` trơn: đó là bản *thinking*, viết cả đoạn suy luận tiếng Anh vào câu trả lời. Ollama chạy trong service
+`ollama` của docker-compose, không mở cổng ra ngoài. Ollama tắt / quá tải / mô hình chưa tải → trợ lý tự trả lời bằng
+chế độ từ khóa (vẫn đúng dữ liệu, chỉ kém tự nhiên hơn). Trợ lý chỉ đọc — không đăng ký/hủy thay người dùng.
+
+```bash
+# Tải mô hình MỘT lần (lưu trong volume, khởi động lại không tải lại)
+docker compose exec ollama ollama pull qwen3:4b-instruct-2507-q4_K_M
+# Có card NVIDIA (Docker Desktop + WSL2 hoặc Linux có NVIDIA Container Toolkit): bật GPU
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d   # hoặc đặt COMPOSE_FILE trong .env
+# Ollama cài sẵn trên máy (ngoài Docker): đặt OLLAMA_BASE_URL=http://host.docker.internal:11434 trong .env
+# Kiểm thử + benchmark với mô hình thật (bỏ qua nếu không đặt OLLAMA_LIVE_URL)
+docker compose exec -e OLLAMA_LIVE_URL=http://ollama:11434 web python manage.py test bloodbank.tests.test_ollama_live
+```
+
+Không có GPU: mô hình vẫn chạy bằng CPU nhưng chậm (mỗi câu vài chục giây) — nên dùng `qwen2.5:3b` hoặc tắt AI ở
+**Quản trị → Trợ lý hỏi đáp** (trang này cũng cho biết Ollama có kết nối được và mô hình đã tải chưa).
 
 ## 5c. Phạm vi toàn quốc (tỉnh/thành)
 
@@ -188,7 +203,7 @@ Bộ test (170 test) chạy trên PostgreSQL thật, gồm:
 - smoke test mở mọi màn hình với từng vai trò trên dữ liệu mẫu,
 - test hồi quy cho các lỗi tìm được trong đợt QA audit (`test_qa_audit.py`, xem `qa-audit/`),
 - kiểm thử đồng thời nhiều luồng trên PostgreSQL thật (`test_concurrency.py`),
-- trợ lý hỏi đáp + bộ 47 câu hỏi mẫu (`test_assistant.py`, `assistant_eval.json`; phần Claude dùng client giả lập, không tốn phí).
+- trợ lý hỏi đáp + bộ 47 câu hỏi mẫu (`test_assistant.py`, `assistant_eval.json`; phần AI dùng client Ollama giả lập; `test_ollama_live.py` chạy với mô hình thật).
 
 ## 7. Cấu hình (`.env`)
 
@@ -203,11 +218,14 @@ Bộ test (170 test) chạy trên PostgreSQL thật, gồm:
 | `JOBS_INTERVAL_SECONDS` | `300` | Chu kỳ chạy tác vụ định kỳ (giây) |
 | `DJANGO_DEBUG` | `1` | Chế độ phát triển |
 | `DJANGO_SECRET_KEY` | (chuỗi mẫu) | **Phải đổi** nếu triển khai thật; bắt buộc khi `DJANGO_DEBUG=0` (thiếu thì ứng dụng không khởi động) |
-| `ANTHROPIC_API_KEY` | (trống) | Khóa Claude API cho trợ lý hỏi đáp. Trống = chế độ từ khóa (không cần AI, miễn phí) |
-| `CHATBOT_MODEL` | `claude-haiku-5-5` | Mô hình Claude của trợ lý (rẻ, nhanh) |
+| `OLLAMA_BASE_URL` | `http://ollama:11434` | Địa chỉ Ollama (service trong docker-compose). Để trống = chỉ chế độ từ khóa |
+| `OLLAMA_MODEL` | `qwen3:4b-instruct-2507-q4_K_M` | Mô hình trả lời (phải `ollama pull` trước) |
+| `OLLAMA_NUM_CTX` | `8192` | Độ dài ngữ cảnh (token): quy tắc + tài liệu + 6 lượt hội thoại |
+| `OLLAMA_KEEP_ALIVE` | `30m` | Giữ mô hình trong GPU giữa các câu hỏi (tránh nạp lại) |
+| `OLLAMA_TIMEOUT` | `90` | Giây chờ tối đa một lượt gọi mô hình |
+| `OLLAMA_THINK` | `false` | Chế độ "suy nghĩ" của qwen3 (chậm hơn nhiều) |
 | `CHATBOT_RATE_LIMIT` | `20` | Số câu hỏi tối đa / 5 phút / người dùng |
-| `CHATBOT_MAX_CONCURRENT` | `8` | Số câu gửi AI cùng lúc (khóa advisory PostgreSQL, áp cho mọi worker); vượt → trả lời ngay bằng chế độ từ khóa thay vì xếp hàng |
-| `CHATBOT_DAILY_LIMIT` | `2000` | Hạn mức gọi AI mỗi ngày (chặn chi phí bất thường); hết → chế độ từ khóa |
+| `CHATBOT_MAX_CONCURRENT` | `2` | Số câu gửi AI cùng lúc (khóa advisory PostgreSQL, áp cho mọi worker); vượt → trả lời ngay bằng chế độ từ khóa thay vì xếp hàng |
 | `DJANGO_HTTPS` | `0` | `1` khi chạy sau HTTPS: chuyển hướng HTTPS, HSTS, cookie Secure |
 | `ADMIN_LOGIN_PATH` | `quan-tri/dang-nhap` | Đường dẫn trang đăng nhập quản trị. Khi chạy thật đặt chuỗi khó đoán (vd `quan-tri-7f3k9/vao`) |
 | `ADMIN_ALLOWED_IPS` | (trống) | Danh sách IP được vào cổng quản trị, cách nhau dấu phẩy. Trống = không giới hạn; IP khác nhận 404 |

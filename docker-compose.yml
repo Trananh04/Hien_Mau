@@ -38,6 +38,28 @@ services:
       db:
         condition: service_healthy
 
+  # Mô hình AI chạy tại chỗ cho trợ lý hỏi đáp: dữ liệu không rời máy chủ. Không mở cổng ra ngoài — chỉ service
+  # web/scheduler gọi được qua mạng nội bộ Docker (http://ollama:11434). Mô hình tải MỘT lần vào volume `ollama`:
+  #   docker compose exec ollama ollama pull qwen3:4b-instruct-2507-q4_K_M
+  # Có card NVIDIA: chạy thêm docker-compose.gpu.yml (xem README).
+  ollama:
+    image: ollama/ollama:${OLLAMA_IMAGE_TAG:-0.12.3}
+    restart: unless-stopped
+    environment:
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}       # card nhỏ: xử lý từng câu, câu khác chuyển chế độ từ khóa
+      OLLAMA_MAX_LOADED_MODELS: 1
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      # Card nhỏ: flash attention + nén bộ nhớ ngữ cảnh (KV cache) → cả mô hình 4B nằm gọn trong 4 GB VRAM
+      OLLAMA_FLASH_ATTENTION: "1"
+      OLLAMA_KV_CACHE_TYPE: q8_0
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
   web:
     build: ./backend
     restart: unless-stopped
@@ -80,3 +102,4 @@ services:
 volumes:
   pgdata:
   pgadmin:
+  ollama:

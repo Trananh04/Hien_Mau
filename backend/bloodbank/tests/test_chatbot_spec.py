@@ -13,7 +13,8 @@ from bloodbank.assistant import knowledge, llm, rules, service, tools, verify
 from bloodbank.assistant.tools import Ctx
 from bloodbank.models import ChatConversation, ChatMessage
 
-from .test_assistant import AssistantData, fake_response, text, tool_use
+from .ollama_fake import ai_on, call, fake_client, reply, tool_reply
+from .test_assistant import AssistantData
 from .test_badges import donate
 
 
@@ -118,51 +119,45 @@ class VerifyTests(TestCase):
         self.assertIn("bác sĩ khám sàng lọc", out)
 
 
-@override_settings(ANTHROPIC_API_KEY="test-key", CHATBOT_USE_LLM=True, CHATBOT_EFFORT="")
+@ai_on
 class LLMRagTests(AssistantData):
     def test_retrieved_docs_injected_without_extra_search_round(self):
-        client = mock.Mock()
-        client.messages.create.side_effect = [fake_response([text("Hiến máu đúng quy trình là an toàn. "
-                                                                  "(Nguồn: Hiến máu có an toàn..., phiên bản 1.0)")])]
+        client = fake_client(reply("Hiến máu đúng quy trình là an toàn. (Nguồn: Hiến máu có an toàn..., phiên bản 1.0)"))
         with mock.patch.object(llm, "client", return_value=client):
             res = llm.ask("Hiến máu có nguy hiểm không?", Ctx())
-        first = client.messages.create.call_args_list[0].kwargs
-        self.assertIn('<doc id="an-toan"', first["messages"][0]["content"])          # RAG: tài liệu trong lượt hỏi
-        self.assertNotIn("output_config", first)                                    # Haiku 4.5: không gửi effort
-        self.assertNotIn("search_knowledge", [t["name"] for t in first["tools"]])   # đã có tài liệu → 1 lần gọi
-        self.assertEqual(client.messages.create.call_count, 1)
+        first = client.chat.call_args_list[0].kwargs
+        self.assertIn('<doc id="an-toan"', first["messages"][-1]["content"])        # RAG: tài liệu trong lượt hỏi
+        self.assertNotIn("search_knowledge", [t["function"]["name"] for t in first["tools"]])  # đã có tài liệu
+        self.assertEqual(client.chat.call_count, 1)
         self.assertEqual(res["doc_ids"][0], "an-toan")
 
     def test_follow_up_without_docs_can_search(self):
-        client = mock.Mock()
-        client.messages.create.side_effect = [
-            fake_response([tool_use("search_knowledge", {"query": "chế phẩm tiểu cầu"})], "tool_use"),
-            fake_response([text("Tiểu cầu giúp cầm máu. (Nguồn: Các loại chế phẩm máu, phiên bản 1.0)")]),
-        ]
+        client = fake_client(tool_reply(call("search_knowledge", {"query": "chế phẩm tiểu cầu"})),
+                             reply("Tiểu cầu giúp cầm máu. (Nguồn: Các loại chế phẩm máu, phiên bản 1.0)"))
         with mock.patch.object(llm, "client", return_value=client):
             res = llm.ask("còn cái kia thì sao", Ctx(), docs=[])
-        first = client.messages.create.call_args_list[0].kwargs
-        self.assertIn("search_knowledge", [t["name"] for t in first["tools"]])
+        first = client.chat.call_args_list[0].kwargs
+        self.assertIn("search_knowledge", [t["function"]["name"] for t in first["tools"]])
         self.assertIn("che-pham", res["doc_ids"])
         self.assertIn("Tiểu cầu", res["evidence"])
 
     def test_prefetched_data_injected_and_cards_returned(self):
         from bloodbank.assistant import rules
 
-        client = mock.Mock()
-        client.messages.create.side_effect = [fake_response([text("Có 1 đợt ở Tam Kỳ, chi tiết ở bên dưới.")])]
+        client = fake_client(reply("Có 1 đợt ở Tam Kỳ, chi tiết ở bên dưới."))
         pre = rules.prefetch("có đợt hiến nào ở Tam Kỳ không", Ctx())
         with mock.patch.object(llm, "client", return_value=client):
             res = llm.ask("có đợt hiến nào ở Tam Kỳ không", Ctx(), docs=[], prefetched=pre[1:])
-        content = client.messages.create.call_args_list[0].kwargs["messages"][0]["content"]
+        kw = client.chat.call_args_list[0].kwargs
+        content = kw["messages"][-1]["content"]
         self.assertIn("DỮ LIỆU HỆ THỐNG ĐÃ TRA CỨU SẴN", content)
         self.assertIn("Đợt Tam Kỳ", content)
-        self.assertEqual(client.messages.create.call_count, 1)                    # không cần vòng gọi công cụ
+        self.assertIsNone(kw["tools"])                       # đã có dữ liệu → không đưa công cụ, 1 lần gọi
+        self.assertEqual(client.chat.call_count, 1)
         self.assertEqual([c["name"] for c in res["cards"]], ["Đợt Tam Kỳ"])
 
     def test_incomplete_answer_falls_back(self):
-        client = mock.Mock()
-        client.messages.create.side_effect = [fake_response([text("Mình kiểm tra đơn đăng ký của bạn.")])]
+        client = fake_client(reply("Mình kiểm tra đơn đăng ký của bạn."))
         self.client.force_login(self.newbie)
         with mock.patch.object(llm, "client", return_value=client):
             r = self.client.post(reverse("bloodbank:api_chat_message"), {"message": "Tôi đã đăng ký hiến máu ngày nào?"}).json()
@@ -170,8 +165,7 @@ class LLMRagTests(AssistantData):
         self.assertIn("Đợt Thanh Khê chiều", r["answer"])
 
     def test_fabricated_code_falls_back_to_rules(self):
-        client = mock.Mock()
-        client.messages.create.side_effect = [fake_response([text("Đơn DK-123456 của bạn đã duyệt.")])]
+        client = fake_client(reply("Đơn DK-123456 của bạn đã duyệt."))
         self.client.force_login(self.newbie)
         with mock.patch.object(llm, "client", return_value=client):
             r = self.client.post(reverse("bloodbank:api_chat_message"), {"message": "đơn đăng ký của tôi"}).json()
@@ -179,8 +173,33 @@ class LLMRagTests(AssistantData):
         self.assertNotIn("DK-123456", r["answer"])
         self.assertIn("Đợt Thanh Khê chiều", r["answer"])
 
+    def test_links_and_citations_removed(self):
+        """Không hiện link markdown và dòng "(Nguồn: …)" (kể cả thẻ <doc> lọt ra) trong câu trả lời."""
+        client = fake_client(reply("Xem tại [Lịch sử hiến máu](/tai-khoan/lich-su-hien/). (Nguồn: suggest_campaigns)"),
+                             reply('Nên ăn nhẹ. (Nguồn: <doc id="chuan-bi" title="Chuẩn bị trước khi hiến máu" '
+                                   'version="1.0">)'))
+        with mock.patch.object(llm, "client", return_value=client):
+            first = llm.ask("lịch sử của tôi", Ctx(), docs=[])["answer"]
+            second = llm.ask("cần chuẩn bị gì", Ctx(), docs=[])["answer"]
+        self.assertEqual(first, "Xem tại Lịch sử hiến máu.")
+        self.assertEqual(second, "Nên ăn nhẹ.")                  # không ghi nguồn ở cuối câu trả lời
 
-@override_settings(ANTHROPIC_API_KEY="")
+    def test_eligibility_answer_always_reminds_doctor(self):
+        client = fake_client(tool_reply(call("my_eligibility")), reply("Bạn được hiến lại từ ngày 19/12/2026."))
+        self.client.force_login(self.donor)
+        with mock.patch.object(llm, "client", return_value=client), \
+                mock.patch("bloodbank.assistant.rules.prefetch", return_value=None):
+            r = self.client.post(reverse("bloodbank:api_chat_message"), {"message": "bao giờ hiến tiếp"}).json()
+        self.assertEqual(r["mode"], "llm")
+        self.assertIn("bác sĩ khám sàng lọc", r["answer"])
+
+    def test_think_tags_stripped(self):
+        client = fake_client(reply("<think>người dùng hỏi về chuẩn bị</think>Bạn nên ngủ đủ giấc trước khi hiến."))
+        with mock.patch.object(llm, "client", return_value=client):
+            res = llm.ask("cần chuẩn bị gì", Ctx())
+        self.assertEqual(res["answer"], "Bạn nên ngủ đủ giấc trước khi hiến.")
+
+
 class ConversationAndApiTests(AssistantData):
     def post(self, message, **extra):
         return self.client.post(reverse("bloodbank:api_chat_message"), {"message": message, **extra})

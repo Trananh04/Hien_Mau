@@ -207,22 +207,17 @@ def my_donation_history(ctx):
     if not ctx.member:
         return _login_needed(ctx, "lịch sử hiến máu của bạn")
     from bloodbank.models import Donation
-    from bloodbank.services.badges import badges_for
     from bloodbank.services.donations import summarize
 
     qs = Donation.objects.filter(donor=ctx.user)
     s = summarize(qs)
     recent = qs.filter(status="confirmed").select_related("hospital").order_by("-donated_at")[:5]
-    badges = badges_for(s["count"])
     return {
         "confirmed_count": s["count"], "whole_blood_count": s["whole_count"], "whole_blood_ml": s["whole_ml"],
         "component_count": s["component_count"],
         "last_donation": timezone.localdate(s["last"]).isoformat() if s["last"] else None,
         "recent": [{"date": timezone.localdate(d.donated_at).isoformat(), "type": d.get_donation_type_display(),
                     "volume_ml": d.volume_ml, "hospital": d.hospital.name} for d in recent],
-        "badges_earned": [b["name"] for b in badges["earned"]],
-        "next_badge": ({"name": badges["next"]["name"], "remaining": badges["next"]["remaining"]}
-                       if badges["next"] else None),
         "note": "Chỉ tính các lượt hiến đã được bệnh viện xác nhận.",
         "links": [{"label": "Lịch sử hiến máu", "url": reverse("bloodbank:my_history")}],
     }
@@ -304,83 +299,67 @@ TOOLS = {
 }
 WITH_ARGS = {"suggest_campaigns", "preliminary_check"}
 
-# Định nghĩa cho Claude (thứ tự cố định → không làm hỏng prompt cache)
+def _fn(name, description, properties=None, required=()):
+    return {"type": "function", "function": {"name": name, "description": description, "parameters": {
+        "type": "object", "properties": properties or {}, "required": list(required)}}}
+
+
+# Định nghĩa công cụ gửi cho mô hình (định dạng Ollama /api/chat). Schema giữ tối giản — mô hình nhỏ điền đúng hơn khi
+# tham số đều tùy chọn và có mô tả cụ thể; giá trị sai kiểu được run_tool chuẩn hóa / loại bỏ.
 TOOL_SPECS = [
-    {
-        "name": "suggest_campaigns",
-        "description": "Tìm các đợt hiến máu đang mở đăng ký, phù hợp với người hỏi. Với người dùng đã đăng nhập, "
-                       "tự loại đợt đã đăng ký và đợt kết thúc trước ngày họ được hiến lại. Dùng khi người dùng hỏi "
-                       "về đợt hiến, lịch hiến, nơi hiến máu, đợt gần họ.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "area": {"type": ["string", "null"], "description": "Địa danh người dùng nêu: quận/huyện, tỉnh, "
-                         "trường, bệnh viện (vd 'Cầu Giấy', 'Hà Nội', 'Quận 1', 'Cần Thơ'). null nếu không nêu."},
-                "date_from": {"type": ["string", "null"], "description": "Ngày bắt đầu khoảng tìm, YYYY-MM-DD."},
-                "date_to": {"type": ["string", "null"], "description": "Ngày kết thúc khoảng tìm, YYYY-MM-DD."},
-                "time_of_day": {"type": ["string", "null"], "enum": ["morning", "afternoon", "evening", None]},
-                "limit": {"type": "integer", "description": "Số đợt trả về, 1–6. Mặc định 3."},
-            },
-            "required": ["area", "date_from", "date_to", "time_of_day", "limit"],
-            "additionalProperties": False,
-        },
-        "strict": True,
-    },
-    {
-        "name": "my_eligibility",
-        "description": "Ngày sớm nhất người đang hỏi nên hiến lại (theo lần hiến gần nhất được xác nhận). "
-                       "Chỉ cho chính người đang đăng nhập.",
-        "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False},
-        "strict": True,
-    },
-    {
-        "name": "my_registrations",
-        "description": "Các đơn đăng ký hiến máu của chính người đang hỏi và trạng thái (chờ duyệt, đã duyệt...).",
-        "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False},
-        "strict": True,
-    },
-    {
-        "name": "my_patient_requests",
-        "description": "Trạng thái các yêu cầu cần máu mà chính người đang hỏi đã gửi (mã PR-..., bệnh viện xử lý).",
-        "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False},
-        "strict": True,
-    },
-    {
-        "name": "my_donation_history",
-        "description": "Lịch sử hiến máu của chính người đang hỏi: số lần đã được xác nhận, tổng ml, lần gần nhất, "
-                       "huy hiệu. Dùng khi hỏi 'tôi đã hiến mấy lần', 'lần gần nhất tôi hiến khi nào'.",
-        "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False},
-        "strict": True,
-    },
-    {
-        "name": "preliminary_check",
-        "description": "Đối chiếu SƠ BỘ tuổi, cân nặng, giới tính (và khoảng nghỉ nếu đã đăng nhập) với ngưỡng tham khảo. "
-                       "Dùng khi người dùng nêu tuổi/cân nặng và hỏi có hiến được không. Không bao giờ kết luận đủ điều "
-                       "kiện; nếu kết quả báo thiếu thông tin thì hỏi lại người dùng.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "age": {"type": ["integer", "null"], "description": "Tuổi người dùng nêu; null nếu không nêu."},
-                "weight_kg": {"type": ["number", "null"], "description": "Cân nặng (kg); null nếu không nêu."},
-                "gender": {"type": ["string", "null"], "enum": ["male", "female", None],
-                           "description": "Giới tính nếu người dùng nêu; null nếu không nêu."},
-            },
-            "required": ["age", "weight_kg", "gender"],
-            "additionalProperties": False,
-        },
-        "strict": True,
-    },
+    _fn("suggest_campaigns",
+        "Tìm đợt hiến máu đang mở đăng ký. Dùng khi người dùng hỏi về đợt hiến, lịch hiến, nơi hiến máu, đợt gần họ.",
+        {"area": {"type": "string", "description": "Địa danh người dùng nêu: quận/huyện, tỉnh, bệnh viện "
+                                                    "(vd 'Cầu Giấy', 'Đà Nẵng'). Bỏ trống nếu không nêu."},
+         "date_from": {"type": "string", "description": "Ngày bắt đầu khoảng tìm, dạng YYYY-MM-DD."},
+         "date_to": {"type": "string", "description": "Ngày kết thúc khoảng tìm, dạng YYYY-MM-DD."},
+         "time_of_day": {"type": "string", "enum": ["morning", "afternoon", "evening"],
+                         "description": "Buổi: sáng / chiều / tối."},
+         "limit": {"type": "integer", "description": "Số đợt trả về, 1–6. Mặc định 3."}}),
+    _fn("my_eligibility", "Ngày sớm nhất người đang hỏi được hiến lại. Chỉ cho chính người đang đăng nhập."),
+    _fn("my_registrations", "Các đơn đăng ký hiến máu của chính người đang hỏi và trạng thái (chờ duyệt, đã duyệt...)."),
+    _fn("my_patient_requests", "Trạng thái các yêu cầu cần máu mà chính người đang hỏi đã gửi (mã PR-...)."),
+    _fn("my_donation_history", "Lịch sử hiến máu của chính người đang hỏi: số lần đã xác nhận, tổng ml, lần gần nhất."),
+    _fn("preliminary_check",
+        "Đối chiếu SƠ BỘ tuổi, cân nặng, giới tính với ngưỡng tham khảo khi người dùng hỏi có hiến được không. "
+        "Không bao giờ kết luận đủ điều kiện; thiếu thông tin thì hỏi lại người dùng.",
+        {"age": {"type": "integer", "description": "Tuổi người dùng nêu."},
+         "weight_kg": {"type": "number", "description": "Cân nặng (kg)."},
+         "gender": {"type": "string", "enum": ["male", "female"], "description": "Giới tính nếu người dùng nêu."}}),
 ]
+PARAMS = {t["function"]["name"]: t["function"]["parameters"]["properties"] for t in TOOL_SPECS}
+
+
+def _coerce(value, spec):
+    """Giá trị mô hình điền → đúng kiểu trong schema; sai kiểu / ngoài enum → None (coi như không nêu)."""
+    if value in (None, "", "null", "None"):
+        return None
+    try:
+        if spec["type"] == "integer":
+            value = int(float(value))
+        elif spec["type"] == "number":
+            value = float(str(value).replace(",", "."))
+        else:
+            value = str(value).strip()[:100]
+    except (TypeError, ValueError):
+        return None
+    if "enum" in spec and value not in spec["enum"]:
+        return None
+    return value
 
 
 def run_tool(name, args, ctx):
+    """Chạy công cụ theo tên mô hình yêu cầu. Chỉ nhận tham số khai báo trong schema; công cụ lạ / tham số hỏng → trả
+    lỗi cho mô hình (không raise), để vòng gọi tiếp tục và mô hình tự sửa."""
     fn = TOOLS.get(name)
     if fn is None:
         return {"error": f"Không có công cụ {name}."}
-    args = {k: v for k, v in (args or {}).items() if v is not None}
+    spec = PARAMS[name]
+    clean = {k: _coerce(v, spec[k]) for k, v in (args if isinstance(args, dict) else {}).items() if k in spec}
+    clean = {k: v for k, v in clean.items() if v is not None}
     try:
-        return fn(ctx, **args) if name in WITH_ARGS else fn(ctx)
-    except TypeError:
+        return fn(ctx, **clean) if name in WITH_ARGS else fn(ctx)
+    except (TypeError, ValueError):
         return {"error": "Tham số không hợp lệ."}
 
 

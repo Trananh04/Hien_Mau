@@ -1406,3 +1406,11 @@ html.js .ws-shell .filter-submit { display: none; }
 .reason-list { display: flex; flex-wrap: wrap; gap: 4px 6px; list-style: none; margin: 0; padding: 0; }
 .reason-list li { padding: 2px 8px; border-radius: 999px; background: var(--ground); color: var(--ink-soft); font-size: 12.5px; white-space: nowrap; }
 .reason-list li:first-child { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+/* Trợ lý: đang trả lời dần dần + nút gửi thành nút Dừng */
+.bot-stop-icon { display: none; }
+.bot-panel.is-busy .bot-send-icon { display: none; }
+.bot-panel.is-busy .bot-stop-icon { display: inline-flex; }
+.bot-msg.streaming::after { content: ""; display: inline-block; width: 7px; height: 1em; margin-left: 2px; vertical-align: -2px;
+  background: currentColor; opacity: 0.6; animation: bot-caret 1s steps(2) infinite; }
+@keyframes bot-caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .bot-msg.streaming::after { animation: none; } }

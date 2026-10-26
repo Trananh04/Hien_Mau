@@ -1,6 +1,8 @@
 """Quản trị: cảnh báo toàn hệ thống (chỉ đọc, không lộ tên bệnh nhân) và theo dõi / bật tắt AI của trợ lý."""
 from datetime import timedelta
 
+from unittest import mock
+
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -11,6 +13,7 @@ from bloodbank.services import admin as admin_service
 from bloodbank.services.common import BusinessError
 
 from . import factories as f
+from .ollama_fake import ai_on
 
 
 class SystemAlertTests(TestCase):
@@ -43,7 +46,7 @@ class SystemAlertTests(TestCase):
         self.assertEqual(self.client.get(reverse("bloodbank:admin_alerts")).status_code, 404)
 
 
-@override_settings(ANTHROPIC_API_KEY="test-key", CHATBOT_USE_LLM=True)
+@ai_on
 class AssistantMonitorTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -60,9 +63,22 @@ class AssistantMonitorTests(TestCase):
         self.assertEqual(s["days"][-1]["total"], 4)
         self.assertTrue(s["enabled"])
 
+    def test_admin_page_shows_ollama_status(self):
+        self.client.force_login(self.admin)
+        ready = {"reachable": True, "model_ready": True, "models": ["qwen3:4b-instruct-2507-q4_K_M"], "error": None}
+        with mock.patch.object(llm, "health", return_value=ready):
+            self.assertContains(self.client.get(reverse("bloodbank:admin_assistant")), "AI đang trả lời")
+        missing = {"reachable": True, "model_ready": False, "models": [], "error": None}
+        with mock.patch.object(llm, "health", return_value=missing):
+            r = self.client.get(reverse("bloodbank:admin_assistant"))
+        self.assertContains(r, "chưa tải về")
+        self.assertContains(r, "ollama pull qwen3:4b-instruct-2507-q4_K_M")
+        down = {"reachable": False, "model_ready": False, "models": [], "error": "refused"}
+        with mock.patch.object(llm, "health", return_value=down):
+            self.assertContains(self.client.get(reverse("bloodbank:admin_assistant")), "Không kết nối được")
+
     def test_admin_switches_ai_off_and_on_with_audit(self):
         self.client.force_login(self.admin)
-        self.assertContains(self.client.get(reverse("bloodbank:admin_assistant")), "AI đang trả lời")
         self.client.post(reverse("bloodbank:admin_assistant"), {"ai": "off"})
         self.assertFalse(SystemSetting.get("chatbot_ai_enabled"))
         self.assertFalse(llm.enabled())                     # trợ lý chuyển sang chế độ từ khóa
@@ -80,7 +96,7 @@ class AssistantMonitorTests(TestCase):
 
 class DailyCounterTests(TestCase):
     def test_counter_reseeded_from_audit_when_cache_lost(self):
-        """Cache bị dọn mất bộ đếm → đếm lại từ nhật ký, hạn mức ngày không bị đặt về 0."""
+        """Cache bị dọn mất bộ đếm lượt gọi AI → đếm lại từ nhật ký (thống kê không bị đặt về 0)."""
         from django.core.cache import cache
 
         from bloodbank.assistant import service
@@ -90,8 +106,6 @@ class DailyCounterTests(TestCase):
                                     new_values={"mode": "llm", "intent": "faq"})
         cache.delete(service.llm_day_key())
         self.assertEqual(service.llm_calls_today(), 3)
-        with override_settings(CHATBOT_DAILY_LIMIT=3):
-            self.assertIsNone(service._llm_slot())        # đã chạm hạn mức → không gọi AI
 
     def test_intent_labels_hide_technical_names(self):
         for intent in ("shell", "history:login_required"):

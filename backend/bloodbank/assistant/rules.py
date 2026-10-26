@@ -16,15 +16,14 @@ ELIGIBILITY = ["hien lai", "khi nao duoc hien", "bao gio duoc hien", "khi nao to
                "du thoi gian nghi", "lan hien tiep", "hien tiep", "khi nao co the hien", "bao gio hien duoc"]
 HISTORY = ["hien may lan", "hien bao nhieu lan", "da hien bao nhieu", "so lan hien cua toi", "toi da hien",
            "lan gan nhat toi hien", "lan hien gan nhat", "lich su hien cua toi", "tong so lan hien",
-           "lich su hien mau cua toi", "lich su cua toi", "huy hieu cua toi", "may huy hieu", "toi duoc huy hieu",
-           "toi co huy hieu", "toi dat huy hieu"]
+           "lich su hien mau cua toi", "lich su cua toi"]
 MY_REGS = ["don dang ky", "don cua toi", "duoc duyet chua", "da duyet chua", "dang ky cua toi", "toi da dang ky",
            "lich dang ky", "dang ky ngay nao", "dang ky hien mau ngay nao"]
 MY_PRQ = ["yeu cau can mau cua toi", "yeu cau cua toi", "yeu cau toi da gui", "yeu cau xin mau cua toi", "pr "]
 CAMPAIGNS = ["dot hien", "lich hien", "hien mau o dau", "hien o dau", "cho nao hien", "noi nao hien", "gan toi",
              "gan day", "gan nha", "sap dien ra", "sap toi", "dot nao", "cuoi tuan", "dia diem hien", "diem hien mau",
              "muon hien mau o"]
-NOT_CAMPAIGN = ["lich su", "so lan hien", "huy hieu", "mat khau", "bao mat", "ban do"]
+NOT_CAMPAIGN = ["lich su", "so lan hien", "mat khau", "bao mat", "ban do"]
 TIME_PHRASES = [("hom nay", "today"), ("ngay mai", "tomorrow"), ("cuoi tuan", "weekend"), ("tuan nay", "this_week"),
                 ("tuan sau", "next_week"), ("tuan toi", "next_week")]
 # "bao giờ tôi có thể hiến máu tiếp", "khi nào mình hiến lại được", "hiến máu lại"...
@@ -144,8 +143,6 @@ def render(intent, data):
         if data["component_count"]:
             parts.append(f"{data['component_count']} lần hiến thành phần")
         text = ", ".join(parts) + f". Lần gần nhất: {_d(data['last_donation'])}."
-        if data["next_badge"]:
-            text += f" Còn {data['next_badge']['remaining']} lần nữa để đạt huy hiệu \"{data['next_badge']['name']}\"."
         return {"answer": text, "links": data["links"]}
     if intent == "precheck":
         if "error" in data:
@@ -203,7 +200,7 @@ TOOL_OF = {"eligibility": "my_eligibility", "history": "my_donation_history", "p
 
 def prefetch(question, ctx, intent=None):
     """Tra cứu dữ liệu theo ý định câu hỏi. Trả về (intent, tên công cụ, dữ liệu) hoặc None nếu là câu hỏi kiến thức.
-    Dùng cho cả chế độ từ khóa lẫn chế độ Claude (đưa sẵn dữ liệu cho mô hình)."""
+    Dùng cho cả chế độ từ khóa lẫn chế độ AI (đưa sẵn dữ liệu cho mô hình)."""
     intent = intent or detect_intent(question)
     if intent not in TOOL_OF:
         return None

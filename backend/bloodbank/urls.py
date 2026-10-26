@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/chatbot/", public.chatbot, name="chatbot"),
     # API trợ lý & dữ liệu cá nhân (JSON)
     path("api/chatbot/message", api.chat_message, name="api_chat_message"),
+    path("api/chatbot/stream", api.chat_stream, name="api_chat_stream"),
     path("api/chatbot/conversations", api.conversations, name="api_conversations"),
     path("api/chatbot/conversations/<int:pk>", api.conversation, name="api_conversation"),
     path("api/donation-campaigns", api.campaigns, name="api_campaigns"),

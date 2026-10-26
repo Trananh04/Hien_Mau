@@ -1,0 +1,12 @@
+# Bật GPU NVIDIA cho Ollama (Docker Desktop + WSL2, hoặc Linux có NVIDIA Container Toolkit):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+# hoặc đặt COMPOSE_FILE trong .env (Windows ngăn cách bằng ";", Linux/macOS bằng ":").
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

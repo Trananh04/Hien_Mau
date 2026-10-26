@@ -401,6 +401,9 @@
     var form = panel.querySelector('[data-bot-form]');
     var input = form.querySelector('input[name="q"]');
     var url = panel.getAttribute('data-bot-url');
+    var streamUrl = panel.getAttribute('data-bot-stream-url');
+    var sendBtn = form.querySelector('button[type="submit"]');
+    var busy = null;     // AbortController của câu đang trả lời (bấm nút gửi lần nữa = Dừng)
     var convUrl = panel.getAttribute('data-bot-conv-url');
     var coords = null;   // vị trí chỉ giữ trong trang, gửi kèm câu hỏi — không lưu ở máy chủ
     var convId = null;   // cuộc trò chuyện hiện tại (chỉ khi đã đăng nhập — lưu ở máy chủ)
@@ -414,8 +417,15 @@
     }
     /* Mọi nội dung từ máy chủ được gán bằng textContent / thuộc tính (không innerHTML) → không có XSS */
     function add(text, who, data) {
-      data = data || {};
       var div = el('div', 'bot-msg ' + who, text);
+      fill(div, text, data);
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+    function fill(div, text, data) {
+      data = data || {};
+      div.textContent = text;
       (data.cards || []).forEach(function (c) {
         var card = el('a', 'bot-card');
         card.href = c.url;
@@ -436,10 +446,6 @@
         });
         div.appendChild(row);
       }
-      if (data.source) div.appendChild(el('span', 'src', 'Nguồn: ' + data.source));
-      log.appendChild(div);
-      log.scrollTop = log.scrollHeight;
-      return div;
     }
     // Đã đăng nhập: mở trợ lý lần đầu → tải lại cuộc trò chuyện gần nhất (ghi nhớ hội thoại)
     function loadLatest() {
@@ -460,17 +466,83 @@
         })
         .catch(function () { /* không tải được lịch sử: vẫn trò chuyện mới bình thường */ });
     }
+    function setBusy(ctrl) {
+      busy = ctrl;
+      panel.classList.toggle('is-busy', !!ctrl);
+      sendBtn.setAttribute('aria-label', ctrl ? 'Dừng trả lời' : 'Gửi câu hỏi');
+      sendBtn.title = ctrl ? 'Dừng' : '';
+    }
+    function body(q) {
+      var b = new FormData();
+      b.append('q', q);
+      if (convId) b.append('conversation_id', convId);
+      if (coords) { b.append('lat', coords.lat); b.append('lng', coords.lng); }
+      return b;
+    }
+    function finish(div, data) {
+      div.classList.remove('pending', 'streaming');
+      if (data.conversation_id) convId = data.conversation_id;
+      fill(div, data.answer, data);
+      log.scrollTop = log.scrollHeight;
+    }
+    var FAIL = 'Xin lỗi, trợ lý đang gặp sự cố. Vui lòng thử lại sau ít phút.';
+    // Một lần (JSON) — dùng khi trình duyệt không đọc được luồng
+    function askOnce(q, div, ctrl) {
+      return fetch(url, { method: 'POST', body: body(q), headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                          credentials: 'same-origin', signal: ctrl.signal })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (data) { finish(div, data); });
+    }
+    // Trả lời dần dần (Server-Sent Events qua fetch POST): delta → nối chữ, reset → xóa, done → thay bằng bản cuối
+    function askStream(q, div, ctrl) {
+      return fetch(streamUrl, { method: 'POST', body: body(q), headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                                credentials: 'same-origin', signal: ctrl.signal })
+        .then(function (r) {
+          if (!r.ok || !r.body) throw new Error(r.status);
+          var reader = r.body.getReader(), dec = new TextDecoder(), buf = '', text = '', done = false;
+          function handle(block) {
+            var ev = 'message', data = '';
+            block.split('\n').forEach(function (line) {
+              if (line.indexOf('event: ') === 0) ev = line.slice(7);
+              else if (line.indexOf('data: ') === 0) data += line.slice(6);
+            });
+            var d = data ? JSON.parse(data) : {};
+            if (ev === 'delta') {
+              if (!text) { div.classList.remove('pending'); div.classList.add('streaming'); }
+              text += d.text; div.textContent = text; log.scrollTop = log.scrollHeight;
+            } else if (ev === 'reset') {
+              text = ''; div.textContent = 'Đang tra cứu…'; div.classList.add('pending');
+            } else if (ev === 'done') { done = true; finish(div, d); }
+            else if (ev === 'error') { done = true; finish(div, { answer: d.message || FAIL }); }
+          }
+          function pump() {
+            return reader.read().then(function (res) {
+              if (res.done) { if (!done) throw new Error('cut'); return; }
+              buf += dec.decode(res.value, { stream: true });
+              var k;
+              while ((k = buf.indexOf('\n\n')) >= 0) { handle(buf.slice(0, k)); buf = buf.slice(k + 2); }
+              return pump();
+            });
+          }
+          return pump();
+        });
+    }
     function ask(q) {
       add(q, 'me');
-      var pending = add('Đang trả lời…', 'bot pending');
-      var body = new FormData();
-      body.append('q', q);
-      if (convId) body.append('conversation_id', convId);
-      if (coords) { body.append('lat', coords.lat); body.append('lng', coords.lng); }
-      fetch(url, { method: 'POST', body: body, headers: { 'X-CSRFToken': getCookie('csrftoken') }, credentials: 'same-origin' })
-        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(function (data) { pending.remove(); if (data.conversation_id) convId = data.conversation_id; add(data.answer, 'bot', data); })
-        .catch(function () { pending.remove(); add('Xin lỗi, trợ lý đang gặp sự cố. Vui lòng thử lại sau ít phút.', 'bot'); });
+      var div = add('Đang trả lời…', 'bot pending');
+      var ctrl = new AbortController();
+      setBusy(ctrl);
+      var run = streamUrl && window.ReadableStream && window.TextDecoder ? askStream : askOnce;
+      run(q, div, ctrl)
+        .catch(function () {
+          div.classList.remove('pending', 'streaming');
+          if (ctrl.signal.aborted) {
+            div.textContent = (div.textContent === 'Đang trả lời…' ? '' : div.textContent + ' ') + '(đã dừng)';
+          } else {
+            fill(div, FAIL);
+          }
+        })
+        .then(function () { if (busy === ctrl) setBusy(null); input.focus(); });
     }
 
     // Nút mở trợ lý nằm ngoài panel (cũng được giữ lại) — bắt ở document để không gắn trùng
@@ -485,6 +557,7 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       e.stopPropagation();
+      if (busy) { busy.abort(); return; }         // đang trả lời: nút gửi thành nút Dừng
       var q = input.value.trim();
       if (!q) return;
       input.value = '';
@@ -493,6 +566,7 @@
     panel.querySelectorAll('[data-bot-suggest] button').forEach(function (b) {
       b.addEventListener('click', function () {
         var q = b.textContent.trim();
+        if (busy) return;
         if (!b.hasAttribute('data-bot-geo') || !navigator.geolocation) { ask(q); return; }
         // Xin vị trí khi người dùng chủ động bấm; từ chối → vẫn gợi ý theo tỉnh/thành trong hồ sơ
         navigator.geolocation.getCurrentPosition(function (p) {
@@ -503,6 +577,7 @@
     });
     var reset = panel.querySelector('[data-bot-reset]');
     if (reset) reset.addEventListener('click', function () {
+      if (busy) busy.abort();
       var body = new FormData(); body.append('reset', '1');
       fetch(url, { method: 'POST', body: body, headers: { 'X-CSRFToken': getCookie('csrftoken') }, credentials: 'same-origin' });
       while (log.children.length > 1) log.removeChild(log.lastChild);

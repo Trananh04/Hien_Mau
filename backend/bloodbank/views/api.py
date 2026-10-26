@@ -4,13 +4,16 @@ Phân quyền: bảng `access.py` (middleware trả JSON 401/403 cho đường d
 Dữ liệu cá nhân luôn lấy theo người đang đăng nhập — không nhận id người dùng từ client.
 """
 import json
+import logging
 
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bloodbank.assistant import service, tools
 from bloodbank.assistant.tools import Ctx
 from bloodbank.services.common import BusinessError
+
+log = logging.getLogger(__name__)
 
 
 def _err(status, code, message):
@@ -45,6 +48,45 @@ def chat_message(request):
     except BusinessError as exc:
         return _err(404, exc.code, exc.message)
     return JsonResponse(res)
+
+
+def _sse(event, data):
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, default=str)}\n\n"
+
+
+@require_POST
+def chat_stream(request):
+    """POST /api/chatbot/stream — như /message nhưng trả câu trả lời dần dần (Server-Sent Events):
+        event: delta  {"text": "..."}   phần chữ mới
+        event: reset  {}                xóa phần chữ đã hiện (AI chuyển sang tra dữ liệu / bị thay bằng câu dự phòng)
+        event: done   {answer, links, cards, source, mode, conversation_id}   câu trả lời cuối — luôn có, thay toàn bộ
+    Kết quả công cụ / dữ liệu nội bộ không bao giờ được stream ra; chỉ chữ của câu trả lời."""
+    data = _payload(request)
+    conv_id = data.get("conversation_id") or None
+    if request.user.is_authenticated:
+        try:
+            service.own_conversation(request.user, conv_id)    # kiểm tra quyền trước khi mở luồng
+        except BusinessError as exc:
+            return _err(404, exc.code, exc.message)
+
+    def events():
+        try:
+            for kind, payload in service.answer_events(request, data.get("message") or data.get("q"),
+                                                       data.get("lat"), data.get("lng"), conv_id):
+                if kind == "delta":
+                    yield _sse("delta", {"text": payload})
+                elif kind == "reset":
+                    yield _sse("reset", {})
+                else:
+                    yield _sse("done", payload)
+        except Exception:      # lỗi bất ngờ giữa luồng: báo cho khung chat thay vì cắt ngang im lặng
+            log.exception("Lỗi khi stream câu trả lời trợ lý")
+            yield _sse("error", {"message": "Trợ lý đang gặp sự cố. Vui lòng thử lại sau ít phút."})
+
+    resp = StreamingHttpResponse(events(), content_type="text/event-stream; charset=utf-8")
+    resp["Cache-Control"] = "no-cache"
+    resp["X-Accel-Buffering"] = "no"      # proxy (nginx) không gom lại cả câu mới gửi
+    return resp
 
 
 @require_http_methods(["GET"])

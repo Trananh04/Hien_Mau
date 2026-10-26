@@ -308,7 +308,7 @@ ASSISTANT_INTENTS = {
 
 
 def assistant_stats(days=7, now=None):
-    """Theo dõi trợ lý từ nhật ký `assistant_query` (không có nội dung câu hỏi) + bộ đếm lượt gọi AI hôm nay."""
+    """Theo dõi trợ lý từ nhật ký `assistant_query` (không có nội dung câu hỏi), lượt gọi AI hôm nay, trạng thái Ollama."""
     from datetime import timedelta
 
     from django.conf import settings
@@ -347,9 +347,9 @@ def assistant_stats(days=7, now=None):
         "days": [{"date": d, **v} for d, v in sorted(per_day.items())], "peak": peak, "total": total,
         "modes": [{"key": k, "label": label, "count": totals[k]} for k, label in ASSISTANT_MODES.items()],
         "intents": sorted(intents.items(), key=lambda kv: -kv[1])[:8],
-        "ai_calls_today": llm_calls_today(),
-        "daily_limit": settings.CHATBOT_DAILY_LIMIT, "max_concurrent": settings.CHATBOT_MAX_CONCURRENT,
-        "configured": llm.configured(), "enabled": llm.enabled(),
-        "switch_on": bool(SystemSetting.get("chatbot_ai_enabled")), "model": settings.CHATBOT_MODEL,
+        "ai_calls_today": llm_calls_today(), "max_concurrent": settings.CHATBOT_MAX_CONCURRENT,
+        "configured": llm.configured(), "enabled": llm.enabled(), "ollama": llm.health(),
+        "switch_on": bool(SystemSetting.get("chatbot_ai_enabled")), "model": settings.OLLAMA_MODEL,
+        "base_url": settings.OLLAMA_BASE_URL,
     }
 

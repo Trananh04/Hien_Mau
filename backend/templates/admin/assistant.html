@@ -6,17 +6,17 @@
   <section class="panel" aria-labelledby="ai-title">
     <div class="panel-head"><h2 class="panel-title" id="ai-title">Trạng thái AI</h2></div>
     <dl class="dl dash-dl">
-      <dt>Hiện tại</dt><dd>{% if s.enabled %}<span class="tag ok">{% icon "circle-check" 14 %} AI đang trả lời</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Chỉ chế độ từ khóa</span>{% endif %}</dd>
-      <dt>Lượt gọi AI hôm nay</dt><dd><strong>{{ s.ai_calls_today }}</strong> / {{ s.daily_limit }} (hạn mức ngày)
-        <div class="progress u-h-8 u-mt-6"><span class="u-bg-primary" data-pct="{{ s.ai_calls_today|pct:s.daily_limit }}"></span></div></dd>
+      <dt>Hiện tại</dt><dd>{% if s.enabled and s.ollama.model_ready %}<span class="tag ok">{% icon "circle-check" 14 %} AI đang trả lời</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Chỉ chế độ từ khóa</span>{% endif %}</dd>
+      <dt>Máy chủ AI (Ollama)</dt><dd>{% if s.ollama.reachable %}Kết nối được{% elif s.configured %}<span class="t-danger">Không kết nối được</span>{% else %}Chưa cấu hình{% endif %} · <code>{{ s.base_url|default:"—" }}</code></dd>
+      <dt>Mô hình</dt><dd>{{ s.model }}{% if s.ollama.reachable and not s.ollama.model_ready %} · <span class="t-danger">chưa tải về</span> (<code>docker compose exec ollama ollama pull {{ s.model }}</code>){% endif %}</dd>
+      <dt>Lượt gọi AI hôm nay</dt><dd><strong>{{ s.ai_calls_today }}</strong></dd>
       <dt>Gọi AI cùng lúc tối đa</dt><dd>{{ s.max_concurrent }} câu; vượt thì trả lời ngay bằng chế độ từ khóa</dd>
-      <dt>Mô hình</dt><dd>{{ s.model }}</dd>
     </dl>
     {% if s.configured %}
     <form method="post" class="panel-foot u-jc-space-between u-ai-center"{% if s.switch_on %} data-confirm="Tắt AI? Trợ lý sẽ trả lời bằng chế độ từ khóa cho tới khi bật lại."{% endif %}>
       {% csrf_token %}
       {% if s.switch_on %}
-        <span class="small muted">Tắt AI khi cần tiết kiệm chi phí hoặc dịch vụ AI gặp sự cố.</span>
+        <span class="small muted">Tắt AI khi máy chủ AI quá tải hoặc gặp sự cố.</span>
         <input type="hidden" name="ai" value="off">
         <button type="submit" class="btn secondary sm">{% icon "power" %} Tắt AI</button>
       {% else %}
@@ -26,7 +26,7 @@
       {% endif %}
     </form>
     {% else %}
-    <p class="dash-empty">{% icon "info" 18 %} Máy chủ chưa cấu hình khóa AI (ANTHROPIC_API_KEY trong .env), trợ lý chỉ dùng chế độ từ khóa.</p>
+    <p class="dash-empty">{% icon "info" 18 %} Máy chủ chưa cấu hình AI (OLLAMA_BASE_URL, OLLAMA_MODEL trong .env), trợ lý chỉ dùng chế độ từ khóa.</p>
     {% endif %}
   </section>
 

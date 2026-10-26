@@ -143,10 +143,6 @@ SESSION_COOKIE_AGE = 60 * 60 * 12
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 
-# Trợ lý hỏi đáp: có ANTHROPIC_API_KEY → dùng Claude; không có → chế độ từ khóa (không cần AI)
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-if "test" in sys.argv[1:2]:
-    ANTHROPIC_API_KEY = ""  # bộ test không bao giờ gọi API thật (tốn phí, không ổn định) — test LLM dùng client giả lập
 # Bản đồ Goong (https://help.goong.io): Map key hiển thị bản đồ trên trình duyệt (bắt buộc lộ ra trang — giới hạn
 # theo tên miền ở account.goong.io); API key chỉ dùng trên máy chủ (tra địa chỉ, gợi ý địa điểm, chỉ đường).
 GOONG_MAP_KEY = os.environ.get("GOONG_MAP_KEY", "")
@@ -155,18 +151,25 @@ GOONG_API_KEY = os.environ.get("GOONG_API_KEY", "")
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     GOONG_MAP_KEY = GOONG_API_KEY = ""
 
+# Trợ lý hỏi đáp: mô hình chạy tại chỗ qua Ollama (dữ liệu không rời máy chủ). Không gọi được Ollama → chế độ từ khóa.
 CHATBOT_USE_LLM = os.environ.get("CHATBOT_USE_LLM", "1") == "1"
-CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "claude-haiku-5-5")
-# Địa chỉ API tương thích Claude Messages (để trống = API chính thức của Anthropic). Dịch vụ trung gian sẽ nhận
-# toàn bộ câu hỏi + kết quả công cụ — chỉ dùng nhà cung cấp tin cậy.
-CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL", "").rstrip("/") or None
-CHATBOT_MAX_TOKENS = int(os.environ.get("CHATBOT_MAX_TOKENS", "4096"))
-# Mức effort; để trống = không gửi (Claude Haiku 4.5 / Sonnet 4.5 không hỗ trợ tham số effort)
-CHATBOT_EFFORT = os.environ.get("CHATBOT_EFFORT", "" if any(v in CHATBOT_MODEL for v in ("4.5", "4-5")) else "low")
-CHATBOT_TIMEOUT = float(os.environ.get("CHATBOT_TIMEOUT", "20"))
-CHATBOT_RATE_LIMIT = int(os.environ.get("CHATBOT_RATE_LIMIT", "20"))
-CHATBOT_MAX_CONCURRENT = int(os.environ.get("CHATBOT_MAX_CONCURRENT", "8"))  # số câu gửi AI cùng lúc tối đa (toàn hệ thống)
-CHATBOT_DAILY_LIMIT = int(os.environ.get("CHATBOT_DAILY_LIMIT", "2000"))   # số câu gửi AI / ngày (kiểm soát chi phí)  # số câu / 5 phút / người dùng (hoặc phiên)
+# Trong Docker: tên service `ollama`; Ollama chạy ngoài Docker trên cùng máy: http://host.docker.internal:11434
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:4b-instruct-2507-q4_K_M")
+OLLAMA_NUM_CTX = int(os.environ.get("OLLAMA_NUM_CTX", "8192"))          # đủ cho quy tắc + tài liệu + 6 lượt hội thoại
+OLLAMA_NUM_PREDICT = int(os.environ.get("OLLAMA_NUM_PREDICT", "512"))   # câu trả lời ngắn (2–5 câu)
+OLLAMA_TEMPERATURE = float(os.environ.get("OLLAMA_TEMPERATURE", "0.3"))
+OLLAMA_KEEP_ALIVE = os.environ.get("OLLAMA_KEEP_ALIVE", "30m")          # giữ mô hình trong bộ nhớ giữa các câu hỏi
+OLLAMA_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "90"))           # lần đầu nạp mô hình vào GPU mất vài chục giây
+# Chế độ "suy nghĩ" (mô hình có hỗ trợ): tắt mặc định — chậm hơn nhiều mà câu trả lời ngắn không cần.
+# Mặc định dùng bản qwen3 *instruct* vì bản `qwen3:4b` (thinking) vẫn viết suy luận ra câu trả lời dù tắt.
+OLLAMA_THINK = {"1": True, "true": True, "0": False, "false": False}.get(
+    os.environ.get("OLLAMA_THINK", "false").lower())
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    OLLAMA_BASE_URL = ""   # bộ test không gọi mô hình thật — test AI dùng client giả lập
+CHATBOT_RATE_LIMIT = int(os.environ.get("CHATBOT_RATE_LIMIT", "20"))     # số câu / 5 phút / người dùng (hoặc phiên)
+# Số câu gửi AI cùng lúc (toàn hệ thống); vượt → trả lời ngay bằng chế độ từ khóa. Card 4 GB: 1–2.
+CHATBOT_MAX_CONCURRENT = int(os.environ.get("CHATBOT_MAX_CONCURRENT", "2"))
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "Giọt Hồng <no-reply@hienmau.local>"
