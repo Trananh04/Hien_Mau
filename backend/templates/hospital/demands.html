@@ -1,43 +1,39 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Dự báo thiếu hụt{% endblock %}
 {% block ws_title %}Dự báo thiếu hụt{% endblock %}
-{% block ws_sub %}<p class="ws-sub">{% if ai %}Dự báo AI (XGBoost) cho dòng đủ 28 ngày lịch sử, còn lại theo{% else %}Theo{% endif %} lượng xuất cho người bệnh {{ window }} ngày gần nhất và nhu cầu có kế hoạch, dự báo {{ horizon }} ngày tới. Cần máu trong vài giờ: dùng nút <strong>Khẩn cấp</strong>.</p>{% endblock %}
+{% block ws_sub %}<p class="ws-sub">Khối hồng cầu, {{ horizon }} ngày tới{% if campaign %} · đợt hiến gần nhất: <a class="link" href="{% url 'bloodbank:hospital_campaign_detail' campaign.pk %}">{{ campaign.name }}</a> ({{ campaign.start_time|vn_dt:"%d/%m" }}){% endif %}. Cần máu trong vài giờ: dùng nút <strong>Khẩn cấp</strong>.</p>{% endblock %}
 {% block ws_actions %}<button type="button" class="btn secondary" data-open-dialog="demand-form">{% icon "calendar-plus" %} Khai nhu cầu có kế hoạch</button>{% endblock %}
 {% block content %}
-{% if ai %}<div class="notice {% if ai.synthetic %}warn{% else %}info{% endif %}">{% icon "sparkles" %}<div>Dự báo bằng mô hình AI (XGBoost) huấn luyện ngày {{ ai.trained_at|slice:":10" }}{% if ai.wape is not None %}, sai số kiểm thử WAPE {{ ai.wape|floatformat:1 }}% (trung bình 28 ngày: {{ ai.wape_b0|floatformat:1 }}%){% endif %}.{% if ai.synthetic %} <strong>Nguồn dữ liệu huấn luyện: Mô phỏng</strong> — chỉ để trình diễn, chưa kiểm chứng trên dữ liệu bệnh viện thật.{% endif %}</div></div>{% endif %}
-<p class="summary-line">
-  {% if sum.soon %}<b class="t-danger">{{ sum.soon }}</b> loại sắp hết trong 7 ngày — mời người hiến ngay{% else %}Không loại nào sắp hết trong 7 ngày{% endif %}
-  · {% if sum.plan %}<b class="t-warn">{{ sum.plan }}</b> loại cần lên kế hoạch (7–{{ horizon }} ngày){% else %}không loại nào cần lên kế hoạch{% endif %}
-  {% if campaign %}· đợt hiến gần nhất: <a class="link" href="{% url 'bloodbank:hospital_campaign_detail' campaign.pk %}">{{ campaign.name }}</a> ({{ campaign.start_time|vn_dt:"%d/%m" }}){% endif %}
-</p>
+{% if ai %}<p class="fc-model">{% icon "sparkles" 15 %}<span>Dự báo AI · huấn luyện {{ ai.trained_at|slice:"8:10" }}/{{ ai.trained_at|slice:"5:7" }}{% if ai.wape14 is not None %} · sai số tổng 14 ngày {{ ai.wape14|floatformat:0 }}% (cách cũ {{ ai.wape14_b0|floatformat:0 }}%){% endif %}</span>{% if ai.synthetic %}<span class="fc-sim">Dữ liệu huấn luyện mô phỏng</span>{% endif %}</p>{% endif %}
 
 <section class="panel">
   {% if rows %}
-  <div class="table-wrap"><table class="table">
-    <thead><tr><th>Nhóm</th><th>Chế phẩm</th><th class="num">Khả dụng</th><th class="num">Dùng/ngày</th>{% if ai %}<th>Dự báo bằng</th>{% endif %}<th class="u-minw-200">Đủ dùng</th><th class="num">Có kế hoạch</th><th class="num">Thiếu {{ horizon }} ngày</th><th class="num">Việc nên làm</th></tr></thead>
-    <tbody>{% for r in rows %}
+  <div class="table-wrap"><table class="table stack-mobile fc-table">
+    <thead><tr><th>Loại máu</th><th class="num">Còn</th><th class="num">Dùng/ngày</th><th class="fc-cover-col">Đủ dùng</th>{% if any_planned %}<th class="num">Ca mổ đã khai</th>{% endif %}<th class="num">Thiếu</th><th><span class="sr-only">Việc nên làm</span></th></tr></thead>
+    {% for group in groups %}{% if group.rows %}
+    <tbody>
+      <tr class="fc-group"><th colspan="{% if any_planned %}7{% else %}6{% endif %}" scope="rowgroup">{{ group.label }} <span>{{ group.rows|length }}</span></th></tr>
+      {% for r in group.rows %}
       <tr class="{% if r.level == 'soon' %}row-danger{% elif r.level == 'plan' %}row-warn{% endif %}">
-        <td>{% blood r.blood_group "sm" %}</td>
-        <td><span class="cell-title">{{ r.spec.product.name }}</span><span class="cell-sub">{{ r.spec.name }}{% if r.below_min %} · dưới tối thiểu ({{ r.min_level }}){% endif %}</span></td>
-        <td class="num">{{ r.available }}</td>
-        <td class="num">{% if r.per_day %}{{ r.per_day|floatformat:1 }}{% else %}<span class="muted">—</span>{% endif %}</td>
-        {% if ai %}<td>{% if r.method == "ai" %}<span class="badge info plain" title="Nhu cầu 14 ngày tới: {{ r.daily|join:', ' }}">AI</span>{% else %}<span class="muted small">TB 28 ngày</span>{% endif %}</td>{% endif %}
-        <td>{% if r.days is not None %}
-            <div class="cover"><div class="progress u-h-8"><span class="{% if r.level == 'soon' %}u-bg-primary{% elif r.level == 'plan' %}u-bg-xf59e0b{% else %}u-bg-ok{% endif %}" data-pct="{{ r.cover_pct }}"></span></div>
-            <span class="cover-text">{% if r.days < 1 %}<b class="t-danger">dưới 1 ngày</b>{% else %}<b>{{ r.days|floatformat:0 }} ngày</b>{% endif %}{% if r.run_out %} · hết khoảng {{ r.run_out|date:"d/m" }}{% endif %}</span></div>
-          {% else %}<span class="muted">chưa có lượt dùng</span>{% endif %}</td>
-        <td class="num">{% if r.planned %}{{ r.planned }}{% if r.planned_first %}<span class="cell-sub">từ {{ r.planned_first|vn_dt:"%d/%m" }}</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>
-        <td class="num">{% if r.shortage %}<b class="{% if r.level == 'soon' %}t-danger{% else %}t-warn{% endif %}">{{ r.shortage }}</b>{% else %}<span class="muted">0</span>{% endif %}</td>
-        <td class="num"><div class="table-actions">
-          {% if r.level == "soon" %}<a class="btn primary sm" href="{% url 'bloodbank:donor_suggest' %}?blood_group={{ r.blood_group|urlencode }}&thieu={{ r.shortage|default:1 }}">{% icon "users" 14 %} Mời người hiến</a>
-          {% elif r.level == "plan" %}<a class="btn secondary sm" href="{% url 'bloodbank:hospital_campaign_create' %}?blood_group={{ r.blood_group|urlencode }}"{% if r.campaign_by %} title="Nên tổ chức trước {{ r.campaign_by|date:'d/m' }}"{% endif %}>{% icon "calendar-plus" 14 %} Tạo đợt hiến{% if r.campaign_by %} trước {{ r.campaign_by|date:"d/m" }}{% endif %}</a>
-          {% else %}<span class="muted small">Đủ dùng</span>{% endif %}
+        <td data-label="Loại máu"><div class="fc-kind">{% blood r.blood_group "sm" %}<div><span class="cell-title">{{ r.spec.product.name }} · {{ r.spec.name|cut:"Từ "|cut:" máu"|cut:"Túi " }}</span>{% if r.below_min %}<span class="cell-sub t-warn">Dưới mức tối thiểu {{ r.min_level }}</span>{% endif %}</div></div></td>
+        <td data-label="Còn" class="num"><b>{{ r.available }}</b></td>
+        <td data-label="Dùng/ngày" class="num">{% if r.per_day %}<span>{{ r.per_day|floatformat:1 }}<span class="cell-sub" {% if r.daily %}title="14 ngày tới: {{ r.daily|join:' · ' }}"{% endif %}>{% if r.method == "ai" %}AI{% else %}TB 4 tuần{% endif %}</span></span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td data-label="Đủ dùng">{% if r.days is None %}<span class="muted">Chưa có lượt dùng</span>
+          {% else %}<div class="cover"><div class="progress u-h-8"><span class="{% if r.level == 'soon' %}u-bg-primary{% elif r.level == 'plan' %}u-bg-xf59e0b{% else %}u-bg-ok{% endif %}" data-pct="{{ r.cover_pct }}"></span></div>
+            <span class="cover-text">{% if r.days < 1 %}<b class="t-danger">Dưới 1 ngày</b>{% elif r.days < horizon %}<b>{{ r.days|floatformat:0 }} ngày</b> · hết khoảng {{ r.run_out|date:"d/m" }}{% else %}<b>Trên {{ horizon }} ngày</b>{% endif %}</span></div>{% endif %}</td>
+        {% if any_planned %}<td data-label="Ca mổ đã khai" class="num">{% if r.planned %}{{ r.planned }}{% if r.planned_first %}<span class="cell-sub">từ {{ r.planned_first|vn_dt:"%d/%m" }}</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>{% endif %}
+        <td data-label="Thiếu" class="num">{% if r.shortage %}<b class="{% if r.level == 'soon' %}t-danger{% else %}t-warn{% endif %}">{{ r.shortage }}</b>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td data-label="Việc nên làm"><div class="table-actions">
+          {% if r.level == "soon" %}<a class="btn primary sm" href="{% url 'bloodbank:donor_suggest' %}?blood_group={{ r.blood_group|urlencode }}&amp;thieu={{ r.shortage|default:1 }}">{% icon "users" 14 %} Mời người hiến</a>
+          {% elif r.level == "plan" %}<a class="btn secondary sm" href="{% url 'bloodbank:hospital_campaign_create' %}?blood_group={{ r.blood_group|urlencode }}">{% icon "calendar-plus" 14 %} Tạo đợt hiến{% if r.campaign_by %} trước {{ r.campaign_by|date:"d/m" }}{% endif %}</a>{% endif %}
         </div></td>
       </tr>
-    {% endfor %}</tbody>
+      {% endfor %}
+    </tbody>
+    {% endif %}{% endfor %}
   </table></div>
   {% else %}
-  <div class="empty"><div class="empty-icon">{% icon "chart-line" %}</div><h3>Chưa đủ dữ liệu để dự báo</h3><p>Dự báo dựa trên lượng xuất kho cho người bệnh. Khi có phiếu xuất hoặc nhu cầu có kế hoạch, bảng sẽ hiện ở đây.</p></div>
+  <div class="empty"><div class="empty-icon">{% icon "chart-line" %}</div><h3>Chưa đủ dữ liệu để dự báo</h3><p>Khi có phiếu xuất cho người bệnh hoặc ca mổ đã khai, bảng sẽ hiện ở đây.</p></div>
   {% endif %}
 </section>
 

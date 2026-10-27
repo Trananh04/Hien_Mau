@@ -150,8 +150,7 @@ class ForecastPageTests(TestCase):
         self.client.force_login(self.user)
         with override_settings(FORECAST_MODEL_DIR=self.dir):
             page = self.client.get("/benh-vien/nhu-cau/")
-        self.assertContains(page, "Nguồn dữ liệu huấn luyện: Mô phỏng")
-        self.assertContains(page, "WAPE 40,0%")
+        self.assertContains(page, "Dữ liệu huấn luyện mô phỏng")
 
     def test_missing_model_falls_back(self):
         SystemSetting.objects.update_or_create(setting_key="forecast_ai_enabled", defaults={"setting_value": True})

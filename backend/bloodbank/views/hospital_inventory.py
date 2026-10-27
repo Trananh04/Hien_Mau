@@ -144,6 +144,9 @@ def demands(request, pk=None):
         "form": form, "demand": demand, "page": paginate(request, qs, 20), "status": status,
         "rows": rows, "sum": fc.summary(rows), "window": fc.WINDOW_DAYS, "horizon": fc.HORIZON_DAYS,
         "campaign": callout.next_campaign(h), "ai": _ai_info(rows),
+        "groups": [{"label": "Cần xử lý", "rows": [r for r in rows if r["level"] != "ok"]},
+                   {"label": "Đủ dùng", "rows": [r for r in rows if r["level"] == "ok"]}],
+        "any_planned": any(r["planned"] for r in rows),
     })
 
 
@@ -154,9 +157,15 @@ def _ai_info(rows):
     if not any(r.get("method") == "ai" for r in rows):
         return None
     _, meta = ml.loaded()
-    scores = {r["model"]: r["wape"] * 100 for r in meta.get("backtest", [])}
+    scores = {r["model"]: r for r in meta.get("backtest", [])}
+
+    def pct(name, key):
+        v = scores.get(name, {}).get(key)
+        return v * 100 if v is not None else None
     return {"trained_at": meta.get("trained_at", ""), "synthetic": meta.get("synthetic", True),
-            "wape": scores.get("XGB"), "wape_b0": scores.get("B0")}
+            "wape": pct("XGB", "wape"), "wape_b0": pct("B0", "wape"),
+            # sai số TỔNG 14 ngày — đúng con số dùng để so với tồn kho
+            "wape14": pct("XGB", "wape_14d_total"), "wape14_b0": pct("B0", "wape_14d_total")}
 
 
 @staff_required

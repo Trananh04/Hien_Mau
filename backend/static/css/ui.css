@@ -1414,3 +1414,25 @@ html.js .ws-shell .filter-submit { display: none; }
   background: currentColor; opacity: 0.6; animation: bot-caret 1s steps(2) infinite; }
 @keyframes bot-caret { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .bot-msg.streaming::after { animation: none; } }
+
+/* Dự báo thiếu hụt */
+.fc-model { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0 0 14px; font-size: 13px; color: var(--ink-soft); }
+.fc-model .lucide { color: var(--primary); }
+.fc-sim { padding: 2px 8px; border-radius: 999px; background: var(--warn-bg, #fff7e6); color: var(--warn, #b45309); font-size: 12px; font-weight: 600; }
+.fc-table .fc-group th { padding: 10px 16px 6px; background: var(--ground); color: var(--ink); font-size: 12.5px; font-weight: 700;
+  text-align: left; border-bottom: 1px solid var(--line); }
+.fc-table .fc-group th span { margin-left: 4px; color: var(--ink-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.fc-table tbody + tbody .fc-group th { border-top: 1px solid var(--line); }
+.fc-table td.num, .fc-table th.num { font-variant-numeric: tabular-nums; }
+.fc-kind { display: flex; align-items: center; gap: 10px; }
+.fc-kind .cell-title { white-space: nowrap; }
+.fc-cover-col { min-width: 190px; }
+.fc-table .table-actions { justify-content: flex-end; }
+@media (max-width: 720px) {
+  .fc-table .fc-group, .fc-table .fc-group th { display: block; width: 100%; }
+  .fc-table .fc-group { padding: 0; }
+  .fc-table .fc-group th { padding: 12px 16px 8px; }
+  .fc-table td .cell-sub { display: inline; margin-left: 6px; }
+  .fc-table td > .cover, .fc-table td > .muted { min-width: 0; text-align: right; }
+  .fc-table td > .cover { flex: 1; max-width: 220px; }
+}
