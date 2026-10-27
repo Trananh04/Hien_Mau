@@ -7,6 +7,14 @@ from django.db.models import Q
 from .hospitals import Hospital
 
 
+# Nhóm nhật ký: "Nghiệp vụ" (mặc định) là thao tác thay đổi dữ liệu; "Bảo mật" là đăng nhập / truy cập;
+# câu hỏi trợ lý chỉ hiện ở "Tất cả". Index một phần idx_audit_*_business khớp đúng bộ lọc "Nghiệp vụ".
+AUDIT_SECURITY_ACTIONS = ("login", "login_failed", "login_wrong_portal", "access_denied", "view_sensitive",
+                          "password_reset", "password_reset_requested", "password_changed", "email_verified")
+AUDIT_NOISE_ACTIONS = ("assistant_query",)
+_BUSINESS = ~Q(action__in=AUDIT_SECURITY_ACTIONS + AUDIT_NOISE_ACTIONS)
+
+
 class AuditLog(models.Model):
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.RESTRICT, null=True, blank=True, related_name="+"
@@ -28,6 +36,10 @@ class AuditLog(models.Model):
             models.Index(fields=["actor", "created_at"], name="idx_audit_actor_time"),
             models.Index(fields=["entity_type", "entity_id", "created_at"], name="idx_audit_entity"),
             models.Index(fields=["hospital", "created_at"], name="idx_audit_hospital_time"),
+            # Trang Nhật ký (tab Nghiệp vụ, mặc định) của bệnh viện và của quản trị
+            models.Index(fields=["hospital", "-created_at", "-id"], condition=_BUSINESS,
+                         name="idx_audit_hosp_business"),
+            models.Index(fields=["-created_at", "-id"], condition=_BUSINESS, name="idx_audit_business"),
         ]
 
 

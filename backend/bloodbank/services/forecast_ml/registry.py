@@ -19,8 +19,6 @@ from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 
-from . import model as M
-
 MAX_UNDER_BIAS = -0.05
 
 
@@ -70,6 +68,8 @@ def new_version():
 
 
 def save_version(trained, meta):
+    from . import model as M
+
     version = meta.get("version") or new_version()
     meta = M.save(trained, versions_dir() / version, {**meta, "version": version})
     return version, meta
@@ -97,6 +97,8 @@ def activate(version):
     khi model.json đổi, lúc đó metadata đã khớp."""
     if not re.fullmatch(r"\d{8}-\d{6}", version or ""):
         raise FileNotFoundError(version)
+    from . import model as M
+
     src = versions_dir() / version
     meta = _read(src / "metadata.json")
     if not meta or not (src / "model.json").exists() or M.load(src)[0] is None:

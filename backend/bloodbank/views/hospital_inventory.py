@@ -159,7 +159,7 @@ def _ai_info(rows):
 
     if not any(r.get("method") == "ai" for r in rows):
         return None
-    _, meta = ml.loaded()
+    meta = ml.active_meta() or {}
     scores = {r["model"]: r for r in meta.get("backtest", [])}
 
     def pct(name, key):

@@ -9,7 +9,7 @@ Yêu cầu chỉ ghi chế phẩm (không ghi quy cách) → gán vào quy cách
 Một chuỗi chỉ "có lịch sử" từ phiếu kho đầu tiên của nó; trước đó là chưa dùng hệ thống, không phải nhu cầu bằng 0.
 """
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 import numpy as np
 from django.db.models import Count, Min, Sum
@@ -17,16 +17,37 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 
 
+MAIN_SPEC_DAYS = 90          # "quy cách xuất nhiều nhất" xét trong 90 ngày gần nhất (không quét toàn bộ lịch sử)
+MAIN_SPEC_CACHE_SECONDS = 3600
+
+
 def _tz():
     return timezone.get_current_timezone()
 
 
+def _span(start, end):
+    """[đầu ngày `start`, đầu ngày sau `end`) theo giờ địa phương — lọc bằng khoảng thời gian thay vì ép kiểu ngày
+    (`occurred_at__date`), để PostgreSQL dùng được index trên cột thời điểm."""
+    tz = _tz()
+    return (timezone.make_aware(datetime.combine(start, time.min), tz),
+            timezone.make_aware(datetime.combine(end + timedelta(days=1), time.min), tz))
+
+
 def _main_spec(hospital_ids):
-    """{(bệnh viện, chế phẩm): quy cách xuất nhiều nhất} — để gán yêu cầu người cần máu vào một dòng tồn."""
+    """{(bệnh viện, chế phẩm): quy cách xuất nhiều nhất} — để gán yêu cầu người cần máu vào một dòng tồn.
+    Hầu như không đổi trong ngày → lưu đệm 1 giờ (mỗi lượt mở trang Tổng quan / Dự báo không phải đếm lại)."""
+    from django.core.cache import cache
+
     from bloodbank.models import ProductSpec, StockTxn
 
+    key = "main_spec:" + ",".join(str(h) for h in sorted(hospital_ids))
+    hit = cache.get(key)
+    if hit is not None:
+        return {tuple(k): v for k, v in hit[0]}, dict(hit[1])
     best = {}
-    rows = (StockTxn.objects.filter(stock__hospital__in=hospital_ids, txn_type=StockTxn.Type.ISSUE)
+    since = timezone.now() - timedelta(days=MAIN_SPEC_DAYS)
+    rows = (StockTxn.objects.filter(stock__hospital__in=hospital_ids, txn_type=StockTxn.Type.ISSUE,
+                                    occurred_at__gte=since)
             .values("stock__hospital", "stock__product_spec__product", "stock__product_spec")
             .annotate(n=Count("id")).order_by("-n"))
     for r in rows:
@@ -34,6 +55,7 @@ def _main_spec(hospital_ids):
     fallback = {}
     for s in ProductSpec.objects.filter(is_active=True).order_by("pk"):
         fallback.setdefault(s.product_id, s.pk)
+    cache.set(key, (list(best.items()), list(fallback.items())), MAIN_SPEC_CACHE_SECONDS)
     return best, fallback
 
 
@@ -43,9 +65,10 @@ def daily_demand(start, end, hospitals=None):
 
     days = (end - start).days + 1
     out = defaultdict(lambda: np.zeros(days))
+    lo, hi = _span(start, end)
     txns = StockTxn.objects.filter(txn_type=StockTxn.Type.ISSUE, demand__isnull=True, patient_request__isnull=True,
-                                   occurred_at__date__gte=start, occurred_at__date__lte=end)
-    prqs = PatientRequest.objects.filter(verified_at__date__gte=start, verified_at__date__lte=end,
+                                   occurred_at__gte=lo, occurred_at__lt=hi)
+    prqs = PatientRequest.objects.filter(verified_at__gte=lo, verified_at__lt=hi,
                                          blood_group__isnull=False).exclude(status=PatientRequest.Status.REJECTED)
     if hospitals is not None:
         txns, prqs = txns.filter(stock__hospital__in=hospitals), prqs.filter(hospital__in=hospitals)

@@ -7,6 +7,7 @@ Không phụ thuộc việc có người mở trang:
      sau `prq_escalate_admin_minutes` báo lên Quản trị hệ thống. Mỗi mức chỉ nhắc một lần.
   4. Điền kết quả lời kêu gọi người hiến; nhắc người hiến đã đủ thời gian nghỉ; làm mới dự báo nhu cầu (mỗi ngày).
   5. Dự báo nhu cầu: lưu dự báo mỗi ngày để đo độ chính xác thật; huấn luyện lại mô hình khi đến hạn / được yêu cầu.
+  6. Gửi lại email khẩn bị lỗi / bỏ dở (services/outbox.py).
 """
 import logging
 from datetime import timedelta
@@ -17,7 +18,7 @@ from django.utils import timezone
 from accounts.models import User
 from bloodbank.models import HospitalRequest, Notification, PatientRequest, RequestOffer, SystemSetting
 
-from . import badges
+from . import badges, outbox
 from .common import alert, audit, business_transaction, hospital_staff_users, notify_hospital_staff
 from .transfers import expire_overdue, recompute_status
 
@@ -95,6 +96,7 @@ def run_all(now=None):
         "escalations": escalate_patient_requests(now),
         "eligible_reminders": badges.remind_eligible_again(now),
         "chat_purged": _purge_chat(now),
+        "emails_retried": outbox.sweep(now),
         **_forecast(now),
     }
 
@@ -104,7 +106,10 @@ def _forecast(now=None):
     try:
         from bloodbank.services.forecast_ml import monitor
 
-        return {"forecast_snapshots": monitor.record_snapshots(now), "forecast_retrain": monitor.nightly_check(now)}
+        snapshots = monitor.record_snapshots(now)
+        if snapshots:                                  # lần chạy đầu mỗi ngày: tính sẵn sai số cho trang quản trị
+            monitor.store_accuracy(now)
+        return {"forecast_snapshots": snapshots, "forecast_retrain": monitor.nightly_check(now)}
     except Exception:
         logging.getLogger(__name__).exception("Tác vụ dự báo thất bại")
         return {"forecast_snapshots": "error"}

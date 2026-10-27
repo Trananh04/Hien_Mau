@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 staticfiles/
 .pytest_cache/
+# Mô hình, dữ liệu mô phỏng, script đo hiệu năng trên máy dev — không đưa vào image
+var/

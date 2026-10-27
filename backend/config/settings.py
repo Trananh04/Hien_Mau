@@ -122,6 +122,10 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
+# Chạy thật: tên file tĩnh kèm mã băm nội dung → WhiteNoise cho trình duyệt lưu 1 năm (đổi file là đổi tên, không lo
+# bản cũ). Dev / test giữ tên gốc để sửa CSS/JS là thấy ngay, không cần collectstatic.
+if not DEBUG and not (len(sys.argv) > 1 and sys.argv[1] == "test"):
+    STORAGES["staticfiles"]["BACKEND"] = "bloodbank.storage.StaticStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -185,6 +189,8 @@ if len(sys.argv) > 1 and sys.argv[1] == "test":
     FORECAST_SCHEDULED_TRAINING = False
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email khẩn gửi ở luồng nền sau khi commit (request không chờ máy chủ mail); test gửi ngay tại chỗ
+EMAIL_ASYNC = not (len(sys.argv) > 1 and sys.argv[1] == "test")
 DEFAULT_FROM_EMAIL = "Giọt Hồng <no-reply@hienmau.local>"
 
 MESSAGE_TAGS = {10: "info", 20: "info", 25: "success", 30: "warning", 40: "error"}

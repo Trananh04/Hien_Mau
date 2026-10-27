@@ -65,11 +65,8 @@ def parse_local_dt(value):
         return None
 
 
-# Nhóm nhật ký: "Nghiệp vụ" (mặc định) là thao tác thay đổi dữ liệu; "Bảo mật" là đăng nhập / truy cập;
-# câu hỏi trợ lý chỉ hiện ở "Tất cả".
-SECURITY_ACTIONS = ("login", "login_failed", "login_wrong_portal", "access_denied", "view_sensitive",
-                    "password_reset", "password_reset_requested", "password_changed", "email_verified")
-NOISE_ACTIONS = ("assistant_query",)
+from bloodbank.models.system import AUDIT_NOISE_ACTIONS as NOISE_ACTIONS  # noqa: E402
+from bloodbank.models.system import AUDIT_SECURITY_ACTIONS as SECURITY_ACTIONS  # noqa: E402
 AUDIT_TABS = ("nghiep-vu", "bao-mat", "tat-ca")
 
 

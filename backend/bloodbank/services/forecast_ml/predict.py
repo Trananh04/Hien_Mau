@@ -4,19 +4,17 @@ Chỉ dùng mô hình khi: Quản trị bật `forecast_ai_enabled`, có file m�
 (tính từ phiếu đầu tiên). Ngược lại trả về {} cho dòng đó → trang Dự báo thiếu hụt dùng trung bình 28 ngày như cũ.
 Nhu cầu lịch sử lấy từ history.py (cùng nguồn với trung bình 28 ngày và với lúc huấn luyện).
 """
+import json
 from datetime import timedelta
 
-import numpy as np
-import pandas as pd
 from django.conf import settings
 from django.utils import timezone
 
 from . import history
-from . import model as M
-from .features import HISTORY_DAYS, HORIZON, build
-from .simulate import tet_flags
+from .constants import BLOOD_GROUPS, FEATURES, HISTORY_DAYS, HORIZON
 
 _cache = {"mtime": None, "model": None, "meta": None}
+_meta_cache = {"mtime": None, "meta": None}
 
 
 def model_dir():
@@ -32,22 +30,50 @@ def loaded():
         _cache.update(mtime=None, model=None, meta=None)
         return None, None
     if _cache["mtime"] != mtime:
+        from . import model as M
+
         model, meta = M.load(model_dir())
         _cache.update(mtime=mtime, model=model, meta=meta)
     return _cache["model"], _cache["meta"]
 
 
+def active_meta():
+    """Metadata của mô hình đang dùng nếu hợp lệ — chỉ đọc file JSON (không nạp xgboost), lưu đệm theo mtime."""
+    try:
+        mtime = (model_dir() / "model.json").stat().st_mtime
+    except OSError:
+        return None
+    if _meta_cache["mtime"] != mtime:
+        try:
+            meta = json.loads((model_dir() / "metadata.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            meta = None
+        if meta and (meta.get("features") != FEATURES or meta.get("blood_groups") != BLOOD_GROUPS):
+            meta = None
+        _meta_cache.update(mtime=mtime, meta=meta)
+    return _meta_cache["meta"]
+
+
 def enabled():
     from bloodbank.models import SystemSetting
 
-    return bool(SystemSetting.get("forecast_ai_enabled")) and loaded()[0] is not None
+    return bool(SystemSetting.get("forecast_ai_enabled")) and active_meta() is not None
 
 
 def forecast(hospital, now=None):
     """{(nhóm máu, quy cách): mảng 14 số — nhu cầu dự báo từ ngày mai}; {} nếu không dùng mô hình."""
     if not enabled():
         return {}
+    import numpy as np
+    import pandas as pd
+
+    from . import model as M
+    from .features import build
+    from .simulate import tet_flags
+
     model, _ = loaded()
+    if model is None:
+        return {}
     today = timezone.localdate(now)
     recent = history.recent(hospital, today, HISTORY_DAYS)
     # Chỉ chuỗi đã có sổ kho đủ 28 ngày (trước đó là "chưa dùng hệ thống", không phải "nhu cầu bằng 0")

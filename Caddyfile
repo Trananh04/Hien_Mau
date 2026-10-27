@@ -1,0 +1,12 @@
+# Reverse proxy chạy thật (docker-compose.prod.yml): HTTPS tự động, nén, chuyển request vào gunicorn.
+# Caddy tự thêm X-Forwarded-For / X-Forwarded-Proto — Django dùng (DJANGO_HTTPS=1, TRUSTED_PROXY_COUNT=1).
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 10MB
+	}
+	reverse_proxy web:8000 {
+		# Trợ lý hỏi đáp trả lời dạng stream (SSE): đẩy từng phần ngay, không gom bộ đệm
+		flush_interval -1
+	}
+}

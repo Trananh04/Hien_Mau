@@ -210,11 +210,12 @@ def mark_notifications_read(user, notification_id=None):
 def alert(users, type_, title, body=None, entity=None):
     """Thông báo khẩn: trong ứng dụng + email (gửi SAU khi giao dịch commit; lỗi gửi không làm hỏng nghiệp vụ).
 
-    Mỗi email được lưu thành một dòng `notifications` (channel = email) kèm trạng thái gửi để tra soát.
+    Mỗi email được lưu thành một dòng `notifications` (channel = email) kèm trạng thái gửi để tra soát; việc gửi chạy ở
+    luồng nền (services/outbox.py) nên request không phải chờ máy chủ mail, email lỗi được tác vụ định kỳ gửi lại.
     """
-    from django.conf import settings
-    from django.core.mail import send_mail
     from django.db import transaction
+
+    from . import outbox
 
     rows = []
     for user in users:
@@ -228,17 +229,8 @@ def alert(users, type_, title, body=None, entity=None):
             channel=Notification.Channel.EMAIL, delivery_status=Notification.Delivery.PENDING,
         ))
 
-    def send():
-        for row in rows:
-            try:
-                send_mail(f"[Khẩn] {row.title}", (row.body or row.title) + "\n\nĐăng nhập cổng bệnh viện để xử lý.",
-                          settings.DEFAULT_FROM_EMAIL, [row.user.email])
-                status = Notification.Delivery.SENT
-            except Exception:  # máy chủ mail lỗi: ghi nhận để gửi lại, không chặn luồng
-                status = Notification.Delivery.FAILED
-            Notification.objects.filter(pk=row.pk).update(delivery_status=status, attempts=1, sent_at=timezone.now())
-
-    transaction.on_commit(send)
+    ids = [row.pk for row in rows]
+    transaction.on_commit(lambda: outbox.dispatch(ids))
     return len(rows)
 
 

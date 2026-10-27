@@ -11,7 +11,9 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
+# var/forecast: nơi lưu mô hình dự báo (volume khi chạy thật) — tạo sẵn thuộc user app để volume mới nhận đúng quyền
 RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh \
+    && mkdir -p /app/var/forecast \
     && useradd --create-home --uid 1000 app && chown -R app:app /app
 
 # Không chạy bằng root

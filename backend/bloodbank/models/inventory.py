@@ -125,6 +125,8 @@ class StockTxn(models.Model):
         indexes = [
             models.Index(fields=["performed_by", "occurred_at"], name="idx_txn_performed_by"),
             models.Index(fields=["stock", "occurred_at", "id"], name="idx_txn_stock_time"),
+            # Lịch sử kho: 30 phiếu mới nhất của bệnh viện (không phải sắp xếp toàn bộ phiếu)
+            models.Index(fields=["-occurred_at", "-id"], name="idx_txn_time"),
         ]
         constraints = [
             models.UniqueConstraint(fields=["offer", "txn_type"], name="uq_txn_offer_type"),

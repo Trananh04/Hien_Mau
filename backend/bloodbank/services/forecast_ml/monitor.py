@@ -4,7 +4,8 @@ record_snapshots: lần chạy đầu tiên mỗi ngày, mỗi bệnh viện × 
     trên lịch sử đến HẾT HÔM QUA: cách đang hiển thị (AI nếu bật và đủ điều kiện, không thì trung bình) + trung bình
     28 ngày để so sánh. Trang Dự báo thiếu hụt ĐỌC bảng này (latest) thay vì tự tính mỗi lượt mở trang; bật/tắt AI hay
     đổi phiên bản thì tính lại ngay (refresh_snapshots).
-accuracy: so dự báo đã lưu với nhu cầu thực tế (history.daily_demand) theo từng tuần.
+accuracy: so dự báo đã lưu với nhu cầu thực tế (history.daily_demand) theo từng tuần — tính MỘT lần mỗi ngày
+    (cùng lúc lưu dự báo) vào last_accuracy.json; trang quản trị chỉ đọc kết quả (store_accuracy / weekly).
 nightly_check: một lần mỗi đêm trong khung giờ vắng (FORECAST_TRAIN_HOURS) — dọn dữ liệu cũ, tự bảo vệ, rồi chỉ học lại
     khi có lý do (retrain_reason):
       "first"     chưa có mô hình nào;
@@ -23,7 +24,7 @@ import numpy as np
 from django.conf import settings
 from django.utils import timezone
 
-from . import history, registry, training
+from . import history, registry
 
 log = logging.getLogger(__name__)
 WINDOW_DAYS = 28
@@ -48,7 +49,7 @@ def record_snapshots(now=None, refresh=False):
     elif ForecastSnapshot.objects.filter(origin=origin).exists():
         return 0
     as_of = timezone.make_aware(datetime.combine(origin, time(23, 59)))
-    version = (predict.loaded()[1] or {}).get("version") if predict.enabled() else None
+    version = (predict.active_meta() or {}).get("version") if predict.enabled() else None
     rows = []
     for hospital in Hospital.objects.filter(stocks__isnull=False).distinct():
         recent = history.recent(hospital, origin, WINDOW_DAYS)
@@ -110,25 +111,24 @@ def accuracy(weeks=12, now=None, version=None):
     qs = ForecastSnapshot.objects.filter(target_date__gte=start, target_date__lte=end)
     if version is not None:
         qs = qs.filter(method="ai", model_version=version)
-    snaps = list(qs.values("hospital", "blood_group", "product_spec", "target_date", "method", "predicted",
-                           "baseline"))
-    if not snaps:
+    if not qs.exists():
         return []
     actual = history.daily_demand(start, end)
     acc = defaultdict(lambda: defaultdict(float))
-    for s in snaps:
-        series = actual.get((s["hospital"], s["blood_group"], s["product_spec"]))
-        a = float(series[(s["target_date"] - start).days]) if series is not None else 0.0
-        w = acc[s["target_date"] - timedelta(days=s["target_date"].weekday())]
+    rows = qs.values_list("hospital", "blood_group", "product_spec", "target_date", "method", "predicted", "baseline")
+    for hosp, bg, spec, target, method, predicted, baseline in rows.iterator(chunk_size=5000):
+        series = actual.get((hosp, bg, spec))
+        a = float(series[(target - start).days]) if series is not None else 0.0
+        w = acc[target - timedelta(days=target.weekday())]
         w["n"] += 1
-        if s["method"] == "ai":
+        if method == "ai":
             w["n_ai"] += 1
-            w["ai_err"] += abs(a - s["predicted"])
-            w["ai_base_err"] += abs(a - s["baseline"])
+            w["ai_err"] += abs(a - predicted)
+            w["ai_base_err"] += abs(a - baseline)
             w["ai_actual"] += a
-            w["ai_bias"] += s["predicted"] - a
+            w["ai_bias"] += predicted - a
         else:
-            w["avg_err"] += abs(a - s["baseline"])
+            w["avg_err"] += abs(a - baseline)
             w["avg_actual"] += a
     out = []
     for week in sorted(acc):
@@ -138,6 +138,27 @@ def accuracy(weeks=12, now=None, version=None):
                     "ai_base": _wape(w["ai_base_err"], w["ai_actual"]),
                     "ai_bias": _wape(w["ai_bias"], w["ai_actual"]), "avg": _wape(w["avg_err"], w["avg_actual"])})
     return out
+
+
+def store_accuracy(now=None):
+    """Tính sai số 12 tuần một lần (tác vụ định kỳ, sau khi lưu dự báo mỗi ngày) → last_accuracy.json."""
+    from . import training
+
+    weeks = accuracy(now=now)
+    registry.set_state("last_accuracy", {"date": timezone.localdate(now).isoformat(),
+                                         "weeks": [{**w, "week": w["week"].isoformat()} for w in weeks],
+                                         "real_series": training.db_frame()[1]})   # quét sổ kho 1 lần / ngày
+    return weeks
+
+
+def weekly(now=None):
+    """Sai số theo tuần đã tính sẵn; chưa có (hoặc cũ hơn hôm nay) thì tính một lần rồi lưu."""
+    from datetime import date
+
+    state = registry.state("last_accuracy")
+    if not state or state.get("date") != timezone.localdate(now).isoformat():
+        return store_accuracy(now)
+    return [{**w, "week": date.fromisoformat(w["week"])} for w in state["weeks"]]
 
 
 def losing_weeks(now=None):
@@ -166,6 +187,8 @@ def _since(iso, now):
 def retrain_reason(now=None, losing=0, real_series=0):
     from bloodbank.models import SystemSetting
 
+    from . import training
+
     if not SystemSetting.get("forecast_auto_retrain"):
         return None
     current = registry.active_meta()
@@ -189,6 +212,8 @@ REASONS = {"requested": "Quản trị yêu cầu", "first": "chưa có mô hình
 
 
 def _retrain(reason):
+    from . import training
+
     registry.clear_request()
     try:
         meta = training.run(log=log.info)
@@ -241,6 +266,8 @@ def cleanup(now=None):
 
 def nightly_check(now=None):
     """Trả về kết quả học lại ("promoted" / "kept" / "error") hoặc None nếu không học."""
+    from . import training
+
     if not settings.FORECAST_SCHEDULED_TRAINING:
         return None
     if registry.training_requested():                 # Quản trị bấm → chạy ở lần kế, không chờ đêm
@@ -267,21 +294,21 @@ def dashboard(now=None):
     """Số liệu cho trang Quản trị → Dự báo AI."""
     from bloodbank.models import SystemSetting
 
-    from . import predict
+    from . import predict, training
 
-    model, meta = predict.loaded()
-    weeks = accuracy(now=now)
+    meta = predict.active_meta()
+    weeks = weekly(now)
     peak = max([w[k] or 0 for w in weeks for k in ("ai", "ai_base", "avg")] or [0])
     check = registry.state("last_check") or {}
     real_series = check.get("real_series")
-    if real_series is None:                           # đã có bản dữ liệu thật hoặc chưa kiểm tra đêm nào
-        real_series = training.db_frame()[1] if not meta or meta.get("synthetic") else training.MIN_DB_SERIES
+    if real_series is None:                           # tính sẵn mỗi ngày cùng sai số (weekly ở trên)
+        real_series = (registry.state("last_accuracy") or {}).get("real_series", 0)
     versions = registry.versions()[:KEEP_VERSIONS]
     for v in versions:
         v["scores"] = _scores(v)
     last = registry.last_run()
     return {
-        "enabled": bool(SystemSetting.get("forecast_ai_enabled")), "ready": model is not None,
+        "enabled": bool(SystemSetting.get("forecast_ai_enabled")), "ready": meta is not None,
         "meta": meta, "scores": _scores(meta), "versions": versions, "last": last,
         "last_at": datetime.fromisoformat(last["at"]) if last else None,
         "trigger": REASONS.get((last or {}).get("trigger")), "check": check,

@@ -7,11 +7,7 @@ dùng mã bệnh viện làm đặc trưng nên mô hình áp được cho bện
 import numpy as np
 import pandas as pd
 
-HORIZON = 14
-HISTORY_DAYS = 28                      # cần tối thiểu 28 ngày lịch sử để có đủ đặc trưng
-BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
-FEATURES = ["h", "dow", "month", "tet", "blood_group",
-            "last_1", "last_7", "last_14", "mean_7", "mean_28", "std_28", "nonzero_28", "same_weekday_4"]
+from .constants import BLOOD_GROUPS, FEATURES, HISTORY_DAYS, HORIZON  # noqa: F401 — giữ đường import cũ
 
 
 def _origin_stats(demand):

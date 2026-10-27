@@ -1,5 +1,7 @@
 # Biến môi trường thật (dùng .env.example làm mẫu)
 .env
+.env.*
+!.env.example
 
 # Python
 __pycache__/
