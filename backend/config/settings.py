@@ -171,6 +171,9 @@ CHATBOT_RATE_LIMIT = int(os.environ.get("CHATBOT_RATE_LIMIT", "20"))     # số 
 # Số câu gửi AI cùng lúc (toàn hệ thống); vượt → trả lời ngay bằng chế độ từ khóa. Card 4 GB: 1–2.
 CHATBOT_MAX_CONCURRENT = int(os.environ.get("CHATBOT_MAX_CONCURRENT", "2"))
 
+# AI dự báo nhu cầu (XGBoost): mô hình + metadata do `manage.py train_forecast` ghi ra; không commit vào Git
+FORECAST_MODEL_DIR = Path(os.environ.get("FORECAST_MODEL_DIR", BASE_DIR / "var" / "forecast"))
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "Giọt Hồng <no-reply@hienmau.local>"
 

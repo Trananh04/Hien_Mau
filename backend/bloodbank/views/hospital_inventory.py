@@ -143,8 +143,20 @@ def demands(request, pk=None):
     return render(request, "hospital/demands.html", {
         "form": form, "demand": demand, "page": paginate(request, qs, 20), "status": status,
         "rows": rows, "sum": fc.summary(rows), "window": fc.WINDOW_DAYS, "horizon": fc.HORIZON_DAYS,
-        "campaign": callout.next_campaign(h),
+        "campaign": callout.next_campaign(h), "ai": _ai_info(rows),
     })
+
+
+def _ai_info(rows):
+    """Thông tin mô hình AI cho trang Dự báo thiếu hụt — chỉ khi có dòng thực sự dùng dự báo AI."""
+    from bloodbank.services.forecast_ml import predict as ml
+
+    if not any(r.get("method") == "ai" for r in rows):
+        return None
+    _, meta = ml.loaded()
+    scores = {r["model"]: r["wape"] * 100 for r in meta.get("backtest", [])}
+    return {"trained_at": meta.get("trained_at", ""), "synthetic": meta.get("synthetic", True),
+            "wape": scores.get("XGB"), "wape_b0": scores.get("B0")}
 
 
 @staff_required

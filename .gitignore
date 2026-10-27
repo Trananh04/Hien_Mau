@@ -25,3 +25,9 @@ Thumbs.db
 
 # Ảnh chụp màn hình sinh ra khi chạy kiểm thử giao diện
 qa-audit/evidence/runs/**/*.png
+
+# Mô hình AI dự báo + dữ liệu mô phỏng (sinh lại bằng manage.py simulate_demand / train_forecast)
+backend/var/
+
+# Repo tham khảo tải về để đọc, không thuộc dự án
+blood-bank-ai/

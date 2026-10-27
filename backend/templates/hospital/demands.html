@@ -1,9 +1,10 @@
 {% extends "layouts/workspace.html" %}
 {% block title %}Dự báo thiếu hụt{% endblock %}
 {% block ws_title %}Dự báo thiếu hụt{% endblock %}
-{% block ws_sub %}<p class="ws-sub">Theo lượng xuất cho người bệnh {{ window }} ngày gần nhất và nhu cầu có kế hoạch, dự báo {{ horizon }} ngày tới. Cần máu trong vài giờ: dùng nút <strong>Khẩn cấp</strong>.</p>{% endblock %}
+{% block ws_sub %}<p class="ws-sub">{% if ai %}Dự báo AI (XGBoost) cho dòng đủ 28 ngày lịch sử, còn lại theo{% else %}Theo{% endif %} lượng xuất cho người bệnh {{ window }} ngày gần nhất và nhu cầu có kế hoạch, dự báo {{ horizon }} ngày tới. Cần máu trong vài giờ: dùng nút <strong>Khẩn cấp</strong>.</p>{% endblock %}
 {% block ws_actions %}<button type="button" class="btn secondary" data-open-dialog="demand-form">{% icon "calendar-plus" %} Khai nhu cầu có kế hoạch</button>{% endblock %}
 {% block content %}
+{% if ai %}<div class="notice {% if ai.synthetic %}warn{% else %}info{% endif %}">{% icon "sparkles" %}<div>Dự báo bằng mô hình AI (XGBoost) huấn luyện ngày {{ ai.trained_at|slice:":10" }}{% if ai.wape is not None %}, sai số kiểm thử WAPE {{ ai.wape|floatformat:1 }}% (trung bình 28 ngày: {{ ai.wape_b0|floatformat:1 }}%){% endif %}.{% if ai.synthetic %} <strong>Nguồn dữ liệu huấn luyện: Mô phỏng</strong> — chỉ để trình diễn, chưa kiểm chứng trên dữ liệu bệnh viện thật.{% endif %}</div></div>{% endif %}
 <p class="summary-line">
   {% if sum.soon %}<b class="t-danger">{{ sum.soon }}</b> loại sắp hết trong 7 ngày — mời người hiến ngay{% else %}Không loại nào sắp hết trong 7 ngày{% endif %}
   · {% if sum.plan %}<b class="t-warn">{{ sum.plan }}</b> loại cần lên kế hoạch (7–{{ horizon }} ngày){% else %}không loại nào cần lên kế hoạch{% endif %}
@@ -13,13 +14,14 @@
 <section class="panel">
   {% if rows %}
   <div class="table-wrap"><table class="table">
-    <thead><tr><th>Nhóm</th><th>Chế phẩm</th><th class="num">Khả dụng</th><th class="num">Dùng/ngày</th><th class="u-minw-200">Đủ dùng</th><th class="num">Có kế hoạch</th><th class="num">Thiếu {{ horizon }} ngày</th><th class="num">Việc nên làm</th></tr></thead>
+    <thead><tr><th>Nhóm</th><th>Chế phẩm</th><th class="num">Khả dụng</th><th class="num">Dùng/ngày</th>{% if ai %}<th>Dự báo bằng</th>{% endif %}<th class="u-minw-200">Đủ dùng</th><th class="num">Có kế hoạch</th><th class="num">Thiếu {{ horizon }} ngày</th><th class="num">Việc nên làm</th></tr></thead>
     <tbody>{% for r in rows %}
       <tr class="{% if r.level == 'soon' %}row-danger{% elif r.level == 'plan' %}row-warn{% endif %}">
         <td>{% blood r.blood_group "sm" %}</td>
         <td><span class="cell-title">{{ r.spec.product.name }}</span><span class="cell-sub">{{ r.spec.name }}{% if r.below_min %} · dưới tối thiểu ({{ r.min_level }}){% endif %}</span></td>
         <td class="num">{{ r.available }}</td>
         <td class="num">{% if r.per_day %}{{ r.per_day|floatformat:1 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+        {% if ai %}<td>{% if r.method == "ai" %}<span class="badge info plain" title="Nhu cầu 14 ngày tới: {{ r.daily|join:', ' }}">AI</span>{% else %}<span class="muted small">TB 28 ngày</span>{% endif %}</td>{% endif %}
         <td>{% if r.days is not None %}
             <div class="cover"><div class="progress u-h-8"><span class="{% if r.level == 'soon' %}u-bg-primary{% elif r.level == 'plan' %}u-bg-xf59e0b{% else %}u-bg-ok{% endif %}" data-pct="{{ r.cover_pct }}"></span></div>
             <span class="cover-text">{% if r.days < 1 %}<b class="t-danger">dưới 1 ngày</b>{% else %}<b>{{ r.days|floatformat:0 }} ngày</b>{% endif %}{% if r.run_out %} · hết khoảng {{ r.run_out|date:"d/m" }}{% endif %}</span></div>
