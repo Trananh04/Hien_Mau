@@ -1,8 +1,10 @@
 """Dự báo thiếu hụt (kế hoạch vài ngày – vài tuần; ca cần máu trong vài giờ đi theo nút Khẩn cấp, không ở đây).
 
 Mỗi dòng = nhóm máu × quy cách:
-  dùng/ngày   = lượng XUẤT CHO NGƯỜI BỆNH trung bình `WINDOW_DAYS` ngày gần nhất (không tính điều chuyển, điều chỉnh);
-  cần 14 ngày = dùng/ngày × 14 + nhu cầu CÓ KẾ HOẠCH (đã khai, cần trong 14 ngày, không phải ca khẩn);
+  dùng/ngày   = nhu cầu THƯỜNG NGÀY trung bình `WINDOW_DAYS` ngày gần nhất (forecast_ml.history: xuất cho người bệnh
+                không gắn ca đã khai + yêu cầu người cần máu đã xác minh; không tính điều chuyển, điều chỉnh);
+  cần 14 ngày = dùng/ngày × 14 + nhu cầu CÓ KẾ HOẠCH còn lại (đã khai, cần trong 14 ngày, không phải ca khẩn,
+                trừ phần đã xuất cho ca đó);
   đủ dùng     = khả dụng ÷ dùng/ngày;  thiếu dự kiến = MAX(0, cần 14 ngày − khả dụng).
 Mức: "soon" (hết trong < 7 ngày hoặc thiếu ngay) → mời người hiến; "plan" (7–14 ngày) → tạo đợt hiến; "ok".
 
@@ -14,10 +16,11 @@ kiện vẫn dùng trung bình — giao diện, ngưỡng và gợi ý người 
 import math
 from datetime import timedelta
 
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 
-from bloodbank.models import Demand, ProductSpec, Stock, StockTxn
+from bloodbank.models import Demand, ProductSpec, Stock
+from bloodbank.services.forecast_ml import history
 
 WINDOW_DAYS = 28
 HORIZON_DAYS = 14
@@ -25,11 +28,9 @@ SOON_DAYS = 7
 
 
 def daily_usage(hospital, now=None):
-    """{(nhóm máu, quy cách): đơn vị dùng / ngày} — trung bình xuất cho người bệnh trong WINDOW_DAYS ngày."""
-    since = (now or timezone.now()) - timedelta(days=WINDOW_DAYS)
-    rows = (StockTxn.objects.filter(stock__hospital=hospital, txn_type=StockTxn.Type.ISSUE, occurred_at__gte=since)
-            .values("stock__blood_group", "stock__product_spec").annotate(n=Sum("quantity_change")))
-    return {(r["stock__blood_group"], r["stock__product_spec"]): -r["n"] / WINDOW_DAYS for r in rows}
+    """{(nhóm máu, quy cách): đơn vị / ngày} — trung bình nhu cầu thường ngày WINDOW_DAYS ngày gần nhất (gồm hôm nay)."""
+    data = history.recent(hospital, timezone.localdate(now), WINDOW_DAYS)
+    return {k: float(v.sum()) / WINDOW_DAYS for k, v in data.items() if v.sum() > 0}
 
 
 def _days_covered(available, daily):
@@ -52,11 +53,14 @@ def forecast(hospital, now=None):
     ai = ml.forecast(hospital, now)
     horizon = now + timedelta(days=HORIZON_DAYS)
     planned = {}
-    for d in Demand.objects.filter(hospital=hospital, status=Demand.Status.ACTIVE, is_emergency=False):
-        if d.needed_by is None or d.needed_by <= horizon:
+    demands = (Demand.objects.filter(hospital=hospital, status=Demand.Status.ACTIVE, is_emergency=False)
+               .annotate(issued=Sum("txns__quantity_change", filter=Q(txns__txn_type="issue"))))
+    for d in demands:
+        left = d.required_quantity + (d.issued or 0)          # issued là số âm
+        if left > 0 and (d.needed_by is None or d.needed_by <= horizon):
             key = (d.blood_group, d.product_spec_id)
             p = planned.setdefault(key, {"qty": 0, "first": None})
-            p["qty"] += d.required_quantity
+            p["qty"] += left
             if d.needed_by and (p["first"] is None or d.needed_by < p["first"]):
                 p["first"] = d.needed_by
     stocks = {(s.blood_group, s.product_spec_id): s for s in Stock.objects.filter(hospital=hospital)}

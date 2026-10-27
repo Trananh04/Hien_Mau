@@ -63,6 +63,7 @@ ERROR_MESSAGES = {
     "ERR-TRF-RECEIVED-EXCEEDS": "Số thực nhận không được vượt số đã xuất.",
     "ERR-TRF-FAILURE-REASON-REQUIRED": "Vui lòng nhập lý do giao nhận thất bại.",
     "ERR-PRQ-NOT-VERIFIED": "Yêu cầu chưa được xác minh nên chưa thể điều phối.",
+    "ERR-DEMAND-MISMATCH": "Ca mổ đã khai không còn mở hoặc khác nhóm máu / quy cách với dòng tồn đang xuất.",
     "ERR-PRQ-WRONG-HOSPITAL": "Yêu cầu không thuộc bệnh viện đang làm việc.",
     "ERR-PRQ-FINAL-STATE": "Yêu cầu đã ở trạng thái cuối.",
     "ERR-APPEND-ONLY": "Dữ liệu chỉ cho phép thêm mới.",

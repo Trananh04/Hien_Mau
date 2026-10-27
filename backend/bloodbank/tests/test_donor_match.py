@@ -266,7 +266,8 @@ class UrgencyTests(TestCase):
         self.assertNotContains(r, self.prq.request_code)        # ca khẩn / yêu cầu khẩn không nằm ở trang dự báo
         r = self.client.get(reverse("bloodbank:hospital_dashboard"))
         self.assertContains(r, "Thiếu máu khẩn")
-        self.assertEqual({k["label"]: k["count"] for k in r.context["kpis"]}["Sắp thiếu (7 ngày)"], 2)
+        # O+, A+ (đã khai) + B+: yêu cầu người cần máu đã xác minh là nhu cầu thật, kho B+ trống
+        self.assertEqual({k["label"]: k["count"] for k in r.context["kpis"]}["Sắp thiếu (7 ngày)"], 3)
 
     def test_urgent_mode_ranks_near_first_and_defaults_to_10km(self):
         stock = [r["user_id"] for r in donor_match.suggest(self.h, "O+")]

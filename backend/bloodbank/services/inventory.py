@@ -48,7 +48,7 @@ def _replay(key, stock_id, txn_type, change):
 
 
 def apply_txn(stock, txn_type, change, user, key, *, reason=None, note=None, offer=None, patient_request=None,
-              reserved_delta=0, donation=None):
+              reserved_delta=0, donation=None, demand=None):
     """Ghi một biến động trên dòng tồn ĐÃ KHÓA (gọi bên trong transaction)."""
     require(key, "ERR-VALIDATION", "Thiếu mã thao tác (idempotency_key).")
     replay = _replay(key, stock.pk, txn_type, change)
@@ -61,6 +61,7 @@ def apply_txn(stock, txn_type, change, user, key, *, reason=None, note=None, off
     txn = StockTxn.objects.create(
         stock=stock, txn_type=txn_type, quantity_change=change, quantity_before=before, quantity_after=after,
         adjustment_reason=reason, reason_note=note, offer=offer, patient_request=patient_request, donation=donation,
+        demand=demand,
         idempotency_key=key, performed_by=user, occurred_at=timezone.now(),
     )
     stock.quantity_on_hand = after
@@ -94,8 +95,10 @@ def _lock_own_stock(staff, stock_id):
     return stock
 
 
-def issue(staff, stock_id, quantity, key, purpose=None, patient_request_id=None, request=None):
-    """UC-INV-04: xuất kho trên phần khả dụng (BR-39); liên kết yêu cầu người cần máu chỉ khi verified/processing (BR-47)."""
+def issue(staff, stock_id, quantity, key, purpose=None, patient_request_id=None, request=None, demand_id=None):
+    """UC-INV-04: xuất kho trên phần khả dụng (BR-39); liên kết yêu cầu người cần máu chỉ khi verified/processing (BR-47).
+    `demand_id`: xuất cho ca mổ đã khai (cùng bệnh viện, đang mở, đúng nhóm máu + quy cách) — xuất đủ số đã khai thì
+    ca đó tự chuyển "Đã đáp ứng". Dự báo không đếm phiếu này vào "dùng thường ngày" (đã nằm trong nhu cầu có kế hoạch)."""
     qty = positive_int(quantity)
     with business_transaction():
         prq = None
@@ -108,17 +111,37 @@ def issue(staff, stock_id, quantity, key, purpose=None, patient_request_id=None,
             if prq.status not in (PatientRequest.Status.VERIFIED, PatientRequest.Status.PROCESSING):
                 raise BusinessError("ERR-PRQ-NOT-VERIFIED")
         stock = _lock_own_stock(staff, stock_id)
+        demand = None
+        if demand_id:
+            demand = Demand.objects.select_for_update().filter(pk=as_id(demand_id), hospital=staff.hospital).first()
+            if demand is None:
+                raise BusinessError("ERR-NOT-FOUND")
+            replay = StockTxn.objects.filter(idempotency_key=key).exists()
+            if not replay and (demand.status != Demand.Status.ACTIVE or demand.blood_group != stock.blood_group
+                               or demand.product_spec_id != stock.product_spec_id):
+                raise BusinessError("ERR-DEMAND-MISMATCH")
         if qty > stock.available and not StockTxn.objects.filter(idempotency_key=key).exists():
             raise BusinessError("ERR-INV-INSUFFICIENT", f"Chỉ còn {stock.available} đơn vị khả dụng.")
-        txn = apply_txn(stock, T.ISSUE, -qty, staff.user, key, note=(purpose or None), patient_request=prq)
+        txn = apply_txn(stock, T.ISSUE, -qty, staff.user, key, note=(purpose or None), patient_request=prq,
+                        demand=demand)
         if not txn.replayed:
             audit(staff.user, txn, "create", new=snapshot(txn), hospital=staff.hospital, request=request)
+            if demand and demand_issued(demand) >= demand.required_quantity:
+                demand.status = Demand.Status.FULFILLED
+                demand.save(update_fields=["status", "updated_at"])
+                audit(staff.user, demand, "status_change", old={"status": "active"}, new={"status": "fulfilled"},
+                      hospital=staff.hospital, request=request)
             if prq and prq.status == PatientRequest.Status.VERIFIED:
                 prq.status = PatientRequest.Status.PROCESSING
                 prq.save(update_fields=["status", "updated_at"])
                 audit(staff.user, prq, "status_change", old={"status": "verified"}, new={"status": "processing"},
                       hospital=staff.hospital, request=request)
     return txn
+
+
+def demand_issued(demand):
+    """Số đơn vị đã xuất cho một ca đã khai."""
+    return -(StockTxn.objects.filter(demand=demand, txn_type=T.ISSUE).aggregate(n=Sum("quantity_change"))["n"] or 0)
 
 
 def adjust(staff, stock_id, direction, quantity, reason, note, key, counted=None, request=None):

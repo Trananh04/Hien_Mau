@@ -307,3 +307,26 @@ Khi có dữ liệu thật: xuất sổ kho thành CSV (`date, series, blood_gro
 - Bias −1,7%: XGBoost hơi dự báo thiếu — chiều nguy hiểm hơn với kho máu, cần theo dõi khi có dữ liệu thật.
 - "TB cùng thứ" thua "TB 28 ngày": hệ số thứ trong tuần mô phỏng nhỏ so với nhiễu, trung bình 4 ngày quá ít mẫu.
 - **Giới hạn:** mô hình học lại đúng quy luật mô phỏng đặt ra — kết quả chứng minh pipeline đúng, chưa chứng minh độ chính xác thật.
+
+## 13. Chạy thật (nhánh `du-bao-ai-san-pham`)
+
+**Dữ liệu đầu vào** (`forecast_ml/history.py`, một nguồn cho cả trang Dự báo, dự đoán và huấn luyện):
+nhu cầu ngày = phiếu xuất cho người bệnh **không** gắn ca mổ đã khai + số đơn vị yêu cầu người cần máu được xác minh
+trong ngày (tính một lần, kể cả phần kho không có). Phiếu xuất có ô **"Ca mổ đã khai"**: chọn ca thì lượng đó không bị
+đếm thêm vào "dùng thường ngày"; xuất đủ số đã khai thì ca tự chuyển "Đã đáp ứng"; phần "có kế hoạch" chỉ tính số còn lại.
+
+**Chưa có dữ liệu thật?** `train_forecast` (mặc định `--source auto`) dùng sổ kho khi có ≥ 3 chuỗi đủ 180 ngày, chưa
+đủ thì tự dùng dữ liệu mô phỏng. Trang Quản trị → Dự báo AI hiện "Dữ liệu thật: x / 3 chuỗi".
+
+**Phiên bản và chốt chặn:** mỗi lần huấn luyện lưu `var/forecast/versions/<thời điểm>/`. Bản mới chỉ được dùng khi
+sai số thấp hơn cả 2 cách đơn giản, không dự báo thiếu quá 5%, và không thay bản dữ liệu thật bằng bản mô phỏng.
+Quay lại bản cũ: nút "Dùng bản này" hoặc `train_forecast --activate <phiên bản>`; xem danh sách: `--list`.
+
+**Tự động** (container `scheduler`):
+- mỗi ngày lưu dự báo 14 ngày (AI và trung bình 4 tuần) vào bảng `forecast_snapshots`; khi ngày đó qua thì so với thực
+  tế → biểu đồ "Sai số thực tế theo tuần";
+- mỗi `forecast_retrain_days` ngày (mặc định 7) huấn luyện lại, bỏ qua nếu chưa có dữ liệu thật mà bản đang dùng đã là
+  bản mô phỏng. Tắt bằng nút "Tắt tự động"; "Huấn luyện lại ngay" xếp lịch cho lần chạy kế (≤ 5 phút).
+
+Vì sao huấn luyện lại: để tự chuyển sang dữ liệu thật khi đủ, và theo kịp thay đổi nhu cầu. Chốt chặn đảm bảo bản kém
+hơn không bao giờ được dùng.

@@ -6,7 +6,9 @@ Không phụ thuộc việc có người mở trang:
   3. Yêu cầu cần máu chưa ai nhận xác minh: sau `prq_escalate_staff_minutes` nhắc lại toàn bộ nhân viên (kèm email),
      sau `prq_escalate_admin_minutes` báo lên Quản trị hệ thống. Mỗi mức chỉ nhắc một lần.
   4. Điền kết quả lời kêu gọi người hiến; nhắc người hiến đã đủ thời gian nghỉ; làm mới dự báo nhu cầu (mỗi ngày).
+  5. Dự báo nhu cầu: lưu dự báo mỗi ngày để đo độ chính xác thật; huấn luyện lại mô hình khi đến hạn / được yêu cầu.
 """
+import logging
 from datetime import timedelta
 
 from django.db.models import Q
@@ -93,7 +95,19 @@ def run_all(now=None):
         "escalations": escalate_patient_requests(now),
         "eligible_reminders": badges.remind_eligible_again(now),
         "chat_purged": _purge_chat(now),
+        **_forecast(now),
     }
+
+
+def _forecast(now=None):
+    # Dự báo hỏng (kể cả thiếu thư viện numpy/xgboost) không được chặn các tác vụ nghiệp vụ
+    try:
+        from bloodbank.services.forecast_ml import monitor
+
+        return {"forecast_snapshots": monitor.record_snapshots(now), "forecast_retrain": monitor.maybe_retrain(now)}
+    except Exception:
+        logging.getLogger(__name__).exception("Tác vụ dự báo thất bại")
+        return {"forecast_snapshots": "error"}
 
 
 def _purge_chat(now=None):

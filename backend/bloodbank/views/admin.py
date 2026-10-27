@@ -140,6 +140,30 @@ def alerts(request):
 
 
 @admin_required
+def forecast_monitor(request):
+    """SCR-59: dự báo AI — bật/tắt, phiên bản đang dùng, độ chính xác thật theo tuần, quay lại bản cũ, huấn luyện lại."""
+    from bloodbank.services.forecast_ml import monitor
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action in ("ai", "auto"):
+            key = "forecast_ai_enabled" if action == "ai" else "forecast_auto_retrain"
+            on = request.POST.get("value") == "on"
+            label = "Dự báo AI" if action == "ai" else "Tự huấn luyện lại"
+            attempt(request, lambda: admin_service.save_setting(request.user, key, "true" if on else "false", request),
+                    f"Đã {'bật' if on else 'tắt'} {label.lower()}.")
+        elif action == "activate":
+            version = request.POST.get("version")
+            attempt(request, lambda: admin_service.forecast_activate(request.user, version, request),
+                    f"Đang dùng phiên bản {version}.")
+        elif action == "train":
+            attempt(request, lambda: admin_service.forecast_request_training(request.user, request),
+                    "Đã xếp lịch huấn luyện lại — tác vụ định kỳ sẽ chạy trong vài phút tới.")
+        return redirect("bloodbank:admin_forecast")
+    return render(request, "admin/forecast.html", {"s": monitor.dashboard()})
+
+
+@admin_required
 def assistant_monitor(request):
     """SCR-58: theo dõi trợ lý hỏi đáp; bật/tắt AI (ghi qua cấu hình hệ thống, có nhật ký)."""
     if request.method == "POST":

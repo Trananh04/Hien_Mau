@@ -104,6 +104,11 @@ class StockTxn(models.Model):
     patient_request = models.ForeignKey(
         "bloodbank.PatientRequest", on_delete=models.RESTRICT, null=True, blank=True, related_name="txns"
     )
+    # Phiếu xuất cho một ca mổ / nhu cầu ĐÃ KHAI TRƯỚC: dự báo không đếm lượng này vào "dùng thường ngày"
+    # (đã có trong phần nhu cầu có kế hoạch) — tránh cộng trùng
+    demand = models.ForeignKey(
+        "bloodbank.Demand", on_delete=models.RESTRICT, null=True, blank=True, related_name="txns"
+    )
     # Truy xuất nguồn gốc: phiếu nhập tạo từ lượt hiến đã xét nghiệm đạt
     donation = models.ForeignKey(
         "bloodbank.Donation", on_delete=models.RESTRICT, null=True, blank=True, related_name="stock_txns"
@@ -151,6 +156,7 @@ class StockTxn(models.Model):
             models.CheckConstraint(
                 condition=Q(patient_request__isnull=True) | Q(txn_type="issue"), name="chk_txn_patient_link"
             ),
+            models.CheckConstraint(condition=Q(demand__isnull=True) | Q(txn_type="issue"), name="chk_txn_demand_link"),
             models.CheckConstraint(
                 condition=~Q(txn_type__in=["receive", "transfer_in", "transfer_return"]) | Q(quantity_change__gt=0),
                 name="chk_txn_sign_in",
@@ -204,3 +210,32 @@ class Demand(models.Model):
             models.CheckConstraint(condition=Q(status__in=["active", "fulfilled", "cancelled"]), name="chk_demands_status"),
             models.CheckConstraint(condition=Q(blood_group__in=BLOOD_GROUP_VALUES), name="chk_demands_blood_group"),
         ]
+
+
+class ForecastSnapshot(models.Model):
+    """Dự báo nhu cầu đã đưa ra mỗi ngày (cả AI lẫn trung bình 28 ngày) — để 14 ngày sau so với thực tế."""
+
+    class Method(models.TextChoices):
+        AI = "ai", "AI"
+        AVG = "avg", "Trung bình 28 ngày"
+
+    hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name="forecast_snapshots")
+    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUPS)
+    product_spec = models.ForeignKey(ProductSpec, on_delete=models.CASCADE, related_name="+")
+    origin = models.DateField()                       # ngày đưa ra dự báo
+    target_date = models.DateField()                  # ngày được dự báo (origin + h)
+    h = models.PositiveSmallIntegerField()
+    method = models.CharField(max_length=3, choices=Method.choices)
+    predicted = models.FloatField()                   # dự báo của cách đang hiển thị (AI hoặc trung bình)
+    baseline = models.FloatField()                    # trung bình 28 ngày — luôn lưu để so sánh
+    model_version = models.CharField(max_length=40, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "forecast_snapshots"
+        constraints = [
+            models.UniqueConstraint(fields=["hospital", "blood_group", "product_spec", "origin", "h"],
+                                    name="uq_forecast_snapshot"),
+            models.CheckConstraint(condition=Q(h__gte=1, h__lte=14), name="chk_forecast_h"),
+        ]
+        indexes = [models.Index(fields=["target_date"], name="idx_forecast_target")]

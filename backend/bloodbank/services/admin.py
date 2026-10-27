@@ -245,6 +245,29 @@ def save_setting(actor, key, raw, request=None):
     return row
 
 
+# ---------------------------------------------------------------- Dự báo AI (mô hình lưu trên đĩa, thao tác có nhật ký)
+def forecast_activate(actor, version, request=None):
+    from bloodbank.services.forecast_ml import registry
+
+    old = (registry.active_meta() or {}).get("version")
+    try:
+        registry.activate(str(version or ""))
+    except (FileNotFoundError, OSError, ValueError):
+        raise BusinessError("ERR-NOT-FOUND")
+    with business_transaction():
+        audit(actor, None, "update", old={"version": old}, new={"version": version}, entity_type="forecast_model",
+              entity_id=0, request=request)
+
+
+def forecast_request_training(actor, request=None):
+    from bloodbank.services.forecast_ml import registry
+
+    registry.request_training()
+    with business_transaction():
+        audit(actor, None, "create", new={"train_requested": True}, entity_type="forecast_model", entity_id=0,
+              request=request)
+
+
 # ---------------------------------------------------------------- Giám sát (chỉ đọc)
 def system_alerts(now=None):
     """Việc cần Quản trị đôn đốc trên toàn hệ thống. Không làm thay bệnh viện, không lộ tên bệnh nhân."""

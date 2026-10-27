@@ -66,7 +66,7 @@ def stock_txn_form(request, kind):
                                   key, data.get("note"), request)
             elif mode == "issue":
                 txn = inv.issue(request.staff, data.get("stock_id"), data.get("quantity"), key, data.get("purpose"),
-                                data.get("patient_request_id") or None, request)
+                                data.get("patient_request_id") or None, request, data.get("demand_id") or None)
             else:
                 txn = inv.adjust(request.staff, data.get("stock_id"), data.get("direction"), data.get("quantity"),
                                  data.get("reason"), data.get("note"), key, data.get("counted"), request)
@@ -83,7 +83,10 @@ def stock_txn_form(request, kind):
     initial_stock = request.GET.get("stock") or data.get("stock_id")
     prqs = (PatientRequest.objects.filter(hospital=h, status__in=PatientRequest.ACTIVE_STATUSES)
             .select_related("blood_product").order_by("-created_at"))
+    planned = (Demand.objects.filter(hospital=h, status=Demand.Status.ACTIVE, is_emergency=False)
+               .select_related("product_spec__product").order_by("needed_by", "pk"))
     return render(request, "hospital/stock_txn_form.html", {
+        "demands": planned, "initial_demand": request.GET.get("demand") or data.get("demand_id"),
         "mode": mode, "kind": kind, "stocks": stocks, "specs": ProductSpec.objects.select_related("product").filter(
             is_active=True, product__is_active=True), "products": Product.objects.filter(is_active=True),
         "blood_groups": BLOOD_GROUPS, "reasons": [r for r in StockTxn.Reason.choices if r[0] != "transfer_shortfall"],

@@ -340,3 +340,14 @@ def vn_since(value):
         return f"{months} tháng"
     years, rest = divmod(months, 12)
     return f"{years} năm" + (f" {rest} tháng" if rest else "")
+
+
+@register.filter
+def ratio_pct(value, digits=1):
+    """0.544 → "54,4%" (tỷ lệ → phần trăm); None → "—"."""
+    if value is None or value == "":
+        return "—"
+    try:
+        return f"{100 * float(value):.{int(digits)}f}%".replace(".", ",")
+    except (TypeError, ValueError):
+        return "—"

@@ -173,6 +173,12 @@ CHATBOT_MAX_CONCURRENT = int(os.environ.get("CHATBOT_MAX_CONCURRENT", "2"))
 
 # AI dự báo nhu cầu (XGBoost): mô hình + metadata do `manage.py train_forecast` ghi ra; không commit vào Git
 FORECAST_MODEL_DIR = Path(os.environ.get("FORECAST_MODEL_DIR", BASE_DIR / "var" / "forecast"))
+FORECAST_SCHEDULED_TRAINING = True    # tác vụ định kỳ được phép huấn luyện lại (tắt khi chạy test)
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    import tempfile
+
+    FORECAST_MODEL_DIR = Path(tempfile.gettempdir()) / "hien_mau_test_forecast"   # test không đụng mô hình thật
+    FORECAST_SCHEDULED_TRAINING = False
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "Giọt Hồng <no-reply@hienmau.local>"

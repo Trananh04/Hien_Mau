@@ -1436,3 +1436,12 @@ html.js .ws-shell .filter-submit { display: none; }
   .fc-table td > .cover, .fc-table td > .muted { min-width: 0; text-align: right; }
   .fc-table td > .cover { flex: 1; max-width: 220px; }
 }
+
+/* Quản trị → Dự báo AI: 2 thanh sai số mỗi tuần (AI / trung bình 28 ngày) */
+.fcw-bars { display: grid; gap: 4px; min-width: 140px; }
+.fcw-bars .progress > span.base { background: var(--ink-muted); }
+.fcw-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8125rem; color: var(--ink-muted); }
+.fcw-legend i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.fcw-legend i.sw.ai { background: var(--primary); }
+.fcw-legend i.sw.base { background: var(--ink-muted); }
+.fcw-note { margin: 0; padding: 10px 16px 14px; }

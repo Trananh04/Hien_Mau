@@ -1,0 +1,86 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}Dự báo AI{% endblock %}
+{% block ws_title %}Dự báo AI{% endblock %}
+{% block content %}
+<div class="dash">
+  <section class="panel" aria-labelledby="st-title">
+    <div class="panel-head"><h2 class="panel-title" id="st-title">Trạng thái</h2></div>
+    <dl class="dl dash-dl">
+      <dt>Trang Dự báo thiếu hụt</dt><dd>{% if s.enabled and s.ready %}<span class="tag ok">{% icon "circle-check" 14 %} Đang dùng AI</span>{% elif s.enabled %}<span class="tag warn">{% icon "circle-alert" 14 %} Đã bật nhưng chưa có mô hình — dùng trung bình 4 tuần</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Trung bình 4 tuần</span>{% endif %}</dd>
+      {% if s.meta %}
+      <dt>Phiên bản</dt><dd><code>{{ s.meta.version|default:"chưa đánh số" }}</code> · huấn luyện {{ s.trained_at|date:"d/m/Y H:i" }}</dd>
+      <dt>Dữ liệu học</dt><dd>{% if s.meta.synthetic %}<span class="fc-sim">Mô phỏng</span>{% else %}Sổ kho thật{% endif %} · {{ s.meta.series }} chuỗi · {{ s.meta.date_from }} → {{ s.meta.date_to }}</dd>
+      {% if s.scores.XGB %}<dt>Sai số khi kiểm tra</dt><dd><strong>{{ s.scores.XGB.wape|ratio_pct }}</strong> (trung bình 4 tuần {{ s.scores.B0.wape|ratio_pct }}) · tổng 14 ngày {{ s.scores.XGB.wape_14d_total|ratio_pct }} · lệch {{ s.scores.XGB.bias|ratio_pct }}</dd>{% endif %}
+      {% endif %}
+      <dt>Dữ liệu thật</dt><dd>{{ s.real_series }} / {{ s.min_series }} chuỗi đủ {{ s.min_days }} ngày{% if s.real_series < s.min_series %} · <span class="muted">chưa đủ, huấn luyện bằng dữ liệu mô phỏng</span>{% endif %}</dd>
+    </dl>
+    <form method="post" class="panel-foot u-jc-space-between u-ai-center"{% if s.enabled %} data-confirm="Tắt dự báo AI? Trang Dự báo thiếu hụt sẽ dùng trung bình 4 tuần."{% endif %}>
+      {% csrf_token %}<input type="hidden" name="action" value="ai">
+      {% if s.enabled %}
+        <span class="small muted">Tắt khi thấy AI dự báo kém hơn trung bình 4 tuần.</span>
+        <input type="hidden" name="value" value="off"><button type="submit" class="btn secondary sm">{% icon "power" %} Tắt AI</button>
+      {% else %}
+        <span class="small muted">{% if s.ready %}Có mô hình qua chốt chặn, có thể bật.{% else %}Chưa có mô hình.{% endif %}</span>
+        <input type="hidden" name="value" value="on"><button type="submit" class="btn primary sm"{% if not s.ready %} disabled{% endif %}>{% icon "power" %} Bật AI</button>
+      {% endif %}
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="tr-title">
+    <div class="panel-head"><h2 class="panel-title" id="tr-title">Huấn luyện lại</h2></div>
+    <dl class="dl dash-dl">
+      <dt>Lần gần nhất</dt><dd>{% if s.last %}{{ s.last_at|date:"d/m/Y H:i" }} · {% if s.last.promoted %}<span class="tag ok">Dùng bản mới</span>{% elif s.last.version %}Giữ bản cũ{% else %}Không huấn luyện{% endif %}{% if s.last.reasons %}<br><span class="small muted">{{ s.last.reasons|join:"; " }}</span>{% endif %}{% else %}Chưa chạy{% endif %}</dd>
+      <dt>Tự động</dt><dd>{% if s.auto %}Mỗi {{ s.retrain_days }} ngày{% if s.next_due %} · lần tới khoảng {{ s.next_due|date:"d/m" }}{% endif %}{% else %}Đang tắt{% endif %}</dd>
+      <dt>Chốt chặn</dt><dd class="small">Bản mới chỉ được dùng khi sai số thấp hơn cách đơn giản và không dự báo thiếu quá 5%.</dd>
+    </dl>
+    <div class="panel-foot u-jc-space-between u-ai-center">
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="auto"><input type="hidden" name="value" value="{% if s.auto %}off{% else %}on{% endif %}">
+        <button type="submit" class="btn secondary sm">{% if s.auto %}Tắt tự động{% else %}Bật tự động{% endif %}</button></form>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="train">
+        <button type="submit" class="btn primary sm"{% if s.requested %} disabled{% endif %}>{% icon "refresh-cw" %} {% if s.requested %}Đã xếp lịch{% else %}Huấn luyện lại ngay{% endif %}</button></form>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="wk-title">
+    <div class="panel-head"><h2 class="panel-title" id="wk-title">Sai số thực tế theo tuần</h2>
+      <span class="fcw-legend"><span><i class="sw ai"></i>AI</span><span><i class="sw base"></i>Trung bình 4 tuần</span></span></div>
+    {% if s.weeks %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Tuần</th><th class="num">AI</th><th class="num">TB 4 tuần</th><th class="num">Lệch AI</th><th class="u-w-40pct"><span class="sr-only">Biểu đồ</span></th></tr></thead>
+      <tbody>{% for w in s.weeks %}
+        <tr><td>{{ w.week|date:"d/m" }}</td>
+          <td class="num"><strong>{{ w.ai|ratio_pct:0 }}</strong></td>
+          <td class="num">{% if w.ai is not None %}{{ w.ai_base|ratio_pct:0 }}{% else %}{{ w.avg|ratio_pct:0 }}{% endif %}</td>
+          <td class="num">{{ w.ai_bias|ratio_pct:0 }}</td>
+          <td><div class="fcw-bars">
+            {% if w.ai is not None %}<div class="progress u-h-8" title="AI {{ w.ai|ratio_pct:0 }}"><span class="u-bg-primary" data-pct="{{ w.ai|pct:s.peak }}"></span></div>{% endif %}
+            <div class="progress u-h-8" title="Trung bình 4 tuần"><span class="base" data-pct="{% if w.ai is not None %}{{ w.ai_base|pct:s.peak }}{% else %}{{ w.avg|pct:s.peak }}{% endif %}"></span></div>
+          </div></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <p class="small muted fcw-note">Sai số = tổng |thực tế − dự báo| ÷ tổng thực tế, càng thấp càng tốt. Lệch âm = dự báo thiếu.</p>
+    {% else %}
+    <p class="dash-empty">{% icon "info" 18 %} Chưa có dữ liệu. Hệ thống lưu dự báo mỗi ngày và so với thực tế khi ngày đó qua.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="vs-title">
+    <div class="panel-head"><h2 class="panel-title" id="vs-title">Các phiên bản</h2></div>
+    {% if s.versions %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Phiên bản</th><th>Dữ liệu</th><th class="num">Sai số</th><th class="num">TB 4 tuần</th><th>Chốt chặn</th><th></th></tr></thead>
+      <tbody>{% for v in s.versions %}
+        <tr><td><code>{{ v.version }}</code></td>
+          <td>{% if v.synthetic %}Mô phỏng{% else %}Sổ kho{% endif %}</td>
+          <td class="num">{{ v.scores.XGB.wape|ratio_pct }}</td><td class="num">{{ v.scores.B0.wape|ratio_pct }}</td>
+          <td>{% if v.guard.passed %}<span class="tag ok">Đạt</span>{% else %}<span class="tag warn" title="{{ v.guard.reasons|join:'; ' }}">Không đạt</span>{% endif %}</td>
+          <td class="num">{% if v.active %}<span class="tag ok">Đang dùng</span>{% else %}
+            <form method="post" data-confirm="Dùng phiên bản {{ v.version }}{% if not v.guard.passed %} (không qua chốt chặn){% endif %}?">{% csrf_token %}<input type="hidden" name="action" value="activate"><input type="hidden" name="version" value="{{ v.version }}"><button type="submit" class="btn secondary sm">Dùng bản này</button></form>{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}
+    <p class="dash-empty">Chưa có phiên bản nào. Bấm “Huấn luyện lại ngay” hoặc chạy <code>python manage.py train_forecast</code>.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
