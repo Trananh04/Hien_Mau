@@ -43,6 +43,15 @@ class Forecaster:
         self.booster.save_model(path)
 
 
+def _threads():
+    try:
+        from django.conf import settings
+
+        return settings.FORECAST_TRAIN_THREADS
+    except Exception:                  # dùng ngoài Django
+        return XGB_PARAMS["nthread"]
+
+
 def _xgb():
     import xgboost as xgb
 
@@ -57,7 +66,7 @@ def train(examples, cutoff=None):
     xgb = _xgb()
     dfit = xgb.DMatrix(fit[FEATURES], label=fit["target"], enable_categorical=True)
     dval = xgb.DMatrix(val[FEATURES], label=val["target"], enable_categorical=True)
-    booster = xgb.train(XGB_PARAMS, dfit, num_boost_round=MAX_ROUNDS, evals=[(dval, "val")],
+    booster = xgb.train({**XGB_PARAMS, "nthread": _threads()}, dfit, num_boost_round=MAX_ROUNDS, evals=[(dval, "val")],
                         early_stopping_rounds=EARLY_STOP, verbose_eval=False)
     return Forecaster(booster)
 

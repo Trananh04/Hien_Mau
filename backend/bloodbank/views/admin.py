@@ -150,12 +150,16 @@ def forecast_monitor(request):
             key = "forecast_ai_enabled" if action == "ai" else "forecast_auto_retrain"
             on = request.POST.get("value") == "on"
             label = "Dự báo AI" if action == "ai" else "Tự huấn luyện lại"
-            attempt(request, lambda: admin_service.save_setting(request.user, key, "true" if on else "false", request),
-                    f"Đã {'bật' if on else 'tắt'} {label.lower()}.")
+            ok, _ = attempt(request, lambda: admin_service.save_setting(request.user, key, "true" if on else "false",
+                                                                       request), f"Đã {'bật' if on else 'tắt'} {label.lower()}.")
+            if ok and action == "ai":
+                monitor.refresh_snapshots()                 # trang Dự báo đổi ngay, không chờ đêm
         elif action == "activate":
             version = request.POST.get("version")
-            attempt(request, lambda: admin_service.forecast_activate(request.user, version, request),
-                    f"Đang dùng phiên bản {version}.")
+            ok, _ = attempt(request, lambda: admin_service.forecast_activate(request.user, version, request),
+                            f"Đang dùng phiên bản {version}.")
+            if ok:
+                monitor.refresh_snapshots()
         elif action == "train":
             attempt(request, lambda: admin_service.forecast_request_training(request.user, request),
                     "Đã xếp lịch huấn luyện lại — tác vụ định kỳ sẽ chạy trong vài phút tới.")

@@ -174,6 +174,10 @@ CHATBOT_MAX_CONCURRENT = int(os.environ.get("CHATBOT_MAX_CONCURRENT", "2"))
 # AI dự báo nhu cầu (XGBoost): mô hình + metadata do `manage.py train_forecast` ghi ra; không commit vào Git
 FORECAST_MODEL_DIR = Path(os.environ.get("FORECAST_MODEL_DIR", BASE_DIR / "var" / "forecast"))
 FORECAST_SCHEDULED_TRAINING = True    # tác vụ định kỳ được phép huấn luyện lại (tắt khi chạy test)
+# Kiểm tra / học lại mô hình chỉ trong khung giờ vắng [bắt đầu, kết thúc) theo giờ địa phương; giới hạn luồng CPU
+# để không làm chậm web chạy cùng máy
+FORECAST_TRAIN_HOURS = tuple(int(x) for x in os.environ.get("FORECAST_TRAIN_HOURS", "2,5").split(","))
+FORECAST_TRAIN_THREADS = int(os.environ.get("FORECAST_TRAIN_THREADS", "2"))
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     import tempfile
 

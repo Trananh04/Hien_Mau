@@ -3,7 +3,8 @@
     FORECAST_MODEL_DIR/
         model.json, metadata.json      ← bản ĐANG DÙNG (predict.py chỉ đọc 2 file này)
         versions/<phiên bản>/          ← mọi bản đã huấn luyện, kể cả bản bị chốt chặn loại
-        last_run.json                  ← lần huấn luyện gần nhất (thời điểm, kết quả) — để không chạy lại liên tục
+        last_run.json                  ← lần huấn luyện gần nhất (thời điểm, kết quả, lý do)
+        last_check.json                ← lần kiểm tra mỗi đêm gần nhất (monitor.nightly_check)
         train.request                  ← Quản trị bấm "Huấn luyện lại ngay"; tác vụ định kỳ nhận và xóa
 
 Chốt chặn (khi không ép): bản mới chỉ được dùng nếu trong backtest
@@ -114,6 +115,14 @@ def last_run():
 
 def record_run(result):
     _write(root() / "last_run.json", {**result, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+
+
+def state(name):
+    return _read(root() / f"{name}.json")
+
+
+def set_state(name, data):
+    _write(root() / f"{name}.json", data)
 
 
 def request_training():

@@ -29,8 +29,9 @@
   <section class="panel" aria-labelledby="tr-title">
     <div class="panel-head"><h2 class="panel-title" id="tr-title">Huấn luyện lại</h2></div>
     <dl class="dl dash-dl">
-      <dt>Lần gần nhất</dt><dd>{% if s.last %}{{ s.last_at|date:"d/m/Y H:i" }} · {% if s.last.promoted %}<span class="tag ok">Dùng bản mới</span>{% elif s.last.version %}Giữ bản cũ{% else %}Không huấn luyện{% endif %}{% if s.last.reasons %}<br><span class="small muted">{{ s.last.reasons|join:"; " }}</span>{% endif %}{% else %}Chưa chạy{% endif %}</dd>
-      <dt>Tự động</dt><dd>{% if s.auto %}Mỗi {{ s.retrain_days }} ngày{% if s.next_due %} · lần tới khoảng {{ s.next_due|date:"d/m" }}{% endif %}{% else %}Đang tắt{% endif %}</dd>
+      <dt>Lần gần nhất</dt><dd>{% if s.last %}{{ s.last_at|date:"d/m/Y H:i" }}{% if s.trigger %} · {{ s.trigger }}{% endif %} · {% if s.last.promoted %}<span class="tag ok">Dùng bản mới</span>{% elif s.last.version %}Giữ bản cũ{% else %}Không huấn luyện{% endif %}{% if s.last.reasons %}<br><span class="small muted">{{ s.last.reasons|join:"; " }}</span>{% endif %}{% else %}Chưa chạy{% endif %}</dd>
+      <dt>Tự động</dt><dd>{% if s.auto %}Kiểm tra mỗi đêm {{ s.hours.0 }}h–{{ s.hours.1 }}h, chỉ học lại khi: lần đầu đủ dữ liệu thật · AI thua trung bình {{ s.drift_weeks }} tuần liền · đã {{ s.retrain_days }} ngày có dữ liệu mới{% else %}Đang tắt — chỉ học lại khi bấm nút{% endif %}{% if s.check.date %}<br><span class="small muted">Kiểm tra gần nhất {{ s.check.date }}{% if s.check.losing_weeks %} · AI thua {{ s.check.losing_weeks }} tuần liền{% endif %}</span>{% endif %}</dd>
+      <dt>Tự bảo vệ</dt><dd class="small">AI thua trung bình {{ s.protect_weeks }} tuần liền thì tự tắt và báo Quản trị.</dd>
       <dt>Chốt chặn</dt><dd class="small">Bản mới chỉ được dùng khi sai số thấp hơn cách đơn giản và không dự báo thiếu quá 5%.</dd>
     </dl>
     <div class="panel-foot u-jc-space-between u-ai-center">

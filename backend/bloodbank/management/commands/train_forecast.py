@@ -12,7 +12,7 @@ Mỗi lần chạy lưu FORECAST_MODEL_DIR/versions/<phiên bản>/ (mô hình, 
 """
 from django.core.management.base import BaseCommand, CommandError
 
-from bloodbank.services.forecast_ml import registry, training
+from bloodbank.services.forecast_ml import monitor, registry, training
 
 
 class Command(BaseCommand):
@@ -41,6 +41,7 @@ class Command(BaseCommand):
                 registry.activate(activate)
             except FileNotFoundError:
                 raise CommandError(f"Không có phiên bản hợp lệ {activate}")
+            monitor.refresh_snapshots()
             self.stdout.write(f"Đang dùng phiên bản {activate}.")
             return
         try:
@@ -56,6 +57,8 @@ class Command(BaseCommand):
         guard = meta["guard"]
         self.stdout.write(f"Phiên bản {meta['version']}: " + ("QUA chốt chặn" if guard["passed"] else
                           "KHÔNG qua chốt chặn — " + "; ".join(guard["reasons"])))
+        if meta["promoted"]:
+            monitor.refresh_snapshots()
         self.stdout.write("→ Đang dùng bản này." if meta["promoted"] else "→ Giữ bản đang dùng.")
         if meta["synthetic"]:
             self.stdout.write("Lưu ý: học trên dữ liệu MÔ PHỎNG — chỉ chứng minh hệ thống chạy đúng.")

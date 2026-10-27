@@ -111,8 +111,8 @@ class SystemSetting(models.Model):
         "shortage_urgent_hours": (24, "Nhu cầu cần máu trước số giờ này được xếp mức Khẩn (ưu tiên xuất kho, xin liên viện, kêu gọi khẩn)"),
         "donor_invite_urgent_cooldown_days": (3, "Kêu gọi khẩn: người hiến không nhận lời kêu gọi nào trong số ngày này mới được mời"),
         "forecast_ai_enabled": (False, "Dự báo thiếu hụt dùng mô hình AI (XGBoost) thay cho trung bình 28 ngày — chỉ bật khi mô hình đã huấn luyện và thắng baseline"),
-        "forecast_auto_retrain": (True, "Tự huấn luyện lại mô hình dự báo định kỳ (bản mới chỉ được dùng khi qua chốt chặn)"),
-        "forecast_retrain_days": (7, "Số ngày giữa hai lần tự huấn luyện lại mô hình dự báo"),
+        "forecast_auto_retrain": (True, "Tự học lại mô hình dự báo khi có lý do: lần đầu đủ dữ liệu thật, AI dự báo kém hơn trung bình, hoặc có thêm dữ liệu mới (bản mới chỉ được dùng khi qua chốt chặn)"),
+        "forecast_retrain_days": (30, "Mô hình học từ dữ liệu thật được học lại để cập nhật dữ liệu mới sau số ngày này"),
         "donor_invite_max_90_days": (4, "Chia đều lượt kêu gọi: người đã nhận số lời kêu gọi này trong 90 ngày (mọi bệnh viện) tạm không được gợi ý"),
         "donor_invite_response_days": (7, "Người được mời đăng ký đợt hiến hoặc hiến máu tại bệnh viện trong số ngày này sau lời mời thì tính là đã hưởng ứng"),
     }

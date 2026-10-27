@@ -147,21 +147,74 @@ class MonitorTests(TmpModelDir, TestCase):
         self.assertEqual(weeks[0]["avg"], 0)
         self.assertIsNone(weeks[0]["ai"])
 
-    @override_settings(FORECAST_SCHEDULED_TRAINING=True)
-    def test_retrain_skipped_without_real_data_and_runs_on_request(self):
+    def test_page_reads_nightly_forecast_instead_of_recomputing(self):
+        self.assertAlmostEqual(fc.forecast(self.h)[0]["per_day"], 54 / 28)        # chưa có dự báo đêm qua → tính trực tiếp
+        monitor.record_snapshots()
+        ForecastSnapshot.objects.update(baseline=5.0)
+        self.assertEqual(fc.forecast(self.h)[0]["per_day"], 5.0)                   # đọc bảng dự báo đã lưu
+        ForecastSnapshot.objects.update(method="ai", predicted=1.0)
+        self.assertEqual(fc.forecast(self.h)[0]["method"], "avg")                  # AI đang tắt → không dùng phần AI
+
+    def set_active(self, synthetic, trained_days_ago=1, version="20260101-000000"):
+        at = (timezone.now() - timedelta(days=trained_days_ago)).isoformat()
+        registry._write(self.dir / "metadata.json", {"version": version, "synthetic": synthetic, "trained_at": at})
+
+    def test_retrain_only_with_a_reason(self):
+        self.assertEqual(monitor.retrain_reason(), "first")
+        self.set_active(synthetic=True)
+        self.assertIsNone(monitor.retrain_reason(real_series=0))                   # mô phỏng, chưa có dữ liệu thật
+        self.assertEqual(monitor.retrain_reason(real_series=3), "real_data")
+        self.set_active(synthetic=False)
+        self.assertIsNone(monitor.retrain_reason())                                # mới học, vẫn tốt → không học
+        self.assertEqual(monitor.retrain_reason(losing=2), "drift")
+        self.set_active(synthetic=False, trained_days_ago=31)
+        self.assertEqual(monitor.retrain_reason(), "new_data")
+        registry.record_run({"version": None})                                     # vừa học xong → chờ ≥ 7 ngày
+        self.assertIsNone(monitor.retrain_reason(losing=2))
+        SystemSetting.objects.update_or_create(setting_key="forecast_auto_retrain", defaults={"setting_value": False})
+        registry._write(self.dir / "last_run.json", {"at": "2020-01-01T00:00:00+00:00"})
+        self.assertIsNone(monitor.retrain_reason(losing=2))                        # tắt tự động
+
+    def test_losing_weeks_turns_ai_off_and_alerts_admins(self):
+        admin = f.user(role="admin")
+        self.set_active(synthetic=False)
+        end = timezone.localdate() - timedelta(days=1)
+        last_monday = end - timedelta(days=end.weekday() + (0 if end.weekday() == 6 else 7))
+        for day in range(21):                                                       # 3 tuần trọn vẹn gần nhất
+            target = last_monday - timedelta(days=14) + timedelta(days=day)
+            for h in range(1, 5):
+                ForecastSnapshot.objects.create(hospital=self.h, blood_group="O+", product_spec=self.spec, h=h,
+                                                origin=target - timedelta(days=h), target_date=target, method="ai",
+                                                predicted=6.0, baseline=2.0, model_version="20260101-000000")
+        self.assertEqual(monitor.losing_weeks(), 3)                                # thực tế 2/ngày: AI 6 sai hơn TB 2
+        SystemSetting.objects.update_or_create(setting_key="forecast_ai_enabled", defaults={"setting_value": True})
+        self.assertTrue(monitor.protect(3))
+        self.assertFalse(SystemSetting.get("forecast_ai_enabled"))
+        self.assertTrue(admin.notifications.filter(type="forecast_ai_disabled").exists())
+        self.assertFalse(monitor.protect(3))                                       # đã tắt → không báo lại
+
+    @override_settings(FORECAST_SCHEDULED_TRAINING=True, FORECAST_TRAIN_HOURS=(0, 24))
+    def test_nightly_check_runs_once_and_trains_on_request(self):
         self.small_sim()
         training.run(source="csv", force=True, log=lambda *_: None)
-        registry.record_run({"version": None})
-        self.assertIsNone(monitor.maybe_retrain())                                  # chưa đến hạn
-        registry._write(self.dir / "last_run.json", {"at": "2020-01-01T00:00:00+00:00"})
-        self.assertEqual(monitor.maybe_retrain(), "skipped")                         # mô phỏng → học lại vô ích
+        self.assertIsNone(monitor.nightly_check())                                 # mô phỏng, chưa có dữ liệu thật
+        self.assertEqual(registry.state("last_check")["real_series"], 0)
+        with override_settings(FORECAST_TRAIN_HOURS=(0, 0)):
+            self.assertIsNone(monitor.nightly_check())                             # ngoài giờ vắng
         registry.request_training()
-        self.assertIn(monitor.maybe_retrain(), ("promoted", "kept"))
+        self.assertIn(monitor.nightly_check(), ("promoted", "kept"))               # bấm nút → chạy ngay
         self.assertFalse(registry.training_requested())
+        self.assertEqual(registry.last_run()["trigger"], "requested")
+
+    def test_cleanup_keeps_one_year(self):
+        old = timezone.localdate() - timedelta(days=400)
+        ForecastSnapshot.objects.create(hospital=self.h, blood_group="O+", product_spec=self.spec, h=1, origin=old,
+                                        target_date=old + timedelta(days=1), method="avg", predicted=1, baseline=1)
+        self.assertEqual(monitor.cleanup(), 1)
 
     def test_scheduled_training_off_in_tests_by_default(self):
         registry.request_training()
-        self.assertIsNone(monitor.retrain_due())
+        self.assertIsNone(monitor.nightly_check())
 
 
 class AdminPageTests(TmpModelDir, TestCase):

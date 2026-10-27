@@ -104,7 +104,7 @@ def _forecast(now=None):
     try:
         from bloodbank.services.forecast_ml import monitor
 
-        return {"forecast_snapshots": monitor.record_snapshots(now), "forecast_retrain": monitor.maybe_retrain(now)}
+        return {"forecast_snapshots": monitor.record_snapshots(now), "forecast_retrain": monitor.nightly_check(now)}
     except Exception:
         logging.getLogger(__name__).exception("Tác vụ dự báo thất bại")
         return {"forecast_snapshots": "error"}

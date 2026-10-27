@@ -322,11 +322,13 @@ trong ngày (tính một lần, kể cả phần kho không có). Phiếu xuất
 sai số thấp hơn cả 2 cách đơn giản, không dự báo thiếu quá 5%, và không thay bản dữ liệu thật bằng bản mô phỏng.
 Quay lại bản cũ: nút "Dùng bản này" hoặc `train_forecast --activate <phiên bản>`; xem danh sách: `--list`.
 
-**Tự động** (container `scheduler`):
-- mỗi ngày lưu dự báo 14 ngày (AI và trung bình 4 tuần) vào bảng `forecast_snapshots`; khi ngày đó qua thì so với thực
-  tế → biểu đồ "Sai số thực tế theo tuần";
-- mỗi `forecast_retrain_days` ngày (mặc định 7) huấn luyện lại, bỏ qua nếu chưa có dữ liệu thật mà bản đang dùng đã là
-  bản mô phỏng. Tắt bằng nút "Tắt tự động"; "Huấn luyện lại ngay" xếp lịch cho lần chạy kế (≤ 5 phút).
-
-Vì sao huấn luyện lại: để tự chuyển sang dữ liệu thật khi đủ, và theo kịp thay đổi nhu cầu. Chốt chặn đảm bảo bản kém
-hơn không bao giờ được dùng.
+**Vận hành tối ưu** (container `scheduler`, `forecast_ml/monitor.py`):
+- **Dự đoán mỗi đêm một lần:** lần chạy đầu mỗi ngày lưu dự báo 14 ngày (AI + trung bình 4 tuần, dữ liệu đến hết hôm
+  qua) vào `forecast_snapshots`. Trang Dự báo thiếu hụt chỉ đọc bảng này; tồn kho, ca đã khai vẫn lấy trực tiếp. Bật/tắt
+  AI hoặc đổi phiên bản → tính lại ngay. Chưa có dự báo đêm qua → trang tự tính như cũ.
+- **Học lại chỉ khi có lý do** (kiểm tra 1 lần/đêm trong giờ vắng `FORECAST_TRAIN_HOURS`, mặc định 2h–5h): lần đầu đủ dữ
+  liệu thật · AI thua trung bình 2 tuần trọn vẹn liền · bản dữ liệu thật đã dùng ≥ `forecast_retrain_days` (30) ngày.
+  Hai lần học tự động cách nhau ≥ 7 ngày; "Huấn luyện lại ngay" chạy ở lần kế (≤ 5 phút). XGBoost dùng
+  `FORECAST_TRAIN_THREADS` (mặc định 2) luồng để không làm chậm web.
+- **Tự bảo vệ:** AI thua trung bình 3 tuần liền → tự tắt AI, trang dùng trung bình 4 tuần, báo Quản trị (thông báo + email).
+- **Dọn dữ liệu:** dự báo đã lưu giữ 1 năm; giữ 10 phiên bản mô hình gần nhất (luôn giữ bản đang dùng).

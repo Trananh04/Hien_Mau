@@ -8,6 +8,10 @@ Mỗi dòng = nhóm máu × quy cách:
   đủ dùng     = khả dụng ÷ dùng/ngày;  thiếu dự kiến = MAX(0, cần 14 ngày − khả dụng).
 Mức: "soon" (hết trong < 7 ngày hoặc thiếu ngay) → mời người hiến; "plan" (7–14 ngày) → tạo đợt hiến; "ok".
 
+Dự báo nhu cầu được tính MỖI ĐÊM một lần (forecast_ml.monitor.record_snapshots, lịch sử đến hết hôm qua) và trang chỉ
+đọc kết quả; tồn kho và nhu cầu có kế hoạch vẫn lấy trực tiếp lúc mở trang. Chưa có dự báo đêm qua (scheduler chưa
+chạy) hoặc dòng tồn mới → tính trực tiếp như dưới.
+
 Mốc cơ sở là trung bình động. Khi Quản trị bật `forecast_ai_enabled` và có mô hình đã huấn luyện
 (`manage.py train_forecast`), dòng nào đủ 28 ngày lịch sử dùng dự báo XGBoost từng ngày (forecast_ml) thay cho trung
 bình: "cần 14 ngày" = tổng dự báo 14 ngày, "đủ dùng" = ngày nhu cầu cộng dồn vượt tồn khả dụng. Dòng không đủ điều
@@ -45,12 +49,21 @@ def _days_covered(available, daily):
 
 
 def forecast(hospital, now=None):
+    from bloodbank.services.forecast_ml import monitor
     from bloodbank.services.forecast_ml import predict as ml
 
     now = now or timezone.now()
     today = timezone.localdate(now)
-    usage = daily_usage(hospital, now)
-    ai = ml.forecast(hospital, now)
+    snap = monitor.latest(hospital, now)
+    if snap is None:
+        usage, ai = daily_usage(hospital, now), ml.forecast(hospital, now)
+    else:
+        use_ai = ml.enabled()
+        usage = {k: s["baseline"] for k, s in snap.items() if s["baseline"] > 0}
+        ai = {k: s["daily"] for k, s in snap.items() if use_ai and s["method"] == "ai"}
+        for k, v in daily_usage(hospital, now).items():       # dòng tồn mới sau lần dự báo đêm qua
+            if k not in snap:
+                usage[k] = v
     horizon = now + timedelta(days=HORIZON_DAYS)
     planned = {}
     demands = (Demand.objects.filter(hospital=hospital, status=Demand.Status.ACTIVE, is_emergency=False)
