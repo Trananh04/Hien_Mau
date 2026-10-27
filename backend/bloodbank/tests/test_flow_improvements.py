@@ -374,7 +374,7 @@ class ShortageActionTests(TestCase):
         r = self.client.get(reverse("bloodbank:demands"))
         row = r.context["rows"][0]
         self.assertEqual((row["blood_group"], row["level"], row["shortage"]), ("O-", "soon", 5))
-        self.assertContains(r, reverse("bloodbank:donor_suggest") + "?blood_group=O-&thieu=5")
+        self.assertContains(r, reverse("bloodbank:donor_suggest") + "?blood_group=O-&amp;thieu=5")
         self.assertNotContains(r, "Xin liên viện")
         r = self.client.get(reverse("bloodbank:donor_suggest") + "?blood_group=O-&thieu=5")
         self.assertEqual(r.context["shortage"], 5)
