@@ -207,11 +207,16 @@ def mark_notifications_read(user, notification_id=None):
     return qs.update(read_at=timezone.now())
 
 
-def alert(users, type_, title, body=None, entity=None):
-    """Thông báo khẩn: trong ứng dụng + email (gửi SAU khi giao dịch commit; lỗi gửi không làm hỏng nghiệp vụ).
+def alert(users, type_, title, body=None, entity=None, send_now=True):
+    """Thông báo quan trọng: trong ứng dụng + email (gửi SAU khi giao dịch commit; lỗi gửi không làm hỏng nghiệp vụ).
 
     Mỗi email được lưu thành một dòng `notifications` (channel = email) kèm trạng thái gửi để tra soát; việc gửi chạy ở
     luồng nền (services/outbox.py) nên request không phải chờ máy chủ mail, email lỗi được tác vụ định kỳ gửi lại.
+    `send_now=False` (nhắc không gấp, gửi hàng loạt từ tác vụ định kỳ): để tác vụ định kỳ lần sau gửi dần.
+
+    Người dùng tự đăng ký chỉ nhận email khi địa chỉ ĐÃ XÁC THỰC (đăng ký nhầm email người khác thì người lạ không nhận
+    thư); tài khoản nhân viên / quản trị do hệ thống cấp, không qua bước xác thực, luôn nhận. Lời kêu gọi / nhắc hiến bỏ
+    qua người đã tắt nhận email. Thông báo trong ứng dụng vẫn tạo cho mọi người.
     """
     from django.db import transaction
 
@@ -222,6 +227,9 @@ def alert(users, type_, title, body=None, entity=None):
         if user is None or not user.is_active:
             continue
         notify(user, type_, title, body, entity=entity)
+        unverified = user.role == "member" and user.email_verified_at is None
+        if unverified or (type_ in outbox.OPTIONAL_TYPES and not user.email_reminders):
+            continue
         rows.append(Notification.objects.create(
             user=user, type=type_, title=title[:200], body=(body or "")[:1000] or None,
             entity_type=entity._meta.db_table if entity is not None else None,
@@ -230,7 +238,8 @@ def alert(users, type_, title, body=None, entity=None):
         ))
 
     ids = [row.pk for row in rows]
-    transaction.on_commit(lambda: outbox.dispatch(ids))
+    if send_now:
+        transaction.on_commit(lambda: outbox.dispatch(ids))
     return len(rows)
 
 

@@ -87,6 +87,8 @@ class User(AbstractBaseUser):
     address = models.CharField(max_length=500, null=True, blank=True)
     province = models.CharField(max_length=100, null=True, blank=True)
     email_verified_at = models.DateTimeField(null=True, blank=True)
+    # Nhận lời kêu gọi / nhắc hiến máu qua email (tắt trong hồ sơ hoặc liên kết hủy nhận trong email)
+    email_reminders = models.BooleanField(default=True)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     last_login = models.DateTimeField(null=True, blank=True, db_column="last_login_at")
     created_at = models.DateTimeField(auto_now_add=True)

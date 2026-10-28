@@ -186,7 +186,8 @@ class HospitalSignupForm(HospitalForm):
 
         email = self.cleaned_data["manager_email"].strip().lower()
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Email này đã có tài khoản. Dùng email khác cho tài khoản bệnh viện.")
+            raise forms.ValidationError("Email này đã được dùng cho một tài khoản khác (vd. tài khoản người hiến máu). "
+                                        "Mỗi vai trò cần một email riêng — dùng email khác cho tài khoản bệnh viện.")
         return email
 
     def clean_code(self):

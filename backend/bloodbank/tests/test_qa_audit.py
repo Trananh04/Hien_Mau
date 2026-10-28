@@ -270,7 +270,8 @@ class SecurityControlTests(TestCase):
     def test_resend_verification_rate_limited(self):
         from django.core import mail
 
-        self.client.force_login(self.member)
+        unverified = f.user(email_verified_at=None)
+        self.client.force_login(unverified)
         for _ in range(6):
             r = self.client.post(reverse("accounts:resend_verification"), follow=True)
         self.assertLessEqual(len(mail.outbox), 3)

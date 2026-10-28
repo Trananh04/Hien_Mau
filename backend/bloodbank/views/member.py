@@ -4,7 +4,6 @@ from django.contrib.auth import update_session_auth_hash
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -18,6 +17,7 @@ from bloodbank.services import campaigns as cmp
 from bloodbank.services import donations as don
 from bloodbank.services import patients as prq_service
 from bloodbank.services.common import BusinessError, mark_notifications_read
+from bloodbank.services.links import notification_link
 
 from .helpers import attempt, int_or_none, paginate, safe_next
 
@@ -152,18 +152,6 @@ def cancel_patient_request(request, pk):
     return redirect("bloodbank:my_patient_request_detail", pk=pk)
 
 
-ENTITY_LINKS = {
-    "registrations": lambda n: reverse("bloodbank:my_registrations"),
-    "donations": lambda n: reverse("bloodbank:my_donation_detail", args=[n.entity_id]),
-    "campaigns": lambda n: reverse("bloodbank:campaign_detail", args=[n.entity_id]),
-    "request_offers": lambda n: reverse("bloodbank:offer_open", args=[n.entity_id]),
-    "hospital_requests": lambda n: reverse("bloodbank:support_request_detail", args=[n.entity_id]),
-    "hospitals": lambda n: reverse("bloodbank:campaigns"),
-    # Lời kêu gọi hiến máu: trang lời mời (bệnh viện, địa chỉ, nút gọi / chỉ đường, đợt hiến kèm theo nếu có)
-    "donor_callouts": lambda n: reverse("bloodbank:my_invitation", args=[n.entity_id]),
-}
-
-
 @member_required
 def my_invitation(request, pk):
     """Lời mời hiến máu người dùng đã nhận. Chỉ người được mời mở được (người khác → 404)."""
@@ -181,33 +169,12 @@ def my_invitation(request, pk):
     })
 
 
-def notification_link(n):
-    # Chọn trang theo VAI TRÒ người nhận (không theo danh sách loại thông báo): người dùng luôn tới trang của mình,
-    # nhân viên tới trang bệnh viện — tránh liên kết nhầm cổng (vd "đủ điều kiện hiến lại" từng trỏ tới trang bệnh viện)
-    staff_side = n.user.role != "member"
-    if n.entity_type == "patient_requests":
-        name = "hospital_patient_request_detail" if staff_side else "my_patient_request_detail"
-        return reverse(f"bloodbank:{name}", args=[n.entity_id])
-    if n.entity_type == "donations":
-        name = "hospital_donation_detail" if staff_side else "my_donation_detail"
-        return reverse(f"bloodbank:{name}", args=[n.entity_id])
-    if n.entity_type == "hospitals" and n.user.role == "admin":      # bệnh viện mới đăng ký → trang duyệt
-        return reverse("bloodbank:admin_hospital_edit", args=[n.entity_id])
-    if n.entity_type == "hospitals" and n.user.role == "hospital":
-        return reverse("bloodbank:hospital_dashboard")
-    fn = ENTITY_LINKS.get(n.entity_type)
-    try:
-        return fn(n) if fn else None
-    except Exception:
-        return None
-
-
 # Loại thông báo theo nghiệp vụ: (nhãn, icon, tiền tố mã loại)
 NOTIF_CATEGORIES = {
     "nguoi-can-mau": ("Người cần máu", "heart-pulse", ("patient_request_", "prq_")),
     "lien-vien": ("Liên viện", "truck", ("offer_", "request_")),
     "hien-mau": ("Hiến máu", "calendar-heart", ("registration_", "donation_", "campaign_", "eligible_", "donor_callout")),
-    "tai-khoan": ("Tài khoản", "user-cog", ("staff_", "hospital_")),
+    "tai-khoan": ("Tài khoản", "user-cog", ("staff_", "hospital_", "password_")),
 }
 # Cần phản ứng ngay: yêu cầu cần máu mới / bị nhắc lại, bệnh viện khác xin cấp máu, lời kêu gọi hiến, đợt hiến bị hủy
 URGENT_TYPES = {"hospital_signup", "patient_request_new", "prq_escalated_staff", "prq_escalated_admin", "offer_received",

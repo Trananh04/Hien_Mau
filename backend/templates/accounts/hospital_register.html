@@ -2,11 +2,19 @@
 {% load static %}
 {% block title %}Đăng ký bệnh viện{% endblock %}
 {% block extra_head %}{% map_head %}{% endblock %}
-{% block band %}{% include "partials/band.html" with title="Đăng ký bệnh viện" lead="Sau khi Quản trị hệ thống duyệt, người quản lý đăng nhập cổng Bệnh viện và tự cấp tài khoản cho nhân viên." narrow=True %}{% endblock %}
+{% block band %}{% include "partials/band.html" with title="Đăng ký bệnh viện" lead="Gửi thông tin bệnh viện. Sau khi Quản trị hệ thống duyệt, bạn đăng nhập bằng email quản lý để bắt đầu làm việc." narrow=True %}{% endblock %}
 {% block content %}
 <div class="container narrow page-body" hx-boost="false">
+  <div class="auth-tabs-page">{% include "partials/auth_tabs.html" with mode="register" active="hospital" %}</div>
   <form method="post" novalidate class="form-page">
     {% csrf_token %}
+    {% if form.errors %}
+    <div class="notice danger" role="alert">{% icon "circle-alert" %}
+      <div><strong>Chưa gửi được đăng ký.</strong> Sửa các mục sau rồi bấm "Gửi đăng ký" lại (mật khẩu cần nhập lại):
+        <ul>{% for field in form %}{% if field.errors %}<li><a class="link" href="#{{ field.id_for_label }}">{{ field.label }}</a>: {{ field.errors.0 }}</li>{% endif %}{% endfor %}</ul>
+      </div>
+    </div>
+    {% endif %}
     <div class="panel">
       {% include "partials/hospital_form_body.html" %}
       <section class="form-section">

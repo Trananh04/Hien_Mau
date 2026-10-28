@@ -62,7 +62,7 @@ class BadgeTests(TestCase):
         other = f.user()
         donate(self.h, self.staff_user, other, 30)  # chưa đủ 84 ngày → không nhắc
         self.assertEqual(remind_eligible_again(), 1)
-        n = Notification.objects.get(type="eligible_again")
+        n = Notification.objects.get(type="eligible_again", channel="in_app")
         self.assertEqual(n.user, self.donor)
         self.assertIn(camp.name, n.body)
         self.assertEqual(remind_eligible_again(), 0)  # chỉ nhắc một lần cho mỗi lượt hiến

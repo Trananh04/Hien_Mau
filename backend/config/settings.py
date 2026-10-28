@@ -103,10 +103,9 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
 ]
+# Chỉ yêu cầu độ dài tối thiểu — không chặn mật khẩu phổ biến / toàn số (theo yêu cầu, giảm vướng khi đăng ký)
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 LANGUAGE_CODE = "vi"
@@ -188,10 +187,22 @@ if len(sys.argv) > 1 and sys.argv[1] == "test":
     FORECAST_MODEL_DIR = Path(tempfile.gettempdir()) / "hien_mau_test_forecast"   # test không đụng mô hình thật
     FORECAST_SCHEDULED_TRAINING = False
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# Email khẩn gửi ở luồng nền sau khi commit (request không chờ máy chủ mail); test gửi ngay tại chỗ
+# Email: chạy thật (DEBUG=0) có EMAIL_HOST → gửi qua SMTP (Resend: smtp.resend.com:465, user "resend", mật khẩu = API key).
+# Dev (DEBUG=1) luôn in ra console dù .env có EMAIL_HOST — dùng chung .env với bản chạy thật mà không gửi mail thật.
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "465") or 465)
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_SSL = EMAIL_PORT == 465
+EMAIL_USE_TLS = EMAIL_PORT == 587
+EMAIL_TIMEOUT = 15
+EMAIL_BACKEND = ("django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST and not DEBUG
+                 else "django.core.mail.backends.console.EmailBackend")
+# Email gửi ở luồng nền sau khi commit (request không chờ máy chủ mail); test gửi ngay tại chỗ
 EMAIL_ASYNC = not (len(sys.argv) > 1 and sys.argv[1] == "test")
-DEFAULT_FROM_EMAIL = "Giọt Hồng <no-reply@hienmau.local>"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Giọt Hồng <no-reply@hienmau.local>")
+# Địa chỉ trang web cho liên kết trong email gửi từ luồng nền / tác vụ định kỳ (không có request để suy ra)
+SITE_URL = os.environ.get("SITE_URL", "").rstrip("/")
 
 MESSAGE_TAGS = {10: "info", 20: "info", 25: "success", 30: "warning", 40: "error"}
 

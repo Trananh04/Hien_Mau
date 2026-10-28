@@ -117,8 +117,8 @@ def hospital_action(staff, prq_id, action, data, request=None):
         audit(staff.user, prq, "status_change" if action != "link_campaign" else "link_campaign", old=old,
               new=snapshot(prq, ["status", "blood_group", "linked_campaign"]), hospital=staff.hospital, request=request)
         if msg or prq.status != old["status"]:
-            notify(prq.requester, "patient_request_status", f"Yêu cầu {prq.request_code}: {prq.get_status_display()}",
-                   msg, entity=prq)
+            alert([prq.requester], "patient_request_status", f"Yêu cầu {prq.request_code}: {prq.get_status_display()}",
+                  msg, entity=prq)
     return prq
 
 

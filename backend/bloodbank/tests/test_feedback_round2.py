@@ -200,6 +200,13 @@ class HospitalSignupTests(TestCase):
     def _login(self, email):
         return self.client.post(reverse("accounts:hospital_login"), {"email": email, "password": PW})
 
+    def test_signup_with_member_email_explains_what_to_fix(self):
+        member = f.user(email="nguoihien@test.vn")
+        r = self._signup(email=member.email)
+        self.assertContains(r, "Chưa gửi được đăng ký")                          # tóm tắt ở đầu form, không lặng lẽ tải lại
+        self.assertContains(r, "Mỗi vai trò cần một email riêng")
+        self.assertFalse(Hospital.objects.exists())
+
     def test_signup_approve_and_manager_adds_staff(self):
         r = self._signup()
         self.assertContains(r, "đang chờ Quản trị hệ thống duyệt")
@@ -256,7 +263,7 @@ class HospitalSignupTests(TestCase):
         r = self._signup(code="BVTEST", email="khac@bv.vn")
         self.assertContains(r, "Mã cơ sở này đã được đăng ký.")
         r = self._signup(code="BVKHAC", email="quanly@bv.vn")
-        self.assertContains(r, "Email này đã có tài khoản.")
+        self.assertContains(r, "Email này đã được dùng cho một tài khoản khác")
         with self.assertRaises(BusinessError):
             hospital_signup.approve(self.admin, h.pk)                     # đã từ chối → không duyệt lại
 

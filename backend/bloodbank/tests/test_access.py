@@ -191,9 +191,11 @@ class LoginPortalTests(TestCase):
         admin_url = reverse("accounts:admin_login")
         for url in ("/", "/dot-hien/", "/dang-nhap/", reverse("accounts:hospital_login"), "/dang-ky/"):
             self.assertNotIn(admin_url, self.client.get(url).content.decode(), url)
-        home = self.client.get("/").content.decode()
-        self.assertIn(f'href="{reverse("accounts:hospital_login")}"', home)   # lối vào nhỏ cho nhân viên
-        self.assertIn("Dành cho nhân viên bệnh viện", home)
+        # Bệnh viện vào từ tab "Bệnh viện" ở trang đăng nhập / đăng ký (không còn lối riêng ở chân trang)
+        self.assertNotIn("Dành cho nhân viên bệnh viện", self.client.get("/").content.decode())
+        self.assertContains(self.client.get("/dang-nhap/"), f'href="{reverse("accounts:hospital_login")}"')
+        self.assertContains(self.client.get("/dang-ky/"), f'href="{reverse("accounts:hospital_register")}"')
+        self.assertNotContains(self.client.get(reverse("accounts:hospital_login")), "liên hệ Quản lý bệnh viện")
         # Cổng người dùng không liệt kê cổng nội bộ; cổng nội bộ không cho Google lập chỉ mục
         self.assertNotContains(self.client.get("/dang-nhap/"), "portal-switch")
         self.assertNotContains(self.client.get("/dang-nhap/"), 'name="robots"')

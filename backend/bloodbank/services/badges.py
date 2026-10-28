@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from bloodbank.models import Campaign, Donation, Notification, SystemSetting
 
-from .common import notify
+from .common import alert
 
 # (số lần hiến, tên, icon lucide, lời ghi nhận)
 BADGES = [
@@ -79,8 +79,9 @@ def remind_eligible_again(now=None):
         info = next_eligible(d.donor, now)
         where = (f" Đợt gần bạn: \"{info['campaign'].name}\" ({timezone.localtime(info['campaign'].start_time):%d/%m})."
                  if info and info["campaign"] else "")
-        notify(d.donor, "eligible_again", "Bạn đã đủ thời gian nghỉ để hiến máu lại",
-               f"Lần hiến gần nhất: {timezone.localtime(d.donated_at):%d/%m/%Y}.{where} Bác sĩ sẽ khám sàng lọc trước khi hiến.",
-               entity=d)
+        # Gửi hàng loạt từ tác vụ định kỳ, không gấp → để lượt chạy sau gửi dần email (send_now=False)
+        alert([d.donor], "eligible_again", "Bạn đã đủ thời gian nghỉ để hiến máu lại",
+              f"Lần hiến gần nhất: {timezone.localtime(d.donated_at):%d/%m/%Y}.{where} Bác sĩ sẽ khám sàng lọc trước khi hiến.",
+              entity=d, send_now=False)
         sent += 1
     return sent

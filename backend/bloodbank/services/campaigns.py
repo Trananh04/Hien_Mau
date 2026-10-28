@@ -1,11 +1,13 @@
 """UC-CMP-01..04, UC-REG-01..06: đợt hiến và đơn đăng ký (máy trạng thái Ch.4 mục 4.3, 4.4)."""
+from datetime import timedelta
+
 from django.db.models import Count, Max, Min, Q, Sum
 from django.utils import timezone
 
 from accounts.models import User, normalize_phone
-from bloodbank.models import Campaign, Donation, Registration
+from bloodbank.models import Campaign, Donation, Notification, Registration
 
-from .common import BusinessError, audit, business_transaction, notify, require, snapshot
+from .common import BusinessError, alert, audit, business_transaction, require, snapshot
 
 CAMPAIGN_FIELDS = ["name", "description", "start_time", "end_time", "location_name", "address", "province",
                    "latitude", "longitude"]
@@ -69,9 +71,13 @@ def update_campaign(staff, campaign, data, request=None):
         audit(staff.user, campaign, "update", old=old, new=snapshot(campaign, CAMPAIGN_FIELDS), hospital=staff.hospital,
               request=request)
         if time_or_place_changed and campaign.status in (C.OPEN, C.CLOSED):
-            for reg in campaign.registrations.filter(status__in=[R.PENDING, R.APPROVED]).select_related("donor"):
-                notify(reg.donor, "campaign_changed", f"Đợt hiến \"{campaign.name}\" thay đổi thời gian/địa điểm",
-                       "Vui lòng xem lại thông tin đợt hiến trước khi đến.", entity=campaign)
+            donors = [reg.donor for reg in
+                      campaign.registrations.filter(status__in=[R.PENDING, R.APPROVED]).select_related("donor")]
+            start = timezone.localtime(campaign.start_time)
+            alert(donors, "campaign_changed", f"Đợt hiến \"{campaign.name}\" thay đổi thời gian/địa điểm",
+                  f"Thông tin mới: {start:%H:%M ngày %d/%m/%Y} tại {campaign.location_name}"
+                  f"{(', ' + campaign.address) if campaign.address else ''}. Vui lòng xem lại trước khi đến.",
+                  entity=campaign)
     return campaign
 
 
@@ -128,11 +134,14 @@ def transition_campaign(staff, campaign, action, reason=None, request=None):
         if action == "cancel":
             # Gồm cả đơn đã check-in (chưa hiến): đợt hủy thì không ghi nhận được nữa, không để đơn treo
             regs = campaign.registrations.filter(status__in=[R.PENDING, R.APPROVED, R.ATTENDED]).select_related("donor")
+            donors = []
             for reg in regs:
                 reg.status = R.CANCELLED
                 reg.save(update_fields=["status", "updated_at"])
-                notify(reg.donor, "campaign_cancelled", f"Đợt hiến \"{campaign.name}\" đã bị hủy",
-                       f"Lý do: {reason}", entity=campaign)
+                donors.append(reg.donor)
+            alert(donors, "campaign_cancelled", f"Đợt hiến \"{campaign.name}\" đã bị hủy",
+                  f"Lý do: {reason}. Đơn đăng ký của bạn đã được hủy theo, bạn không cần đến điểm hiến.",
+                  entity=campaign)
     return campaign
 
 
@@ -259,8 +268,29 @@ def staff_registration_action(staff, reg_id, action, reason=None, request=None):
         if action in ("approve", "reject"):
             title = (f"Đơn đăng ký đợt \"{camp.name}\" đã được duyệt" if action == "approve"
                      else f"Đơn đăng ký đợt \"{camp.name}\" không được duyệt")
-            notify(reg.donor, f"registration_{reg.status}", title, reason, entity=reg)
+            alert([reg.donor], f"registration_{reg.status}", title, reason, entity=reg)
     return reg
+
+
+def remind_upcoming(now=None):
+    """Tác vụ định kỳ: nhắc (trong ứng dụng + email) một lần, trong vòng 24 giờ trước khi đợt hiến người dùng đã đăng ký
+    bắt đầu — giảm đăng ký rồi quên không đến."""
+    now = now or timezone.now()
+    regs = (Registration.objects.filter(status__in=Registration.WAITING_STATUSES, campaign__status__in=[C.OPEN, C.CLOSED],
+                                        campaign__start_time__gt=now, campaign__start_time__lte=now + timedelta(hours=24))
+            .exclude(pk__in=Notification.objects.filter(type="campaign_reminder", entity_type="registrations")
+                     .values("entity_id"))
+            .select_related("campaign", "donor"))
+    sent = 0
+    for reg in regs:
+        camp = reg.campaign
+        start = timezone.localtime(camp.start_time)
+        alert([reg.donor], "campaign_reminder", f"Nhắc lịch hiến máu: {start:%H:%M ngày %d/%m} — {camp.name}",
+              f"Địa điểm: {camp.location_name}{(', ' + camp.address) if camp.address else ''}. Trước khi hiến: ngủ đủ, "
+              "ăn nhẹ, uống nhiều nước, không uống rượu bia; mang theo CCCD. Không đến được thì hủy đơn để nhường chỗ.",
+              entity=reg, send_now=False)
+        sent += 1
+    return sent
 
 
 def find_donor(query):

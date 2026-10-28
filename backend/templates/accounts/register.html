@@ -4,6 +4,7 @@
 {% block art_title %}TRỞ THÀNH TÌNH NGUYỆN VIÊN{% endblock %}
 {% block art_text %}Một tài khoản giúp bạn đăng ký các đợt hiến máu, theo dõi lịch sử hiến được bệnh viện xác nhận, và gửi yêu cầu cần máu khi người thân cần.{% endblock %}
 {% block card %}
+{% include "partials/auth_tabs.html" with mode="register" active="member" %}
 <h2>Tạo tài khoản</h2>
 {% include "partials/form_errors.html" %}
 <form method="post" novalidate>

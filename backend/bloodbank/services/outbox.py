@@ -10,17 +10,39 @@ import threading
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.db import connection
 from django.db.models import F
+from django.urls import reverse
 from django.utils import timezone
 
 from bloodbank.models import Notification
+
+from . import mailer
+from .links import notification_link
 
 log = logging.getLogger(__name__)
 MAX_ATTEMPTS = 3
 RETRY_AFTER = timedelta(minutes=2)       # dòng chưa gửi được sau 2 phút → tác vụ định kỳ gửi lại
 D = Notification.Delivery
+# Cần xử lý ngay → tiêu đề email có "[Khẩn]" để nổi bật trong hộp thư
+URGENT_TYPES = {"patient_request_new", "prq_escalated_admin", "offer_received", "emergency_started"}
+# Lời kêu gọi / nhắc hiến: người nhận tắt được (User.email_reminders), email kèm liên kết hủy nhận
+OPTIONAL_TYPES = {"donor_callout", "eligible_again"}
+
+
+def message(row):
+    """Email của một dòng thông báo: tiêu đề, nội dung, nút tới đúng trang (theo vai trò người nhận)."""
+    subject = row.title
+    if row.type in URGENT_TYPES and not subject.startswith("["):
+        subject = f"[Khẩn] {subject}"
+    staff_side = row.user.role != "member"
+    link = notification_link(row)
+    action = ("Xem chi tiết", link) if link else ("Mở Giọt Hồng", "/")
+    if row.type == "password_changed":
+        # Chỉ trong email: người đọc có thể KHÔNG phải người vừa đổi (trong ứng dụng thì chính họ → không gắn liên kết)
+        action = ("Không phải bạn? Đặt lại mật khẩu", reverse("accounts:forgot_password"))
+    lines = [row.body, "Đăng nhập để xem và xử lý." if staff_side else None]
+    return mailer.build(row.user, subject, lines, action, unsubscribe=row.type in OPTIONAL_TYPES)
 
 
 def _send_one(row):
@@ -29,8 +51,7 @@ def _send_one(row):
     if not claimed:
         return None                                    # nơi khác đang / đã gửi
     try:
-        send_mail(f"[Khẩn] {row.title}", (row.body or row.title) + "\n\nĐăng nhập cổng bệnh viện để xử lý.",
-                  settings.DEFAULT_FROM_EMAIL, [row.user.email])
+        message(row).send()
         status = D.SENT
     except Exception:                                  # máy chủ mail lỗi: ghi nhận để gửi lại
         log.exception("Gửi email thất bại (thông báo %s)", row.pk)
@@ -65,7 +86,7 @@ def dispatch(ids):
 
 
 def sweep(now=None):
-    """Tác vụ định kỳ: gửi lại email lỗi / bị bỏ dở cũ hơn RETRY_AFTER."""
+    """Tác vụ định kỳ: gửi lại email lỗi / bị bỏ dở, và email nhắc để gửi dần (alert send_now=False), cũ hơn RETRY_AFTER."""
     cutoff = (now or timezone.now()) - RETRY_AFTER
     ids = list(Notification.objects.filter(channel=Notification.Channel.EMAIL,
                                            delivery_status__in=(D.PENDING, D.FAILED), attempts__lt=MAX_ATTEMPTS,

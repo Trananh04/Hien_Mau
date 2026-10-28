@@ -1,0 +1,5 @@
+{# Trang đăng nhập / đăng ký: chọn loại tài khoản Người dùng hoặc Bệnh viện (cổng quản trị không bao giờ có ở đây). #}
+<nav class="auth-tabs" aria-label="Loại tài khoản">
+  <a href="{% if mode == 'register' %}{% url 'accounts:register' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="auth-tab{% if active == 'member' %} is-active{% endif %}"{% if active == 'member' %} aria-current="page"{% endif %}>{% icon "user" 16 %} Người dùng</a>
+  <a href="{% if mode == 'register' %}{% url 'accounts:hospital_register' %}{% else %}{% url 'accounts:hospital_login' %}{% endif %}" class="auth-tab{% if active == 'hospital' %} is-active{% endif %}"{% if active == 'hospital' %} aria-current="page"{% endif %}>{% icon "hospital" 16 %} Bệnh viện</a>
+</nav>

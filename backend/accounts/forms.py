@@ -24,7 +24,7 @@ def check_password_strength(password, user=None):
     try:
         password_validation.validate_password(password, user)
     except ValidationError as exc:
-        raise ValidationError(["Mật khẩu chưa đủ mạnh."] + list(exc.messages))
+        raise ValidationError(list(exc.messages))
 
 
 class RegisterForm(BaseForm):
@@ -113,11 +113,13 @@ class ChangePasswordForm(ResetPasswordForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["full_name", "phone", "date_of_birth", "gender", "blood_group", "address", "province"]
+        fields = ["full_name", "phone", "date_of_birth", "gender", "blood_group", "address", "province", "email_reminders"]
         labels = {
             "full_name": "Họ và tên", "phone": "Số điện thoại", "date_of_birth": "Ngày sinh", "gender": "Giới tính",
             "blood_group": "Nhóm máu (tự khai)", "address": "Địa chỉ", "province": "Tỉnh/thành",
+            "email_reminders": "Nhận email khi bệnh viện kêu gọi hiến máu và khi tôi đủ thời gian để hiến lại",
         }
+        help_texts = {"email_reminders": "Email về đơn đăng ký, đợt hiến bạn đã đăng ký và bảo mật tài khoản vẫn luôn được gửi."}
         widgets = {"date_of_birth": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")}
 
     def __init__(self, *args, **kwargs):
@@ -128,6 +130,8 @@ class ProfileForm(forms.ModelForm):
             label="Tỉnh/thành", required=False, choices=[("", "-- Chọn --")] + [(p, p) for p in PROVINCES]
         )
         for field in self.fields.values():
+            if isinstance(field.widget, forms.CheckboxInput):
+                continue
             css = "field-select" if isinstance(field.widget, forms.Select) else "field-input"
             field.widget.attrs.setdefault("class", css)
 

@@ -26,7 +26,7 @@ from django.utils import timezone
 from bloodbank.models import ChatConversation, ChatMessage, SystemSetting
 from bloodbank.services.common import BusinessError, audit
 
-from . import guard, knowledge, llm, rules, verify
+from . import guard, knowledge, llm, rules, smalltalk, verify
 from .tools import Ctx
 
 log = logging.getLogger(__name__)
@@ -199,8 +199,11 @@ def _run(request, question, lat=None, lng=None, conversation_id=None):
 
     result = None
     blocked = guard.check(question)
+    chat = None if blocked else smalltalk.reply(question, request.user)
     if blocked:
         result = {**blocked, "mode": "guard"}
+    elif chat:
+        result = {**chat, "mode": "rules"}       # chào / cảm ơn / tạm biệt: đáp ngay, không chiếm suất AI
     else:
         docs = knowledge.search(question)                       # RAG: truy xuất 1 lần, dùng cho cả 2 chế độ
         pre = rules.prefetch(question, ctx)                     # câu hỏi về dữ liệu → tra cứu sẵn (chỉ đọc)

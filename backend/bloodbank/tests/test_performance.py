@@ -59,7 +59,7 @@ class OutboxTests(TestCase):
         self.assertEqual(len(mail.outbox), 2)
 
     def test_failed_email_is_retried_by_scheduler_then_given_up(self):
-        with mock.patch("bloodbank.services.outbox.send_mail", side_effect=OSError("smtp down")):
+        with mock.patch("django.core.mail.EmailMessage.send", side_effect=OSError("smtp down")):
             self.alert()
             self.assertEqual(outbox.sweep(), 0)                                   # chưa đủ 2 phút → chưa gửi lại
             later = timezone.now() + timedelta(minutes=3)

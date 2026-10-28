@@ -7,7 +7,7 @@ from bloodbank.models import (
     Campaign, Hospital, HospitalRequest, Product, ProductSpec, RequestOffer, Staff, SystemSetting,
 )
 
-from .common import BusinessError, as_id, audit, business_transaction, notify, require, snapshot
+from .common import BusinessError, alert, as_id, audit, business_transaction, notify, require, snapshot
 
 # ---------------------------------------------------------------- Người dùng (Admin)
 def set_user_status(actor, user_id, status, request=None):
@@ -96,8 +96,8 @@ def assign_staff(actor, hospital, data, request=None):
             staff = Staff.objects.create(hospital=hospital, user=user, staff_role=Staff.Role.STAFF)
             action = "create"
         audit(actor, staff, action, new=snapshot(staff), hospital=hospital, request=request)
-        notify(user, "staff_assigned", f"Bạn được phân công tại {hospital.name}",
-               "Vai trò: Nhân viên bệnh viện.", entity=staff)
+        alert([user], "staff_assigned", f"Bạn được phân công tại {hospital.name}",
+              "Vai trò: Nhân viên bệnh viện. Đăng nhập cổng bệnh viện bằng email này để bắt đầu.", entity=staff)
     return staff
 
 

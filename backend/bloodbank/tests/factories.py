@@ -14,6 +14,7 @@ def user(full_name="Người dùng", role="member", **kw):
     n = next(_seq)
     kw.setdefault("email", f"user{n}@test.vn")
     kw.setdefault("phone", f"090{n:07d}")
+    kw.setdefault("email_verified_at", timezone.now())      # tài khoản đang dùng thật đã xác thực email
     return User.objects.create_user(password=kw.pop("password", "MatKhau!2026"), full_name=full_name, role=role, **kw)
 
 

@@ -10,7 +10,7 @@ from django.utils import timezone
 from bloodbank.content import FALLBACK_ANSWER, _norm
 from bloodbank.models import Campaign, Hospital
 
-from . import knowledge, tools
+from . import knowledge, smalltalk, tools
 
 ELIGIBILITY = ["hien lai", "khi nao duoc hien", "bao gio duoc hien", "khi nao toi duoc hien", "bao lau nua",
                "du thoi gian nghi", "lan hien tiep", "hien tiep", "khi nao co the hien", "bao gio hien duoc"]
@@ -228,6 +228,9 @@ def prefetch(question, ctx, intent=None):
 def answer(question, ctx, docs=None, pre=None):
     pre = pre if pre is not None else prefetch(question, ctx)
     if pre is None:
+        chat = smalltalk.reply(question, ctx.user)               # "hi", "cảm ơn", "bạn là ai"… → đáp như người thật
+        if chat:
+            return chat
         docs = knowledge.search(question) if docs is None else docs
         if not docs:
             return {"answer": FALLBACK_ANSWER, "source": None, "intent": "unknown"}

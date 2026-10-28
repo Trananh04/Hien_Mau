@@ -1,16 +1,15 @@
 """UC-AUT-01..04: đăng ký, đăng nhập, khôi phục mật khẩu, quản lý tài khoản."""
 from datetime import timedelta
 
-from django.conf import settings
-from django.core.mail import send_mail
 from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 
 from bloodbank.models import AuditLog, Staff, SystemSetting
-from bloodbank.services.common import BusinessError, audit, business_transaction, snapshot
+from bloodbank.services import mailer
+from bloodbank.services.common import BusinessError, alert, audit, business_transaction, snapshot
 
-from .models import AuthToken, User
+from .models import AuthToken, User, hash_token
 
 
 def register(data, request=None):
@@ -29,10 +28,6 @@ def register(data, request=None):
     return user, link
 
 
-def _absolute(request, path):
-    return request.build_absolute_uri(path) if request else path
-
-
 def _too_many_tokens(user, purpose):
     """Giới hạn gửi email: tối đa `auth_email_max_per_window` token cùng loại trong `auth_email_window_minutes` phút."""
     since = timezone.now() - timedelta(minutes=SystemSetting.get("auth_email_window_minutes"))
@@ -47,20 +42,24 @@ def send_email_verification(user, request=None):
     hours = SystemSetting.get("email_verify_ttl_hours")
     raw = AuthToken.issue(user, AuthToken.Purpose.EMAIL_VERIFY, ttl=timedelta(hours=hours),
                           ip=request.META.get("REMOTE_ADDR") if request else None)
-    link = _absolute(request, reverse("accounts:verify_email", args=[raw]))
-    send_mail(
-        "Xác thực email Giọt Hồng",
-        f"Chào {user.full_name},\n\nBấm vào liên kết sau để xác thực email (hết hạn sau {hours} giờ):\n{link}\n",
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-    )
+    link = mailer.absolute(reverse("accounts:verify_email", args=[raw]), request)
+    mailer.send_quietly(mailer.build(
+        user, "Xác thực email Giọt Hồng", [f"Bấm nút bên dưới để xác thực email của bạn. Liên kết hết hạn sau {hours} giờ."],
+        ("Xác thực email", link), request=request))
     return link
 
 
 def verify_email(raw):
     token = AuthToken.find_valid(raw, AuthToken.Purpose.EMAIL_VERIFY)
     if token is None:
-        raise BusinessError("ERR-NOT-FOUND", "Liên kết xác thực không hợp lệ hoặc đã hết hạn.")
+        # Liên kết đã dùng (bấm lần 2, hoặc Gmail / Outlook tự mở trước để quét an toàn) mà email đã xác thực → coi là
+        # thành công, không báo "không hợp lệ" gây hoang mang
+        used = (AuthToken.objects.select_related("user")
+                .filter(token_hash=hash_token(raw), purpose=AuthToken.Purpose.EMAIL_VERIFY).first())
+        if used is not None and used.user.email_verified_at is not None:
+            return used.user
+        raise BusinessError("ERR-NOT-FOUND", "Liên kết xác thực không hợp lệ hoặc đã hết hạn. "
+                                             "Đăng nhập và bấm \"Gửi lại email xác thực\" trong Hồ sơ của tôi.")
     with business_transaction():
         token.used_at = timezone.now()
         token.save(update_fields=["used_at"])
@@ -145,14 +144,12 @@ def request_password_reset(email, request=None):
     minutes = SystemSetting.get("password_reset_ttl_minutes")
     raw = AuthToken.issue(user, AuthToken.Purpose.PASSWORD_RESET, ttl=timedelta(minutes=minutes),
                           ip=request.META.get("REMOTE_ADDR") if request else None)
-    link = _absolute(request, reverse("accounts:reset_password", args=[raw]))
-    send_mail(
-        "Đặt lại mật khẩu Giọt Hồng",
-        f"Chào {user.full_name},\n\nBấm vào liên kết sau để đặt lại mật khẩu (hết hạn sau {minutes} phút):\n{link}\n\n"
-        "Nếu bạn không yêu cầu, hãy bỏ qua email này.",
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-    )
+    link = mailer.absolute(reverse("accounts:reset_password", args=[raw]), request)
+    mailer.send_quietly(mailer.build(
+        user, "Đặt lại mật khẩu Giọt Hồng",
+        [f"Bấm nút bên dưới để đặt lại mật khẩu. Liên kết hết hạn sau {minutes} phút.",
+         "Nếu bạn không yêu cầu, hãy bỏ qua email này — mật khẩu hiện tại vẫn giữ nguyên."],
+        ("Đặt lại mật khẩu", link), request=request))
     audit(user, user, "password_reset_requested", request=request)
     return link
 
@@ -166,6 +163,7 @@ def reset_password(token, password, request=None):
         user.save(update_fields=["password", "updated_at"])
         revoke_tokens(user)
         audit(user, user, "password_reset", request=request)
+        _alert_password_changed(user)
     return user
 
 
@@ -175,10 +173,30 @@ def change_password(user, password, request=None):
         user.save(update_fields=["password", "updated_at"])
         revoke_tokens(user)
         audit(user, user, "password_changed", request=request)
+        _alert_password_changed(user)
+
+
+def _alert_password_changed(user):
+    """Báo qua email mỗi lần đổi mật khẩu — chủ tài khoản phát hiện ngay nếu không phải mình đổi."""
+    alert([user], "password_changed", "Mật khẩu tài khoản Giọt Hồng vừa được thay đổi",
+          f"Mật khẩu của tài khoản {user.email} đã được đổi lúc {timezone.localtime():%H:%M ngày %d/%m/%Y}. "
+          "Nếu không phải bạn, hãy đặt lại mật khẩu ngay và báo cho quản trị viên.")
 
 
 def revoke_tokens(user):
-    AuthToken.objects.filter(user=user, revoked_at__isnull=True, used_at__isnull=True).update(revoked_at=timezone.now())
+    """Đổi / đặt lại mật khẩu: hủy phiên & liên kết đặt lại mật khẩu còn treo. Giữ liên kết xác thực email (không liên
+    quan mật khẩu — trước đây đổi mật khẩu trước khi xác thực làm liên kết trong email hỏng)."""
+    (AuthToken.objects.filter(user=user, revoked_at__isnull=True, used_at__isnull=True)
+     .exclude(purpose=AuthToken.Purpose.EMAIL_VERIFY).update(revoked_at=timezone.now()))
+
+
+def set_email_reminders(user, enabled, request=None):
+    """Bật / tắt email kêu gọi và nhắc hiến máu (hồ sơ, hoặc liên kết hủy nhận trong email)."""
+    with business_transaction():
+        old = {"email_reminders": user.email_reminders}
+        user.email_reminders = enabled
+        user.save(update_fields=["email_reminders", "updated_at"])
+        audit(user, user, "update", old=old, new={"email_reminders": enabled}, request=request)
 
 
 def update_profile(user, form, request=None):

@@ -5,9 +5,10 @@ Không phụ thuộc việc có người mở trang:
   2. Đề nghị liên viện không được phản hồi quá `offer_response_ttl_hours` → tự hủy, báo bên yêu cầu mời BV khác.
   3. Yêu cầu cần máu chưa ai nhận xác minh: sau `prq_escalate_staff_minutes` nhắc lại toàn bộ nhân viên (kèm email),
      sau `prq_escalate_admin_minutes` báo lên Quản trị hệ thống. Mỗi mức chỉ nhắc một lần.
-  4. Điền kết quả lời kêu gọi người hiến; nhắc người hiến đã đủ thời gian nghỉ; làm mới dự báo nhu cầu (mỗi ngày).
+  4. Điền kết quả lời kêu gọi người hiến; nhắc người hiến đã đủ thời gian nghỉ; nhắc lịch trước đợt hiến 24 giờ;
+     làm mới dự báo nhu cầu (mỗi ngày).
   5. Dự báo nhu cầu: lưu dự báo mỗi ngày để đo độ chính xác thật; huấn luyện lại mô hình khi đến hạn / được yêu cầu.
-  6. Gửi lại email khẩn bị lỗi / bỏ dở (services/outbox.py).
+  6. Gửi lại email bị lỗi / bỏ dở, gửi dần email nhắc (services/outbox.py).
 """
 import logging
 from datetime import timedelta
@@ -18,7 +19,7 @@ from django.utils import timezone
 from accounts.models import User
 from bloodbank.models import HospitalRequest, Notification, PatientRequest, RequestOffer, SystemSetting
 
-from . import badges, outbox
+from . import badges, campaigns, outbox
 from .common import alert, audit, business_transaction, hospital_staff_users, notify_hospital_staff
 from .transfers import expire_overdue, recompute_status
 
@@ -95,6 +96,7 @@ def run_all(now=None):
         "cancelled_offers": cancel_stale_offers(now),
         "escalations": escalate_patient_requests(now),
         "eligible_reminders": badges.remind_eligible_again(now),
+        "campaign_reminders": campaigns.remind_upcoming(now),
         "chat_purged": _purge_chat(now),
         "emails_retried": outbox.sweep(now),
         **_forecast(now),

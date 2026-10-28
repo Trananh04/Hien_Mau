@@ -51,7 +51,7 @@ SCREENS = [
     S("SCR-06", "Đăng nhập, đăng ký, khôi phục mật khẩu", "Công khai", (PUBLIC,), (
         "accounts:login", "accounts:hospital_login", "accounts:admin_login", "accounts:register",
         "accounts:hospital_register",
-        "accounts:forgot_password", "accounts:reset_password", "accounts:verify_email")),
+        "accounts:forgot_password", "accounts:reset_password", "accounts:verify_email", "accounts:unsubscribe")),
 
     # ---------------------------------------------------------------- Người dùng
     S("SCR-07", "Hồ sơ cá nhân", "Người dùng", (MEMBER,), ("bloodbank:profile", "accounts:resend_verification")),

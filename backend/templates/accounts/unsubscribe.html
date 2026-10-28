@@ -1,0 +1,17 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Hủy nhận email{% endblock %}
+{% block card %}
+<h2>Hủy nhận email kêu gọi hiến máu</h2>
+{% if not target %}
+  <div class="notice danger" role="alert">{% icon "link-2-off" %}<div>Liên kết không hợp lệ. Bạn có thể đăng nhập và đổi lựa chọn trong Hồ sơ của tôi.</div></div>
+  <a href="{% url 'accounts:login' %}" class="btn primary block">Đăng nhập</a>
+{% elif done %}
+  <div class="notice success" role="status">{% icon "circle-check" %}<div>Đã hủy. <strong>{{ target.email }}</strong> sẽ không nhận lời kêu gọi và lời nhắc hiến máu qua email nữa.</div></div>
+  <p class="muted">Email về đơn đăng ký, đợt hiến bạn đã đăng ký và bảo mật tài khoản vẫn được gửi. Muốn nhận lại, bật trong Hồ sơ của tôi.</p>
+{% else %}
+  <p>Ngừng gửi lời kêu gọi hiến máu và lời nhắc "đủ thời gian để hiến lại" tới <strong>{{ target.email }}</strong>?</p>
+  <form method="post">
+    <button type="submit" class="btn primary lg block u-mt-18">{% icon "mail-x" %} Hủy nhận email</button>
+  </form>
+{% endif %}
+{% endblock %}

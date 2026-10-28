@@ -15,4 +15,5 @@ urlpatterns = [
     path("dat-lai-mat-khau/<str:token>/", views.reset_password_view, name="reset_password"),
     path("xac-thuc-email/<str:token>/", views.verify_email_view, name="verify_email"),
     path("xac-thuc-email-gui-lai/", views.resend_verification_view, name="resend_verification"),
+    path("huy-nhan-email/<str:token>/", views.unsubscribe_view, name="unsubscribe"),
 ]

@@ -144,8 +144,9 @@ CLINICAL_ANSWER = (
     "Nếu có vấn đề sức khỏe, hãy hỏi trực tiếp bác sĩ hoặc cơ sở y tế."
 )
 FALLBACK_ANSWER = (
-    "Câu hỏi này nằm ngoài nội dung tôi được duyệt để trả lời. Bạn có thể hỏi về: quy trình hiến máu, "
-    "chuẩn bị trước khi hiến, cách đăng ký đợt hiến, cách gửi yêu cầu cần máu, lịch sử hiến, bản đồ hoặc bảo mật dữ liệu."
+    "Xin lỗi bạn, câu này nằm ngoài những gì mình hỗ trợ được. Mình có thể giúp bạn tìm đợt hiến máu gần bạn, xem khi "
+    "nào bạn hiến lại được, giải đáp về quy trình và chuẩn bị trước khi hiến, hoặc hướng dẫn gửi yêu cầu khi người nhà "
+    "cần máu. Bạn muốn hỏi điều gì?"
 )
 
 

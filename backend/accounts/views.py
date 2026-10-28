@@ -4,14 +4,16 @@ from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from bloodbank import access
 from bloodbank.services.common import BusinessError
+from bloodbank.services.mailer import unsubscribe_user_id
 
 from . import services
 from .forms import ForgotPasswordForm, LoginForm, RegisterForm, ResetPasswordForm
-from .models import AuthToken
+from .models import AuthToken, User
 
 
 def _safe_next(request, default):
@@ -79,12 +81,10 @@ def _login(request, role):
             if nxt and not access.can_open(user, _route_of(nxt)):
                 nxt = None
             return redirect(nxt or reverse(_home_for(user)))
-    # Cổng nội bộ chỉ chỉ ngược về cổng người dùng; không bao giờ liệt kê cổng quản trị
-    portals = [{"code": c, "label": l, "url": reverse(u), "icon": i}
-               for c, l, u, _, i in access.ROLES if c == access.MEMBER and role != access.MEMBER]
+    # Người dùng / Bệnh viện chuyển qua lại bằng 2 tab trên trang; không bao giờ liệt kê cổng quản trị
     return render(request, "accounts/login.html", {
         "form": form, "error": error, "hint": hint, "next": request.GET.get("next", ""), "portal": portal,
-        "role": role, "portals": portals,
+        "role": role,
     })
 
 
@@ -190,6 +190,9 @@ def verify_email_view(request, token):
 def resend_verification_view(request):
     if not request.user.is_authenticated:
         return redirect("accounts:login")
+    if request.user.email_verified_at:
+        messages.info(request, "Email của bạn đã được xác thực.")
+        return redirect("bloodbank:profile")
     link = services.send_email_verification(request.user, request)
     if link is None:
         messages.warning(request, "Bạn vừa yêu cầu gửi lại nhiều lần. Vui lòng kiểm tra hộp thư hoặc thử lại sau ít phút.")
@@ -197,3 +200,14 @@ def resend_verification_view(request):
     messages.success(request, "Đã gửi lại email xác thực.")
     _dev_link(request, "Liên kết xác thực email", link)
     return redirect("bloodbank:profile")
+
+
+# Nút "Hủy đăng ký" của Gmail / Outlook gửi POST một lần bấm, không có cookie CSRF (RFC 8058). Liên kết đã ký nên không
+# đoán được; nó chỉ TẮT email kêu gọi / nhắc hiến, không đổi gì khác.
+@csrf_exempt
+def unsubscribe_view(request, token):
+    user_id = unsubscribe_user_id(token)
+    user = User.objects.filter(pk=user_id).first() if user_id is not None else None
+    if user is not None and request.method == "POST":
+        services.set_email_reminders(user, False, request)
+    return render(request, "accounts/unsubscribe.html", {"target": user, "done": request.method == "POST"})
