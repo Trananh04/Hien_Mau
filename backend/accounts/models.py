@@ -86,6 +86,7 @@ class User(AbstractBaseUser):
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUPS, null=True, blank=True)
     address = models.CharField(max_length=500, null=True, blank=True)
     province = models.CharField(max_length=100, null=True, blank=True)
+    ward = models.CharField(max_length=100, null=True, blank=True)   # phường / xã / đặc khu thuộc `province`
     email_verified_at = models.DateTimeField(null=True, blank=True)
     # Nhận lời kêu gọi / nhắc hiến máu qua email (tắt trong hồ sơ hoặc liên kết hủy nhận trong email)
     email_reminders = models.BooleanField(default=True)
@@ -160,6 +161,7 @@ class AuthToken(models.Model):
         REFRESH = "refresh", "Phiên"
         PASSWORD_RESET = "password_reset", "Đặt lại mật khẩu"
         EMAIL_VERIFY = "email_verify", "Xác thực email"
+        EMAIL_OTP = "email_otp", "Mã xác thực email"
 
     user = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="auth_tokens")
     purpose = models.CharField(max_length=20, choices=Purpose.choices)
@@ -179,7 +181,8 @@ class AuthToken(models.Model):
         constraints = [
             models.CheckConstraint(condition=Q(expires_at__gt=models.F("created_at")), name="chk_auth_tokens_expiry"),
             models.CheckConstraint(
-                condition=Q(purpose__in=["refresh", "password_reset", "email_verify"]), name="chk_auth_tokens_purpose"
+                condition=Q(purpose__in=["refresh", "password_reset", "email_verify", "email_otp"]),
+                name="chk_auth_tokens_purpose",
             ),
         ]
 
@@ -195,6 +198,32 @@ class AuthToken(models.Model):
             user=user, purpose=purpose, token_hash=hash_token(raw), expires_at=now + ttl, created_ip=ip, created_at=now
         )
         return raw
+
+    @staticmethod
+    def _code_hash(user_id, created_at, code):
+        # Mã 6 số trùng nhau giữa người dùng / các lần gửi → băm kèm user + thời điểm cấp để token_hash vẫn duy nhất
+        return hash_token(f"otp:{user_id}:{int(created_at.timestamp() * 1_000_000)}:{code}")
+
+    @classmethod
+    def issue_code(cls, user, purpose, ttl, ip=None):
+        """Tạo mã số 6 chữ số (nhập tay); hủy mã cũ cùng loại. Trả về mã gốc để gửi cho người dùng."""
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        now = timezone.now()
+        cls.objects.filter(user=user, purpose=purpose, used_at__isnull=True, revoked_at__isnull=True).update(
+            revoked_at=now
+        )
+        cls.objects.create(user=user, purpose=purpose, token_hash=cls._code_hash(user.pk, now, code),
+                           expires_at=now + ttl, created_ip=ip, created_at=now)
+        return code
+
+    @classmethod
+    def current_code(cls, user, purpose):
+        """Mã còn hiệu lực mới nhất của người dùng (mỗi lúc chỉ có một), hoặc None."""
+        return (cls.objects.filter(user=user, purpose=purpose, used_at__isnull=True, revoked_at__isnull=True,
+                                   expires_at__gt=timezone.now()).order_by("-created_at").first())
+
+    def matches_code(self, code):
+        return secrets.compare_digest(self.token_hash, self._code_hash(self.user_id, self.created_at, code))
 
     @classmethod
     def find_valid(cls, raw, purpose):

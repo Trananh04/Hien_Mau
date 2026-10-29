@@ -68,7 +68,8 @@ Hệ thống có **3 vai trò tách biệt**. Mỗi vai trò đăng nhập ở *
 - Đăng nhập sai cổng sẽ bị từ chối, kèm link sang đúng cổng — trừ tài khoản quản trị (không bao giờ chỉ đường tới cổng quản trị).
 - **Cổng quản trị không có liên kết nào trên giao diện** và không được Google lập chỉ mục. Người chưa đăng nhập / không phải quản trị mở bất kỳ trang `/quan-tri/...` nào đều nhận **404** (như thể không tồn tại); lần dò của tài khoản đã đăng nhập được ghi nhật ký `access_denied`. Khi chạy thật nên đặt `ADMIN_LOGIN_PATH` (đường dẫn khó đoán) và `ADMIN_ALLOWED_IPS`.
 - Cổng bệnh viện chỉ có một liên kết nhỏ "Dành cho nhân viên bệnh viện" ở chân trang (nhân viên nên lưu dấu trang).
-- Người dùng tự đăng ký tại `/dang-ky/`.
+- Người dùng tự đăng ký tại `/dang-ky/`, sau đó **bắt buộc nhập mã OTP 6 số** gửi qua email (email cũng kèm liên kết xác thực). Chưa xác thực thì mọi trang đều chuyển về trang nhập mã. Không áp dụng cho tài khoản bệnh viện / quản trị.
+- Địa chỉ người dùng gồm Tỉnh/thành → Phường/Xã (3.321 đơn vị sau sắp xếp 01/7/2025, `backend/accounts/data/wards.json`) và số nhà/đường.
 - Bệnh viện tự đăng ký tại `/benh-vien/dang-ky/` (kèm tài khoản **Quản lý bệnh viện**) → Quản trị duyệt ở **Quản trị → Bệnh viện → Chờ duyệt** → Quản lý đăng nhập và tự cấp / thu hồi tài khoản nhân viên ở **Bệnh viện → Nhân viên**. Chưa được duyệt hoặc bị từ chối thì không đăng nhập được (báo rõ lý do). Quản trị vẫn cấp được tài khoản nhân viên tại trang chi tiết bệnh viện.
 - Email (xác thực, quên mật khẩu) không gửi thật mà được in ra log: `docker compose logs -f web`. Ở chế độ phát triển, link cũng hiện ngay trên trang.
 

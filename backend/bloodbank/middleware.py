@@ -113,7 +113,8 @@ class HtmxPageMiddleware:
 
     FULL_PAGE = {"bloodbank:map", "bloodbank:campaign_detail", "bloodbank:process",
                  "bloodbank:hospital_campaign_create", "bloodbank:hospital_campaign_edit", "bloodbank:hospital_info",
-                 "bloodbank:admin_hospital_create", "bloodbank:admin_hospital_edit"}
+                 "bloodbank:admin_hospital_create", "bloodbank:admin_hospital_edit",
+                 "accounts:hospital_register"}
 
     def __init__(self, get_response):
         self.get_response = get_response

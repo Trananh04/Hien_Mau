@@ -134,7 +134,7 @@ def suggest_campaigns(ctx, area=None, date_from=None, date_to=None, time_of_day=
     area_n = _norm(area or "")
     def text_of(c):
         return _norm(" ".join(filter(None, [c.name, c.location_name, c.address, c.province, c.hospital.name,
-                                            c.hospital.address, c.hospital.district, c.hospital.province])))
+                                            c.hospital.address, c.hospital.ward, c.hospital.district, c.hospital.province])))
     matched = [c for c in campaigns if area_n and area_n in text_of(c)]
     area_found = bool(matched) if area_n else None
     if area_n and matched:

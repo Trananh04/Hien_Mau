@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -12,7 +12,7 @@ from bloodbank.services.common import BusinessError
 from bloodbank.services.mailer import unsubscribe_user_id
 
 from . import services
-from .forms import ForgotPasswordForm, LoginForm, RegisterForm, ResetPasswordForm
+from .forms import ForgotPasswordForm, LoginForm, RegisterForm, ResetPasswordForm, ward_options
 from .models import AuthToken, User
 
 
@@ -114,12 +114,37 @@ def register_view(request):
         return redirect(_home_for(request.user))
     form = RegisterForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        user, link = services.register(form.cleaned_data, request)
+        user, code = services.register(form.cleaned_data, request)
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        messages.success(request, "Tạo tài khoản thành công. Chúng tôi đã gửi email xác thực tới hộp thư của bạn.")
-        _dev_link(request, "Liên kết xác thực email", link)
-        return redirect(_safe_next(request, reverse("bloodbank:campaigns")))
+        messages.success(request, "Tạo tài khoản thành công. Nhập mã 6 số vừa gửi tới email của bạn để hoàn tất.")
+        _dev_link(request, "Mã xác thực email", code)
+        # Bắt buộc xác thực ngay: trang nhập mã, xong mới về trang người dùng định tới
+        nxt = _safe_next(request, reverse("bloodbank:campaigns"))
+        return redirect(f"{reverse('accounts:verify_otp')}?{urlencode({'next': nxt})}")
     return render(request, "accounts/register.html", {"form": form, "next": request.GET.get("next", "")})
+
+
+def verify_otp_view(request):
+    """Nhập mã OTP xác thực email. Người dùng chưa xác thực bị EmailVerifiedMiddleware đưa về đây."""
+    user = request.user
+    nxt = _safe_next(request, reverse("bloodbank:campaigns"))
+    if user.email_verified_at:
+        return redirect(nxt)
+    error = None
+    if request.method == "POST":
+        try:
+            services.verify_email_code(user, request.POST.get("code"), request)
+        except BusinessError as exc:
+            error = exc.message
+        else:
+            messages.success(request, "Email của bạn đã được xác thực. Chào mừng bạn đến với Giọt Hồng!")
+            return redirect(nxt)
+    return render(request, "accounts/verify_otp.html", {"error": error, "next": nxt})
+
+
+def wards_view(request):
+    """<option> Phường/Xã của một tỉnh cho ô chọn phụ thuộc (HTMX)."""
+    return render(request, "partials/ward_options.html", {"options": ward_options(request.GET.get("province"))})
 
 
 def hospital_register_view(request):
@@ -190,16 +215,17 @@ def verify_email_view(request, token):
 def resend_verification_view(request):
     if not request.user.is_authenticated:
         return redirect("accounts:login")
+    back = f"{reverse('accounts:verify_otp')}?{urlencode({'next': _safe_next(request, reverse('bloodbank:campaigns'))})}"
     if request.user.email_verified_at:
         messages.info(request, "Email của bạn đã được xác thực.")
         return redirect("bloodbank:profile")
-    link = services.send_email_verification(request.user, request)
-    if link is None:
+    code = services.send_email_verification(request.user, request)
+    if code is None:
         messages.warning(request, "Bạn vừa yêu cầu gửi lại nhiều lần. Vui lòng kiểm tra hộp thư hoặc thử lại sau ít phút.")
-        return redirect("bloodbank:profile")
-    messages.success(request, "Đã gửi lại email xác thực.")
-    _dev_link(request, "Liên kết xác thực email", link)
-    return redirect("bloodbank:profile")
+        return redirect(back)
+    messages.success(request, "Đã gửi mã xác thực mới tới email của bạn.")
+    _dev_link(request, "Mã xác thực email", code)
+    return redirect(back)
 
 
 # Nút "Hủy đăng ký" của Gmail / Outlook gửi POST một lần bấm, không có cookie CSRF (RFC 8058). Liên kết đã ký nên không

@@ -475,6 +475,8 @@ dialog.modal-dialog[open] { display: flex; }
 .auth-or { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; font-size: 13.5px; color: var(--ink-muted); }
 .auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .auth-switch { margin-top: 22px; text-align: center; font-size: 14px; color: var(--ink-muted); }
+.otp-input { font-size: 26px; font-weight: 700; letter-spacing: .5em; text-align: center; font-variant-numeric: tabular-nums; padding-left: .5em; }
+.otp-resend { margin-top: 16px; text-align: center; font-size: 14px; color: var(--ink-muted); }
 .pw-toggle { position: relative; }
 .pw-toggle button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-muted); border-radius: 8px; }
 .pw-toggle button:hover { color: var(--primary); background: var(--primary-light); }

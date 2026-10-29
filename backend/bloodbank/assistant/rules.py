@@ -72,8 +72,10 @@ def known_areas():
     from accounts.provinces import area_names
 
     names = set(area_names())
-    for district, province in Hospital.objects.filter(status="active").values_list("district", "province"):
-        names.update(filter(None, [district, province]))
+    for district, ward, province in Hospital.objects.filter(status="active").values_list("district", "ward", "province"):
+        # Phường / xã: người hỏi thường bỏ chữ "Phường", "Xã" (vd "Ba Đình")
+        ward = re.sub(r"^(Phường|Xã|Đặc khu)\s+", "", ward or "")
+        names.update(filter(None, [district, ward, province]))
     names.update(filter(None, Campaign.objects.filter(status="open").values_list("province", flat=True)))
     return sorted(names, key=len, reverse=True)
 

@@ -52,9 +52,12 @@ SCREENS = [
         "accounts:login", "accounts:hospital_login", "accounts:admin_login", "accounts:register",
         "accounts:hospital_register",
         "accounts:forgot_password", "accounts:reset_password", "accounts:verify_email", "accounts:unsubscribe")),
+    S("API-05", "Danh sách phường / xã theo tỉnh (ô chọn địa chỉ)", "Công khai", (PUBLIC,), ("accounts:wards",)),
 
     # ---------------------------------------------------------------- Người dùng
     S("SCR-07", "Hồ sơ cá nhân", "Người dùng", (MEMBER,), ("bloodbank:profile", "accounts:resend_verification")),
+    S("SCR-07b", "Xác thực email bằng mã OTP (bắt buộc trước khi dùng tiếp)", "Người dùng", (MEMBER,), (
+        "accounts:verify_otp",)),
     S("SCR-08", "Đơn đăng ký hiến của tôi", "Người dùng", (MEMBER,), (
         "bloodbank:my_registrations", "bloodbank:cancel_registration", "bloodbank:reregister")),
     S("SCR-09", "Lịch sử hiến máu", "Người dùng", (MEMBER,), ("bloodbank:my_history", "bloodbank:my_donation_detail")),

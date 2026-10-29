@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from django import forms
 from django.utils import timezone
 
-from accounts.forms import BaseForm
+from accounts.forms import BaseForm, add_ward_field
 from accounts.provinces import PROVINCES
 from accounts.models import BLOOD_GROUPS
 from bloodbank.models import DONATION_TYPES, PRIORITIES, Hospital, Product, ProductSpec
@@ -150,12 +150,22 @@ class HospitalForm(BaseForm):
     name = forms.CharField(label="Tên bệnh viện", max_length=255)
     address = forms.CharField(label="Địa chỉ", max_length=500)
     province = forms.ChoiceField(label="Tỉnh/thành", choices=[(p, p) for p in PROVINCES])
-    district = forms.CharField(label="Quận/huyện", max_length=100, required=False)
-    ward = forms.CharField(label="Phường/xã", max_length=100, required=False)
+    ward = forms.CharField(label="Phường/Xã", max_length=100, required=False)   # thay bằng ô chọn theo tỉnh
     latitude = forms.DecimalField(label="Vĩ độ", required=False, max_digits=9, decimal_places=6, min_value=-90, max_value=90)
     longitude = forms.DecimalField(label="Kinh độ", required=False, max_digits=9, decimal_places=6, min_value=-180, max_value=180)
     phone = forms.CharField(label="Điện thoại", max_length=20, required=False)
     email = forms.EmailField(label="Email", max_length=255, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["address"].label = "Địa chỉ (số nhà, đường)"
+        self._ward_field()
+
+    def _ward_field(self):
+        # Sau sắp xếp 01/7/2025 không còn cấp quận/huyện: chọn Tỉnh → Phường/Xã rồi mới nhập số nhà, đường
+        add_ward_field(self, self.initial.get("province") or self.fields["province"].choices[0][0],
+                       keep=self.initial.get("ward"))
+        self.fields["ward"].widget.attrs["class"] = "field-select"
 
     def clean(self):
         data = super().clean()
@@ -180,6 +190,7 @@ class HospitalSignupForm(HospitalForm):
         super().__init__(*args, **kwargs)
         self.fields["code"].label = "Mã cơ sở khám chữa bệnh"
         self.fields["province"].choices = [("", "-- Chọn --")] + list(self.fields["province"].choices)
+        self._ward_field()   # tỉnh mặc định giờ là "-- Chọn --"
 
     def clean_manager_email(self):
         from accounts.models import User

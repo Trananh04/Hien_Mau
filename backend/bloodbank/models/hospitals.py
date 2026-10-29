@@ -51,7 +51,7 @@ class Hospital(models.Model):
 
     @property
     def area(self):
-        return ", ".join(p for p in [self.district, self.province] if p)
+        return ", ".join(p for p in [self.ward or self.district, self.province] if p)
 
 
 class Staff(models.Model):

@@ -12,10 +12,11 @@
   <input type="hidden" name="next" value="{{ next }}">
   {% include "partials/field.html" with field=form.full_name %}
   {% include "partials/field.html" with field=form.email %}
-  {% include "partials/field.html" with field=form.phone %}
   <div class="form-grid u-mt-14">
+    {% include "partials/field.html" with field=form.phone %}
     {% include "partials/field.html" with field=form.blood_group %}
     {% include "partials/field.html" with field=form.province %}
+    {% include "partials/field.html" with field=form.ward %}
   </div>
   {% include "partials/field.html" with field=form.password %}
   {% include "partials/field.html" with field=form.password2 %}

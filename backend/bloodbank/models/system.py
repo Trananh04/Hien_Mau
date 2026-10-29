@@ -10,7 +10,8 @@ from .hospitals import Hospital
 # Nhóm nhật ký: "Nghiệp vụ" (mặc định) là thao tác thay đổi dữ liệu; "Bảo mật" là đăng nhập / truy cập;
 # câu hỏi trợ lý chỉ hiện ở "Tất cả". Index một phần idx_audit_*_business khớp đúng bộ lọc "Nghiệp vụ".
 AUDIT_SECURITY_ACTIONS = ("login", "login_failed", "login_wrong_portal", "access_denied", "view_sensitive",
-                          "password_reset", "password_reset_requested", "password_changed", "email_verified")
+                          "password_reset", "password_reset_requested", "password_changed", "email_verified",
+                          "email_otp_failed")
 AUDIT_NOISE_ACTIONS = ("assistant_query",)
 _BUSINESS = ~Q(action__in=AUDIT_SECURITY_ACTIONS + AUDIT_NOISE_ACTIONS)
 
@@ -101,6 +102,8 @@ class SystemSetting(models.Model):
         "login_lock_minutes": (15, "Thời gian tạm khóa đăng nhập (phút)"),
         "password_reset_ttl_minutes": (60, "Thời hạn token đặt lại mật khẩu (phút)"),
         "email_verify_ttl_hours": (48, "Thời hạn token xác thực email (giờ)"),
+        "email_otp_ttl_minutes": (15, "Thời hạn mã OTP 6 số xác thực email (phút)"),
+        "email_otp_max_attempts": (5, "Số lần nhập sai mã OTP trước khi mã bị hủy (phải gửi mã mới)"),
         "whole_blood_volume_warn_min_ml": (250, "Ngưỡng cảnh báo thể tích toàn phần thấp (ml) — OI-25"),
         "whole_blood_volume_warn_max_ml": (450, "Ngưỡng cảnh báo thể tích toàn phần cao (ml) — OI-25"),
         "donation_record_grace_hours": (48, "Ân hạn ghi nhận sau khi đợt hoàn tất (giờ) — OI-23"),

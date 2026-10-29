@@ -116,8 +116,9 @@ def update_staff(actor, hospital, staff_id, is_active, request=None):
 
 
 # ---------------------------------------------------------------- Bệnh viện
-HOSPITAL_FIELDS = ["code", "name", "address", "province", "district", "ward", "latitude", "longitude", "phone", "email"]
-STAFF_EDITABLE = ["address", "district", "ward", "latitude", "longitude", "phone", "email"]
+# Không còn cấp quận/huyện (sắp xếp 01/7/2025): form không sửa `district`, giá trị cũ của bệnh viện vẫn giữ nguyên
+HOSPITAL_FIELDS = ["code", "name", "address", "province", "ward", "latitude", "longitude", "phone", "email"]
+STAFF_EDITABLE = ["address", "ward", "latitude", "longitude", "phone", "email"]
 
 
 def save_hospital(actor, data, hospital=None, fields=HOSPITAL_FIELDS, request=None):

@@ -231,7 +231,7 @@ ACTION_LABELS = {
     "access_denied": "Truy cập bị từ chối", "view_sensitive": "Xem dữ liệu nhạy cảm", "export": "Xuất dữ liệu",
     "login": "Đăng nhập", "login_failed": "Đăng nhập sai", "password_reset": "Đặt lại mật khẩu",
     "password_reset_requested": "Yêu cầu đặt lại mật khẩu", "password_changed": "Đổi mật khẩu",
-    "email_verified": "Xác thực email", "reserve": "Giữ chỗ kho", "reserve_release": "Giải phóng giữ chỗ",
+    "email_verified": "Xác thực email", "email_otp_failed": "Nhập sai mã xác thực email", "reserve": "Giữ chỗ kho", "reserve_release": "Giải phóng giữ chỗ",
     "dispatched": "Xuất điều chuyển", "received": "Xác nhận nhận hàng", "reinvite": "Mời lại", "reactivate": "Kích hoạt lại",
     "role_change": "Đổi vai trò", "link_campaign": "Kết nối đợt hiến", "link_support_request": "Liên kết yêu cầu liên viện",
     "lab_result": "Kết quả xét nghiệm", "auto_cancel": "Tự hủy (quá hạn)", "escalate": "Nhắc khẩn",

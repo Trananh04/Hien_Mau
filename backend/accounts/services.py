@@ -21,11 +21,12 @@ def register(data, request=None):
             phone=data.get("phone") or None,
             blood_group=data.get("blood_group") or None,
             province=data.get("province") or None,
+            ward=data.get("ward") or None,
             terms_accepted_at=timezone.now(),
         )
         audit(user, user, "create", new=snapshot(user, ["email", "full_name", "phone", "role"]), request=request)
-    link = send_email_verification(user, request)
-    return user, link
+    code = send_email_verification(user, request)
+    return user, code
 
 
 def _too_many_tokens(user, purpose):
@@ -36,17 +37,64 @@ def _too_many_tokens(user, purpose):
 
 
 def send_email_verification(user, request=None):
-    """Trả về liên kết đã gửi, hoặc None nếu đã vượt hạn mức gửi lại."""
+    """Gửi mã OTP 6 số (nhập ngay trên trang) kèm liên kết xác thực (mở từ thiết bị khác vẫn được).
+
+    Trả về mã đã gửi, hoặc None nếu đã vượt hạn mức gửi lại."""
     if _too_many_tokens(user, AuthToken.Purpose.EMAIL_VERIFY):
         return None
+    ip = request.META.get("REMOTE_ADDR") if request else None
     hours = SystemSetting.get("email_verify_ttl_hours")
-    raw = AuthToken.issue(user, AuthToken.Purpose.EMAIL_VERIFY, ttl=timedelta(hours=hours),
-                          ip=request.META.get("REMOTE_ADDR") if request else None)
+    minutes = SystemSetting.get("email_otp_ttl_minutes")
+    raw = AuthToken.issue(user, AuthToken.Purpose.EMAIL_VERIFY, ttl=timedelta(hours=hours), ip=ip)
+    code = AuthToken.issue_code(user, AuthToken.Purpose.EMAIL_OTP, ttl=timedelta(minutes=minutes), ip=ip)
     link = mailer.absolute(reverse("accounts:verify_email", args=[raw]), request)
     mailer.send_quietly(mailer.build(
-        user, "Xác thực email Giọt Hồng", [f"Bấm nút bên dưới để xác thực email của bạn. Liên kết hết hạn sau {hours} giờ."],
+        user, f"{code} là mã xác thực email Giọt Hồng",
+        [f"Mã xác thực của bạn: {code}", f"Nhập mã này trên trang Giọt Hồng. Mã hết hạn sau {minutes} phút.",
+         f"Hoặc bấm nút bên dưới (liên kết hết hạn sau {hours} giờ).",
+         "Nếu bạn không đăng ký tài khoản Giọt Hồng, hãy bỏ qua email này."],
         ("Xác thực email", link), request=request))
-    return link
+    return code
+
+
+def _mark_verified(user):
+    user.email_verified_at = timezone.now()
+    user.save(update_fields=["email_verified_at", "updated_at"])
+    # Đã xác thực → mã / liên kết còn lại không còn tác dụng
+    AuthToken.objects.filter(
+        user=user, purpose__in=[AuthToken.Purpose.EMAIL_VERIFY, AuthToken.Purpose.EMAIL_OTP],
+        used_at__isnull=True, revoked_at__isnull=True,
+    ).update(revoked_at=timezone.now())
+    audit(user, user, "email_verified")
+
+
+def verify_email_code(user, code, request=None):
+    """Kiểm tra mã OTP người dùng nhập. Sai quá `email_otp_max_attempts` lần → hủy mã, phải gửi mã mới."""
+    code = "".join(ch for ch in (code or "") if ch.isdigit())
+    with transaction.atomic():
+        token = (AuthToken.objects.select_for_update()
+                 .filter(pk=getattr(AuthToken.current_code(user, AuthToken.Purpose.EMAIL_OTP), "pk", None)).first())
+        if token is None:
+            raise BusinessError("ERR-NOT-FOUND", "Mã xác thực đã hết hạn. Bấm \"Gửi lại mã\" để nhận mã mới.")
+        if len(code) != 6 or not token.matches_code(code):
+            failed = AuditLog.objects.filter(entity_type="users", entity_id=user.id, action="email_otp_failed",
+                                             created_at__gte=token.created_at).count() + 1
+            audit(user, user, "email_otp_failed", request=request)
+            left = SystemSetting.get("email_otp_max_attempts") - failed
+            if left <= 0:
+                token.revoked_at = timezone.now()
+                token.save(update_fields=["revoked_at"])
+                error = BusinessError("ERR-VALIDATION", "Bạn đã nhập sai quá nhiều lần. Bấm \"Gửi lại mã\" để nhận mã mới.")
+            else:
+                error = BusinessError("ERR-VALIDATION", f"Mã xác thực không đúng. Bạn còn {left} lần thử.")
+        else:
+            token.used_at = timezone.now()
+            token.save(update_fields=["used_at"])
+            _mark_verified(user)
+            error = None
+    if error:   # raise sau khi commit để lần sai luôn được ghi lại
+        raise error
+    return user
 
 
 def verify_email(raw):
@@ -64,9 +112,7 @@ def verify_email(raw):
         token.used_at = timezone.now()
         token.save(update_fields=["used_at"])
         user = token.user
-        user.email_verified_at = timezone.now()
-        user.save(update_fields=["email_verified_at", "updated_at"])
-        audit(user, user, "email_verified")
+        _mark_verified(user)
     return user
 
 

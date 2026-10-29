@@ -1,0 +1,29 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Xác thực email{% endblock %}
+{% block art_greeting %}Còn một bước{% endblock %}
+{% block art_title %}XÁC THỰC EMAIL{% endblock %}
+{% block art_text %}Email đã xác thực giúp bệnh viện liên hệ đúng người và giúp bạn lấy lại tài khoản khi quên mật khẩu.{% endblock %}
+{% block card %}
+<h2>Nhập mã xác thực</h2>
+<p class="lead">Chúng tôi đã gửi mã 6 số tới <strong>{{ user.email }}</strong>. Mở email và nhập mã vào ô bên dưới (xem cả mục Spam / Quảng cáo nếu chưa thấy).</p>
+{% if error %}<div class="notice danger" role="alert">{% icon "circle-alert" %}<div>{{ error }}</div></div>{% endif %}
+<form method="post" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="field{% if error %} has-error{% endif %}">
+    <label for="otp-code">Mã xác thực</label>
+    <input id="otp-code" name="code" class="field-input otp-input" inputmode="numeric" autocomplete="one-time-code"
+           pattern="[0-9]*" maxlength="6" placeholder="••••••" required autofocus>
+  </div>
+  <button type="submit" class="btn primary lg block u-mt-18">{% icon "shield-check" %} Xác thực</button>
+</form>
+<form method="post" action="{% url 'accounts:resend_verification' %}" class="otp-resend">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  Chưa nhận được mã? <button type="submit" class="link">Gửi lại mã</button>
+</form>
+<form method="post" action="{% url 'accounts:logout' %}" class="auth-switch">
+  {% csrf_token %}
+  Nhập sai email? <button type="submit" class="link">Đăng xuất</button> và đăng ký lại bằng email đúng.
+</form>
+{% endblock %}

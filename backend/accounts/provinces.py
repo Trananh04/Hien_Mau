@@ -4,9 +4,13 @@ Theo Nghị quyết 202/2025/QH15 (hiệu lực 01/7/2025): 34 đơn vị gồm 
 - PROVINCES: danh sách hiển thị trong mọi ô chọn tỉnh/thành (xếp theo bảng chữ cái).
 - LEGACY: tên tỉnh trước sắp xếp → tên hiện hành (dữ liệu cũ, người dùng quen gọi tên cũ khi hỏi trợ lý).
 - CENTERS: tọa độ gần đúng trung tâm hành chính, dùng để định vị bản đồ khi chưa có tọa độ cụ thể.
+- WARDS: 3.321 phường / xã / đặc khu theo tỉnh (data/wards.json, nguồn ThangLeQuoc/vietnamese-provinces-database
+  v5.2.0, giấy phép MIT — xem data/NOTICE).
 """
+import json
 import re
 import unicodedata
+from pathlib import Path
 
 PROVINCES = [
     "An Giang", "Bắc Ninh", "Cà Mau", "Cao Bằng", "Cần Thơ", "Đà Nẵng", "Đắk Lắk", "Điện Biên", "Đồng Nai",
@@ -68,6 +72,16 @@ def normalize_province(name):
 def center_of(province):
     """Tọa độ trung tâm tỉnh (đã chuẩn hóa tên); không rõ tỉnh → giữa Việt Nam."""
     return CENTERS.get(normalize_province(province) or "", VIETNAM_CENTER)
+
+
+WARDS = json.loads((Path(__file__).parent / "data" / "wards.json").read_text(encoding="utf-8"))
+
+assert set(WARDS) == set(PROVINCES)
+
+
+def wards_of(province):
+    """Phường / xã / đặc khu của tỉnh (tên hiện hành); tỉnh trống hoặc không rõ → []."""
+    return WARDS.get(province or "", [])
 
 
 def area_names():

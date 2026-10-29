@@ -1,10 +1,40 @@
 from django import forms
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 
 from .models import BLOOD_GROUPS, User, normalize_phone
 
-from .provinces import PROVINCES  # noqa: F401 — giữ đường import cũ cho các module khác
+from .provinces import PROVINCES, wards_of  # PROVINCES: giữ đường import cũ cho các module khác
+
+WARD_PLACEHOLDER = "-- Chọn phường / xã --"
+
+
+def ward_options(province):
+    """Lựa chọn của ô Phường/Xã theo tỉnh; chưa chọn tỉnh → chỉ có dòng nhắc."""
+    if not wards_of(province):
+        return [("", "-- Chọn tỉnh trước --")]
+    return [("", WARD_PLACEHOLDER)] + [(w, w) for w in wards_of(province)]
+
+
+def add_ward_field(form, initial_province, keep=None):
+    """Ô Phường/Xã phụ thuộc ô Tỉnh/thành: đổi tỉnh → HTMX tải lại danh sách (accounts:wards), không cần JS riêng.
+
+    Lựa chọn hợp lệ = xã của tỉnh đang gửi lên, nên xã không thuộc tỉnh đã chọn bị từ chối ngay ở bước kiểm tra.
+    Ô tỉnh bị khóa (không gửi lên) → dùng tỉnh ban đầu. `keep`: giá trị đang lưu không có trong danh sách (tên trước
+    sắp xếp 01/7/2025) vẫn được giữ, để lưu form không âm thầm xóa mất."""
+    province = (form.data.get("province") or initial_province) if form.is_bound else initial_province
+    choices = ward_options(province)
+    if keep and province == initial_province and keep not in wards_of(province):
+        choices.insert(1, (keep, f"{keep} (tên cũ)"))
+    form.fields["ward"] = forms.ChoiceField(
+        label="Phường/Xã", required=False, choices=choices,
+        error_messages={"invalid_choice": "Phường/Xã không thuộc tỉnh/thành đã chọn."},
+    )
+    form.fields["province"].widget.attrs.update({
+        "hx-get": reverse("accounts:wards"), "hx-target": "#id_ward", "hx-swap": "innerHTML",
+        "hx-trigger": "change", "hx-include": "this", "hx-sync": "this:replace",
+    })
 
 
 class BaseForm(forms.Form):
@@ -40,6 +70,11 @@ class RegisterForm(BaseForm):
         label="Tôi đồng ý với điều khoản sử dụng và việc xử lý dữ liệu cá nhân theo Chính sách bảo mật.",
         error_messages={"required": "Bạn cần đồng ý điều khoản để tạo tài khoản."},
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        add_ward_field(self, None)
+        self.fields["ward"].widget.attrs["class"] = "field-select"
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -113,10 +148,11 @@ class ChangePasswordForm(ResetPasswordForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["full_name", "phone", "date_of_birth", "gender", "blood_group", "address", "province", "email_reminders"]
+        fields = ["full_name", "phone", "date_of_birth", "gender", "blood_group", "address", "province", "ward",
+                  "email_reminders"]
         labels = {
             "full_name": "Họ và tên", "phone": "Số điện thoại", "date_of_birth": "Ngày sinh", "gender": "Giới tính",
-            "blood_group": "Nhóm máu (tự khai)", "address": "Địa chỉ", "province": "Tỉnh/thành",
+            "blood_group": "Nhóm máu (tự khai)", "address": "Địa chỉ (số nhà, đường, thôn/xóm)", "province": "Tỉnh/thành",
             "email_reminders": "Nhận email khi bệnh viện kêu gọi hiến máu và khi tôi đủ thời gian để hiến lại",
         }
         help_texts = {"email_reminders": "Email về đơn đăng ký, đợt hiến bạn đã đăng ký và bảo mật tài khoản vẫn luôn được gửi."}
@@ -129,6 +165,7 @@ class ProfileForm(forms.ModelForm):
         self.fields["province"] = forms.ChoiceField(
             label="Tỉnh/thành", required=False, choices=[("", "-- Chọn --")] + [(p, p) for p in PROVINCES]
         )
+        add_ward_field(self, self.instance.province, keep=self.instance.ward)
         for field in self.fields.values():
             if isinstance(field.widget, forms.CheckboxInput):
                 continue
