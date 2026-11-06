@@ -1,0 +1,102 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}AI gợi ý người hiến{% endblock %}
+{% block ws_title %}AI gợi ý người hiến{% endblock %}
+{% block content %}
+<div class="dash">
+  <section class="panel" aria-labelledby="st-title">
+    <div class="panel-head"><h2 class="panel-title" id="st-title">Trạng thái</h2></div>
+    <dl class="dl dash-dl">
+      <dt>Màn Gợi ý người hiến</dt><dd>{% if s.enabled and s.ready %}<span class="tag ok">{% icon "circle-check" 14 %} Xếp theo khả năng nhận lời (AI)</span>{% elif s.enabled %}<span class="tag warn">{% icon "circle-alert" 14 %} Đã bật nhưng chưa có mô hình — xếp theo chấm điểm luật</span>{% else %}<span class="tag warn">{% icon "circle-alert" 14 %} Chấm điểm luật</span>{% endif %}</dd>
+      {% if s.meta %}
+      <dt>Phiên bản</dt><dd><code>{{ s.meta.version|default:"chưa đánh số" }}</code> · {{ s.labels|get_item:s.meta.chosen|default:s.meta.kind }} · huấn luyện {{ s.trained_at|date:"d/m/Y H:i" }}</dd>
+      <dt>Dữ liệu học</dt><dd>{% if s.meta.synthetic %}<span class="fc-sim">Mô phỏng</span>{% else %}Lịch sử kêu gọi thật{% endif %} · {{ s.meta.callouts }} lần kêu gọi · {{ s.meta.rows }} lời mời · tỷ lệ nhận lời {{ s.meta.base_rate|ratio_pct }}</dd>
+      {% endif %}
+      <dt>Dữ liệu thật</dt><dd>{{ s.real_callouts }} / {{ s.min_callouts }} lần kêu gọi · {{ s.real_rows }} / {{ s.min_rows }} lời mời đã biết kết quả{% if s.real_callouts < s.min_callouts or s.real_rows < s.min_rows %} · <span class="muted">chưa đủ, huấn luyện bằng dữ liệu mô phỏng</span>{% endif %}</dd>
+      <dt>Người mới</dt><dd class="small">Khi dùng AI, khoảng {{ s.explore_pct }}% vị trí trong danh sách dành cho người chưa có lịch sử (chỉnh ở Cấu hình: <code>donor_ai_explore_share</code>).</dd>
+    </dl>
+    <form method="post" class="panel-foot u-jc-space-between u-ai-center"{% if s.enabled %} data-confirm="Tắt AI gợi ý người hiến? Danh sách sẽ xếp theo chấm điểm luật."{% endif %}>
+      {% csrf_token %}<input type="hidden" name="action" value="ai">
+      {% if s.enabled %}
+        <span class="small muted">Tắt khi thấy tỷ lệ nhận lời thực tế lệch nhiều so với dự đoán.</span>
+        <input type="hidden" name="value" value="off"><button type="submit" class="btn secondary sm">{% icon "power" %} Tắt AI</button>
+      {% else %}
+        <span class="small muted">{% if s.ready %}Có mô hình qua chốt chặn, có thể bật.{% else %}Chưa có mô hình.{% endif %}</span>
+        <input type="hidden" name="value" value="on"><button type="submit" class="btn primary sm"{% if not s.ready %} disabled{% endif %}>{% icon "power" %} Bật AI</button>
+      {% endif %}
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="cmp-title">
+    <div class="panel-head"><h2 class="panel-title" id="cmp-title">So sánh khi kiểm tra</h2></div>
+    {% if s.scores %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Cách xếp hạng</th><th class="num">Nhận lời trong 10 người đầu</th><th class="num">Số người / lần</th><th class="num">Hơn chấm điểm luật (95%)</th><th class="num">AUC</th><th class="num">Lệch xác suất</th></tr></thead>
+      <tbody>{% for r in s.compare %}
+        <tr><td>{{ r.label }}{% if r.model == s.meta.chosen %} <span class="tag ok">được chọn</span>{% endif %}</td>
+          <td class="num"><strong>{{ r.p_at_10|ratio_pct }}</strong></td>
+          <td class="num">{{ r.hits_at_10|floatformat:2 }}</td>
+          <td class="num">{% if r.lift is not None %}{{ r.lift|floatformat:2 }} <span class="muted small">({{ r.lift_low|floatformat:2 }} → {{ r.lift_high|floatformat:2 }})</span>{% else %}—{% endif %}</td>
+          <td class="num">{{ r.auc|floatformat:3 }}</td>
+          <td class="num">{% if r.calibration is not None %}{{ r.calibration|ratio_pct }}{% else %}—{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <p class="small muted fcw-note">Kiểm tra trên {{ s.scores.RULE.test_callouts }} lần kêu gọi ở giai đoạn sau, mô hình chưa từng thấy. "Hơn chấm điểm luật" = số người nhận lời thêm trong 10 người đầu mỗi lần kêu gọi, trong ngoặc là khoảng tin cậy 95%. Chốt chặn: chỉ dùng khi phần hơn chắc chắn dương (cận dưới &gt; 0), AUC cao hơn, và xác suất lệch thực tế không quá ±{{ s.max_calibration|ratio_pct:0 }}.</p>
+    {% else %}
+    <p class="dash-empty">{% icon "info" 18 %} Chưa có mô hình đang dùng.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="tr-title">
+    <div class="panel-head"><h2 class="panel-title" id="tr-title">Huấn luyện lại</h2></div>
+    <dl class="dl dash-dl">
+      <dt>Lần gần nhất</dt><dd>{% if s.last %}{{ s.last_at|date:"d/m/Y H:i" }}{% if s.trigger %} · {{ s.trigger }}{% endif %} · {% if s.last.promoted %}<span class="tag ok">Dùng bản mới</span>{% elif s.last.version %}Giữ bản cũ{% else %}Không huấn luyện{% endif %}{% if s.last.reasons %}<br><span class="small muted">{{ s.last.reasons|join:"; " }}</span>{% endif %}{% else %}Chưa chạy{% endif %}</dd>
+      <dt>Tự động</dt><dd>{% if s.auto %}Kiểm tra mỗi đêm {{ s.hours.0 }}h–{{ s.hours.1 }}h, chỉ học lại khi: lần đầu đủ dữ liệu thật · tỷ lệ nhận lời thực tế lệch dự đoán quá {{ s.drift_gap|ratio_pct:0 }} · đã {{ s.retrain_days }} ngày có dữ liệu mới{% else %}Đang tắt — chỉ học lại khi bấm nút{% endif %}</dd>
+      <dt>Tự bảo vệ</dt><dd class="small">Lệch quá {{ s.protect_gap|ratio_pct:0 }} trong {{ s.recent_weeks }} tuần gần nhất thì tự tắt AI và báo Quản trị.</dd>
+    </dl>
+    <div class="panel-foot u-jc-space-between u-ai-center">
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="auto"><input type="hidden" name="value" value="{% if s.auto %}off{% else %}on{% endif %}">
+        <button type="submit" class="btn secondary sm">{% if s.auto %}Tắt tự động{% else %}Bật tự động{% endif %}</button></form>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="train">
+        <button type="submit" class="btn primary sm"{% if s.requested %} disabled{% endif %}>{% icon "refresh-cw" %} {% if s.requested %}Đã xếp lịch{% else %}Huấn luyện lại ngay{% endif %}</button></form>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="wk-title">
+    <div class="panel-head"><h2 class="panel-title" id="wk-title">Tỷ lệ nhận lời thực tế theo tuần</h2></div>
+    {% if s.weeks %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Tuần</th><th class="num">Lời mời</th><th class="num">Nhận lời</th><th class="num">Tỷ lệ</th><th class="num">Khi AI xếp hạng: thực tế</th><th class="num">AI dự đoán</th></tr></thead>
+      <tbody>{% for w in s.weeks %}
+        <tr><td>{{ w.week|date:"d/m" }}</td><td class="num">{{ w.sent|default:0 }}</td><td class="num">{{ w.responded|default:0 }}</td>
+          <td class="num"><strong>{{ w.rate|ratio_pct:0 }}</strong></td>
+          <td class="num">{% if w.ai_rate is not None %}{{ w.ai_rate|ratio_pct:0 }} <span class="muted small">({{ w.ai_sent }})</span>{% else %}—{% endif %}</td>
+          <td class="num">{% if w.ai_pred is not None %}{{ w.ai_pred|ratio_pct:0 }}{% else %}—{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <p class="small muted fcw-note">Chỉ tính lời mời đã hết thời gian theo dõi. "Nhận lời" = đăng ký đợt hiến hoặc hiến máu tại bệnh viện đã mời trong thời gian theo dõi.{% if s.gap is not None %} {{ s.recent_weeks }} tuần gần nhất: thực tế lệch dự đoán {{ s.gap|ratio_pct }} trên {{ s.gap_sent }} lời mời.{% endif %}</p>
+    {% else %}
+    <p class="dash-empty">{% icon "info" 18 %} Chưa có lời mời nào đã hết thời gian theo dõi.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="vs-title">
+    <div class="panel-head"><h2 class="panel-title" id="vs-title">Các phiên bản</h2></div>
+    {% if s.versions %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Phiên bản</th><th>Mô hình</th><th>Dữ liệu</th><th class="num">10 người đầu</th><th class="num">Chấm điểm luật</th><th>Chốt chặn</th><th></th></tr></thead>
+      <tbody>{% for v in s.versions %}{% with chosen=v.scores|get_item:v.chosen %}
+        <tr><td><code>{{ v.version }}</code></td>
+          <td>{{ s.labels|get_item:v.chosen|default:v.kind }}</td>
+          <td>{% if v.synthetic %}Mô phỏng{% else %}Lịch sử thật{% endif %}</td>
+          <td class="num">{{ chosen.p_at_10|ratio_pct }}</td><td class="num">{{ v.scores.RULE.p_at_10|ratio_pct }}</td>
+          <td>{% if v.guard.passed %}<span class="tag ok">Đạt</span>{% else %}<span class="tag warn" title="{{ v.guard.reasons|join:'; ' }}">Không đạt</span>{% endif %}</td>
+          <td class="num">{% if v.active %}<span class="tag ok">Đang dùng</span>{% else %}
+            <form method="post" data-confirm="Dùng phiên bản {{ v.version }}{% if not v.guard.passed %} (không qua chốt chặn){% endif %}?">{% csrf_token %}<input type="hidden" name="action" value="activate"><input type="hidden" name="version" value="{{ v.version }}"><button type="submit" class="btn secondary sm">Dùng bản này</button></form>{% endif %}</td></tr>
+      {% endwith %}{% endfor %}</tbody>
+    </table></div>
+    {% else %}
+    <p class="dash-empty">Chưa có phiên bản nào. Bấm “Huấn luyện lại ngay” hoặc chạy <code>python manage.py train_donor_model</code>.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

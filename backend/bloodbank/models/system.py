@@ -130,6 +130,10 @@ class SystemSetting(models.Model):
         "forecast_retrain_days": (30, "Mô hình học từ dữ liệu thật được học lại để cập nhật dữ liệu mới sau số ngày này"),
         "donor_invite_max_90_days": (4, "Chia đều lượt kêu gọi: người đã nhận số lời kêu gọi này trong 90 ngày (mọi bệnh viện) tạm không được gợi ý"),
         "donor_invite_response_days": (7, "Người được mời đăng ký đợt hiến hoặc hiến máu tại bệnh viện trong số ngày này sau lời mời thì tính là đã hưởng ứng"),
+        "donor_ai_enabled": (False, "Gợi ý người hiến xếp theo khả năng nhận lời do AI dự đoán thay cho chấm điểm luật — chỉ bật khi mô hình đã huấn luyện và thắng chấm điểm luật"),
+        "donor_ai_auto_retrain": (True, "Tự học lại mô hình gợi ý người hiến khi có lý do: lần đầu đủ dữ liệu thật, tỷ lệ nhận lời thực tế lệch dự đoán, hoặc có thêm dữ liệu mới (bản mới chỉ được dùng khi qua chốt chặn)"),
+        "donor_ai_retrain_days": (30, "Mô hình gợi ý người hiến học từ dữ liệu thật được học lại để cập nhật dữ liệu mới sau số ngày này"),
+        "donor_ai_explore_share": (0.15, "Tỷ lệ vị trí trong danh sách gợi ý (khi dùng AI) dành cho người hiến chưa có lịch sử, để AI học thêm và lượt mời không dồn vào một nhóm"),
     }
 
     @classmethod

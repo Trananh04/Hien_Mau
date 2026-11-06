@@ -20,18 +20,28 @@
   <input type="hidden" name="mode" value="{{ mode }}">
   {% if radius %}<input type="hidden" name="radius" value="{{ radius }}">{% endif %}
   <input type="hidden" name="next" value="{{ back_url|default:request.get_full_path }}">
-  {% if n_suggest %}
+  {% if ai %}
+  <div class="notice info">{% icon "sparkles" %}<div><strong>Xếp theo khả năng nhận lời do AI dự đoán</strong>{% if ai_meta.synthetic %} (mô hình đang học từ dữ liệu mô phỏng){% endif %}. Danh sách người được gợi ý vẫn do luật quyết định (đúng nhóm máu, đủ tuổi, đủ thời gian nghỉ); AI chỉ sắp thứ tự.{% if n_suggest %} Đã chọn sẵn <strong>{{ n_suggest }} người</strong>, dự kiến khoảng <strong>{{ ai_expected|floatformat:1 }}</strong> người nhận lời để bù {{ shortage }} đơn vị thiếu (tối đa {{ max_send }} người).{% endif %} Bạn có thể bỏ chọn hoặc chọn thêm trước khi gửi.</div></div>
+  {% elif n_suggest %}
   <div class="notice info">{% icon "sparkles" %}<div><strong>Đã chọn sẵn {{ n_suggest }} người điểm cao nhất</strong> để bù {{ shortage }} đơn vị thiếu (thiếu {{ shortage }} ÷ hưởng ứng {{ rate_pct }}%, tối đa {{ max_send }} người). Bạn có thể bỏ chọn hoặc chọn thêm trước khi gửi.</div></div>
   {% endif %}
   <section class="panel">
     <div class="panel-head"><h2 class="panel-title">{% icon "list-ordered" %} Danh sách xếp hạng <span class="muted small">{{ rows|length }} người</span></h2>{% include "partials/radius_filter.html" %}</div>
     <div class="table-wrap"><table class="table stack-mobile">
-      <thead><tr><th></th><th>Mã</th><th>Mức phù hợp</th><th>Điểm</th><th>Lý do</th></tr></thead>
+      <thead><tr><th></th><th>Mã</th>{% if ai %}<th>Khả năng nhận lời</th><th>Yếu tố chính</th>{% else %}<th>Mức phù hợp</th>{% endif %}<th>{% if ai %}Điểm luật{% else %}Điểm{% endif %}</th><th>Lý do</th></tr></thead>
       <tbody>{% for r in rows %}
         <tr>
           <td><input class="u-accent-color-primary u-w-18 u-h-18" type="checkbox" name="code" value="{{ r.code }}" {% if r.preselected %}checked{% endif %} aria-label="Chọn người hiến {{ r.code }}"></td>
           <td data-label="Mã"><span class="cell-title donor-code">{{ r.code }}</span>{% if r.first_time %}<span class="cell-sub">lần đầu hiến</span>{% endif %}</td>
+          {% if ai %}
+          <td data-label="Khả năng nhận lời" class="score-cell">
+            <strong>{{ r.prob_pct }}%</strong>{% if r.explore %} <span class="badge neutral" title="Vị trí dành cho người chưa có lịch sử, giúp AI học thêm và chia đều lượt mời">người mới</span>{% endif %}
+            <div class="progress u-h-8 u-mt-6" aria-hidden="true"><span class="u-bg-primary" data-pct="{{ r.prob_pct }}"></span></div>
+          </td>
+          <td data-label="Yếu tố chính"><ul class="reason-list">{% for x in r.factors %}<li>{% if x.up %}<span class="t-ok" title="làm tăng khả năng nhận lời">▲</span>{% else %}<span class="t-danger" title="làm giảm khả năng nhận lời">▼</span>{% endif %} {{ x.text }}</li>{% empty %}<li class="muted">Không có yếu tố nổi bật</li>{% endfor %}</ul></td>
+          {% else %}
           <td data-label="Mức phù hợp">{% if r.level == "high" %}<span class="badge ok">Cao</span>{% elif r.level == "medium" %}<span class="badge warn">Vừa</span>{% else %}<span class="badge neutral">Thấp</span>{% endif %}</td>
+          {% endif %}
           <td data-label="Điểm" class="score-cell">
             <strong>{{ r.score }}</strong><span class="muted small">/100</span>
             <div class="progress u-h-8 u-mt-6" aria-hidden="true"><span class="u-bg-primary" data-pct="{{ r.score }}"></span></div>

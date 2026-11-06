@@ -105,6 +105,7 @@ urlpatterns = [
     path("quan-tri/canh-bao/", admin.alerts, name="admin_alerts"),
     path("quan-tri/tro-ly/", admin.assistant_monitor, name="admin_assistant"),
     path("quan-tri/du-bao-ai/", admin.forecast_monitor, name="admin_forecast"),
+    path("quan-tri/goi-y-ai/", admin.donor_ai_monitor, name="admin_donor_ai"),
     path("quan-tri/nguoi-dung/", admin.users, name="admin_users"),
     path("quan-tri/benh-vien/", admin.hospitals, name="admin_hospitals"),
     path("quan-tri/benh-vien/tao/", admin.hospital_form, name="admin_hospital_create"),

@@ -168,6 +168,30 @@ def forecast_monitor(request):
 
 
 @admin_required
+def donor_ai_monitor(request):
+    """SCR-60: AI gợi ý người hiến — bật/tắt, kết quả so với chấm điểm luật, tỷ lệ nhận lời thật, phiên bản, học lại."""
+    from bloodbank.services.donor_ml import monitor
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action in ("ai", "auto"):
+            key = "donor_ai_enabled" if action == "ai" else "donor_ai_auto_retrain"
+            on = request.POST.get("value") == "on"
+            label = "AI gợi ý người hiến" if action == "ai" else "Tự huấn luyện lại"
+            attempt(request, lambda: admin_service.save_setting(request.user, key, "true" if on else "false", request),
+                    f"Đã {'bật' if on else 'tắt'} {label[0].lower() + label[1:] if action == 'auto' else label}.")
+        elif action == "activate":
+            version = request.POST.get("version")
+            attempt(request, lambda: admin_service.donor_ai_activate(request.user, version, request),
+                    f"Đang dùng phiên bản {version}.")
+        elif action == "train":
+            attempt(request, lambda: admin_service.donor_ai_request_training(request.user, request),
+                    "Đã xếp lịch huấn luyện lại — tác vụ định kỳ sẽ chạy trong vài phút tới.")
+        return redirect("bloodbank:admin_donor_ai")
+    return render(request, "admin/donor_ai.html", {"s": monitor.dashboard()})
+
+
+@admin_required
 def assistant_monitor(request):
     """SCR-58: theo dõi trợ lý hỏi đáp; bật/tắt AI (ghi qua cấu hình hệ thống, có nhật ký)."""
     if request.method == "POST":

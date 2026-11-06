@@ -158,8 +158,10 @@ def mode_of(value):
     return "urgent" if value == "urgent" else "stock"
 
 
-def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
-    """Ứng viên đã xếp hạng (cao → thấp). Mỗi dòng: user_id, code, score, level, reasons, distance_km, ..."""
+def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock", rank=True):
+    """Ứng viên đã xếp hạng (cao → thấp). Mỗi dòng: user_id, code, score, level, reasons, distance_km, ...
+
+    Lọc cứng luôn bằng luật. `rank=False`: chỉ cần TẬP ứng viên (đếm, kiểm tra mã khi gửi) → bỏ bước xếp hạng AI."""
     if blood_group not in BLOOD_GROUP_VALUES:
         return []
     m = MODES[mode_of(mode)]
@@ -241,33 +243,44 @@ def suggest(hospital, blood_group, radius_km=None, now=None, mode="stock"):
         if s and s["here"]:
             reasons.append("từng hiến tại bệnh viện này")
         reasons.append(f"được gọi {recent} lần trong 90 ngày" if recent else "chưa được gọi trong 90 ngày")
-        # Điểm từng tiêu chí (nhãn, điểm đạt, tối đa) — hiện cho nhân viên xem vì sao người này được xếp hạng
-        parts = [
-            # chưa rõ vị trí nhưng cùng tỉnh/thành → 30%
-            ("Gần bệnh viện (đường đi)" if road is not None else "Gần bệnh viện",
-             m["near"] * (max(0.0, 1 - dist / m["near_full_km"]) if dist is not None else 0.3), m["near"]),
-            # chưa từng được kêu gọi → trung lập
-            ("Từng nhận lời kêu gọi", m["responsive"] * (came_back / asked if asked else 0.5), m["responsive"]),
-            ("Đến đúng hẹn", m["reliable"] * (0.5 if show_rate is None else show_rate), m["reliable"]),
-            ("Kinh nghiệm hiến", m["experience"] * min(n, 5) / 5, m["experience"]),
-            ("Nhóm máu đã xét nghiệm", m["verified"] if verified else 0, m["verified"]),
-            # chia đều lượt gọi: càng ít bị gọi trong 90 ngày càng được ưu tiên
-            ("Ít bị kêu gọi gần đây", m["rested"] * max(0.0, 1 - recent / max_90d), m["rested"]),
-            ("Từng hiến tại bệnh viện này", m["local"] if s and s["here"] else 0, m["local"]),
-        ]
+        parts = rule_parts(m, dist, road is not None, asked, came_back, show_rate, n, verified, recent, max_90d,
+                           bool(s and s["here"]))
         score = round(sum(p[1] for p in parts))
         rows.append({
             "user_id": uid, "code": donor_code(hospital, uid), "score": score,
             "level": "high" if score >= 70 else "medium" if score >= 45 else "low",
             "reasons": reasons, "verified": verified, "donations": n, "days_since": days_since,
             "distance_km": dist, "road": road is not None, "first_time": n == 0, "recent_invites": recent,
-            "asked": asked, "answered": came_back,
+            "asked": asked, "answered": came_back, "history_seen": seen,
             "parts": [{"label": label, "points": round(got), "max": top} for label, got, top in parts],
         })
     # Bằng điểm: người ít bị gọi gần đây trước (chia đều lượt gọi), rồi người gần hơn
     rows.sort(key=lambda x: (-x["score"], x["recent_invites"],
                              x["distance_km"] if x["distance_km"] is not None else 1e9, x["code"]))
+    if rank:
+        from bloodbank.services.donor_ml import predict
+
+        predict.apply(hospital, rows, mode_of(mode), now)   # AI bật + có mô hình → xếp lại theo khả năng nhận lời
     return rows
+
+
+def rule_parts(m, dist, road, asked, came_back, show_rate, n, verified, recent, max_90d, here):
+    """Điểm từng tiêu chí (nhãn, điểm đạt, tối đa) — hiện cho nhân viên xem vì sao người này được xếp hạng.
+
+    Dùng chung cho màn gợi ý và cho mốc so sánh khi huấn luyện AI (donor_ml) → hai nơi chấm cùng một công thức."""
+    return [
+        # chưa rõ vị trí nhưng cùng tỉnh/thành → 30%
+        ("Gần bệnh viện (đường đi)" if road else "Gần bệnh viện",
+         m["near"] * (max(0.0, 1 - dist / m["near_full_km"]) if dist is not None else 0.3), m["near"]),
+        # chưa từng được kêu gọi → trung lập
+        ("Từng nhận lời kêu gọi", m["responsive"] * (came_back / asked if asked else 0.5), m["responsive"]),
+        ("Đến đúng hẹn", m["reliable"] * (0.5 if show_rate is None else show_rate), m["reliable"]),
+        ("Kinh nghiệm hiến", m["experience"] * min(n, 5) / 5, m["experience"]),
+        ("Nhóm máu đã xét nghiệm", m["verified"] if verified else 0, m["verified"]),
+        # chia đều lượt gọi: càng ít bị gọi trong 90 ngày càng được ưu tiên
+        ("Ít bị kêu gọi gần đây", m["rested"] * max(0.0, 1 - recent / max_90d), m["rested"]),
+        ("Từng hiến tại bệnh viện này", m["local"] if here else 0, m["local"]),
+    ]
 
 
 def response_stats(hospital, now=None):

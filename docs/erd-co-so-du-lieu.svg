@@ -1,0 +1,1147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3010" height="1470" viewBox="0 0 3010 1470" font-family="Arial, Helvetica, sans-serif">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<defs><g id="pk"><circle cx="5" cy="5" r="4" fill="#F2B705" stroke="#8A6500" stroke-width="1"/><circle cx="5" cy="5" r="1.4" fill="#FFF"/><rect x="7.5" y="4" width="8" height="2.2" fill="#F2B705" stroke="#8A6500" stroke-width=".7"/><rect x="12" y="6" width="1.6" height="3" fill="#8A6500"/><rect x="14.2" y="6" width="1.6" height="2.2" fill="#8A6500"/></g><g id="fk"><circle cx="5" cy="5" r="4" fill="#4CAF50" stroke="#1E6B22" stroke-width="1"/><circle cx="5" cy="5" r="1.4" fill="#FFF"/><rect x="7.5" y="4" width="8" height="2.2" fill="#2E86C1" stroke="#1B4F72" stroke-width=".7"/><path d="M12 7 l3.5 2 l-3.5 2 z" fill="#2E86C1"/></g><g id="col"><rect x="1" y="0" width="13" height="11" fill="#D6EAF8" stroke="#2E86C1" stroke-width="1"/><rect x="1" y="0" width="13" height="3" fill="#2E86C1"/><line x1="5.5" y1="3" x2="5.5" y2="11" stroke="#2E86C1" stroke-width=".8"/><line x1="1" y1="7" x2="14" y2="7" stroke="#2E86C1" stroke-width=".8"/></g></defs>
+<polyline points="70,610 40,610 40,390 70,390" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M70 604 L58 610 L70 616 M70 610 L58 610 M55 604 L55 616" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="49" cy="610" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M63 384 L63 396 M58 384 L58 396" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2650,390 2620,390 2620,110 2650,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2650 384 L2638 390 L2650 396 M2650 390 L2638 390 M2635 384 L2635 396" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2629" cy="390" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 104 L2643 116 M2638 104 L2638 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="930,370 900,370 900,630 930,630" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M930 364 L918 370 L930 376 M930 370 L918 370 M915 364 L915 376" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="909" cy="370" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M923 624 L923 636 M918 624 L918 636" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2940,730 2970,730 2970,370 2940,370" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2940 724 L2952 730 L2940 736 M2940 730 L2952 730 M2955 724 L2955 736" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2961" cy="730" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2947 364 L2947 376 M2952 364 L2952 376" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2220,450 2190,450 2190,110 2220,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2220 444 L2208 450 L2220 456 M2220 450 L2208 450 M2205 444 L2205 456" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2199" cy="450" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2213 104 L2213 116 M2208 104 L2208 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2650,1050 2620,1050 2620,650 2650,650" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2650 1044 L2638 1050 L2650 1056 M2650 1050 L2638 1050 M2635 1044 L2635 1056" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2629" cy="1050" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 644 L2643 656 M2638 644 L2638 656" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1220,1090 1250,1090 1250,630 1220,630" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1220 1084 L1232 1090 L1220 1096 M1220 1090 L1232 1090 M1235 1084 L1235 1096" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1241" cy="1090" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1227 624 L1227 636 M1232 624 L1232 636" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1360,610 1330,610 1330,150 1360,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1360 604 L1348 610 L1360 616 M1360 610 L1348 610 M1345 604 L1345 616" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1339" cy="610" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1353 144 L1353 156 M1348 144 L1348 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,870 2190,870 2190,670 2220,670" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 864 L2092 870 L2080 876 M2080 870 L2092 870 M2095 864 L2095 876" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="870" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2213 664 L2213 676 M2208 664 L2208 676" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2510,850 2610,850 2610,650 2650,650" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2510 844 L2522 850 L2510 856 M2510 850 L2522 850 M2525 844 L2525 856" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2531" cy="850" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 644 L2643 656 M2638 644 L2638 656" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1220,130 1330,130 1330,150 1360,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1220 124 L1232 130 L1220 136 M1220 130 L1232 130 M1235 124 L1235 136" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1241" cy="130" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1353 144 L1353 156 M1348 144 L1348 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1790,230 1680,230 1680,150 1650,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1790 224 L1778 230 L1790 236 M1790 230 L1778 230 M1775 224 L1775 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1769" cy="230" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 144 L1657 156 M1662 144 L1662 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="500,730 470,730 470,230 500,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M500 724 L488 730 L500 736 M500 730 L488 730 M485 724 L485 736" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="479" cy="730" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M493 224 L493 236 M488 224 L488 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1790,890 1680,890 1680,550 1650,550" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1790 884 L1778 890 L1790 896 M1790 890 L1778 890 M1775 884 L1775 896" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1769" cy="890" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 544 L1657 556 M1662 544 L1662 556" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,850 2110,850 2110,110 2080,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 844 L2092 850 L2080 856 M2080 850 L2092 850 M2095 844 L2095 856" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="850" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2087 104 L2087 116 M2092 104 L2092 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="360,130 820,130 820,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M360 124 L372 130 L360 136 M360 130 L372 130 M375 124 L375 136" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="381" cy="130" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="930,150 830,150 830,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M930 144 L918 150 L930 156 M930 150 L918 150 M915 144 L915 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="909" cy="150" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="930,390 820,390 820,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M930 384 L918 390 L930 396 M930 390 L918 390 M915 384 L915 396" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="909" cy="390" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="360,410 460,410 460,230 500,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M360 404 L372 410 L360 416 M360 410 L372 410 M375 404 L375 416" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="381" cy="410" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M493 224 L493 236 M488 224 L488 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1360,590 1250,590 1250,350 1220,350" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1360 584 L1348 590 L1360 596 M1360 590 L1348 590 M1345 584 L1345 596" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1339" cy="590" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1227 344 L1227 356 M1232 344 L1232 356" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,690 2180,690 2180,430 2220,430" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 684 L2092 690 L2080 696 M2080 690 L2092 690 M2095 684 L2095 696" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="690" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2213 424 L2213 436 M2208 424 L2208 436" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2510,170 2610,170 2610,370 2650,370" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2510 164 L2522 170 L2510 176 M2510 170 L2522 170 M2525 164 L2525 176" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2531" cy="170" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 364 L2643 376 M2638 364 L2638 376" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2510,730 2600,730 2600,380 2620,380 2620,370 2650,370" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2510 724 L2522 730 L2510 736 M2510 730 L2522 730 M2525 724 L2525 736" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2531" cy="730" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 364 L2643 376 M2638 364 L2638 376" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,270 2100,270 2100,50 2970,50 2970,110 2940,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 264 L2092 270 L2080 276 M2080 270 L2092 270 M2095 264 L2095 276" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="270" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2947 104 L2947 116 M2952 104 L2952 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2220,130 2200,130 2200,40 1680,40 1680,150 1650,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2220 124 L2208 130 L2220 136 M2220 130 L2208 130 M2205 124 L2205 136" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2199" cy="130" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 144 L1657 156 M1662 144 L1662 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1220,650 1240,650 1240,150 1360,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1220 644 L1232 650 L1220 656 M1220 650 L1232 650 M1235 644 L1235 656" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1241" cy="650" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1353 144 L1353 156 M1348 144 L1348 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,670 2170,670 2170,110 2220,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 664 L2092 670 L2080 676 M2080 670 L2092 670 M2095 664 L2095 676" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="670" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2213 104 L2213 116 M2208 104 L2208 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2220,870 2200,870 2200,560 1760,560 1760,110 1790,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2220 864 L2208 870 L2220 876 M2220 870 L2208 870 M2205 864 L2205 876" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2199" cy="870" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1783 104 L1783 116 M1778 104 L1778 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="360,890 380,890 380,220 470,220 470,230 500,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M360 884 L372 890 L360 896 M360 890 L372 890 M375 884 L375 896" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="381" cy="890" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M493 224 L493 236 M488 224 L488 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2510,1090 2630,1090 2630,940 2980,940 2980,370 2940,370" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2510 1084 L2522 1090 L2510 1096 M2510 1090 L2522 1090 M2525 1084 L2525 1096" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2531" cy="1090" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2947 364 L2947 376 M2952 364 L2952 376" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1360,570 910,570 910,240 820,240 820,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1360 564 L1348 570 L1360 576 M1360 570 L1348 570 M1345 564 L1345 576" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1339" cy="570" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="930,1110 480,1110 480,240 470,240 470,230 500,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M930 1104 L918 1110 L930 1116 M930 1110 L918 1110 M915 1104 L915 1116" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="909" cy="1110" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M493 224 L493 236 M488 224 L488 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,830 2100,830 2100,970 2610,970 2610,1030 2650,1030" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 824 L2092 830 L2080 836 M2080 830 L2092 830 M2095 824 L2095 836" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="830" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 1024 L2643 1036 M2638 1024 L2638 1036" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1220,1050 1690,1050 1690,150 1650,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1220 1044 L1232 1050 L1220 1056 M1220 1050 L1232 1050 M1235 1044 L1235 1056" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1241" cy="1050" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 144 L1657 156 M1662 144 L1662 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2510,690 2530,690 2530,580 1700,580 1700,140 1680,140 1680,150 1650,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2510 684 L2522 690 L2510 696 M2510 690 L2522 690 M2525 684 L2525 696" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2531" cy="690" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 144 L1657 156 M1662 144 L1662 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1790,490 1340,490 1340,630 1220,630" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1790 484 L1778 490 L1790 496 M1790 490 L1778 490 M1775 484 L1775 496" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1769" cy="490" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1227 624 L1227 636 M1232 624 L1232 636" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2080,470 2190,470 2190,610 2620,610 2620,650 2650,650" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2080 464 L2092 470 L2080 476 M2080 470 L2092 470 M2095 464 L2095 476" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2101" cy="470" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 644 L2643 656 M2638 644 L2638 656" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1790,150 1770,150 1770,50 810,50 810,220 820,220 820,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1790 144 L1778 150 L1790 156 M1790 150 L1778 150 M1775 144 L1775 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1769" cy="150" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="790,750 890,750 890,260 1320,260 1320,160 1330,160 1330,150 1360,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M790 744 L802 750 L790 756 M790 750 L802 750 M805 744 L805 756" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="811" cy="750" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1353 144 L1353 156 M1348 144 L1348 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="360,1290 450,1290 450,210 470,210 470,230 500,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M360 1284 L372 1290 L360 1296 M360 1290 L372 1290 M375 1284 L375 1296" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="381" cy="1290" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M493 224 L493 236 M488 224 L488 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1790,930 1670,930 1670,460 1260,460 1260,270 830,270 830,240 820,240 820,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1790 924 L1778 930 L1790 936 M1790 930 L1778 930 M1775 924 L1775 936" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1769" cy="930" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="1650,670 1770,670 1770,590 2590,590 2590,110 2650,110" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M1650 664 L1662 670 L1650 676 M1650 670 L1662 670 M1665 664 L1665 676" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="1671" cy="670" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M2643 104 L2643 116 M2638 104 L2638 116" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2220,1050 1710,1050 1710,160 1680,160 1680,150 1650,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2220 1044 L2208 1050 L2220 1056 M2220 1050 L2208 1050 M2205 1044 L2205 1056" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2199" cy="1050" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 144 L1657 156 M1662 144 L1662 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2650,690 2630,690 2630,30 1340,30 1340,140 1330,140 1330,150 1360,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2650 684 L2638 690 L2650 696 M2650 690 L2638 690 M2635 684 L2635 696" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2629" cy="690" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1353 144 L1353 156 M1348 144 L1348 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2650,1070 2530,1070 2530,940 2120,940 2120,570 1720,570 1720,130 1690,130 1690,140 1680,140 1680,150 1650,150" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2650 1064 L2638 1070 L2650 1076 M2650 1070 L2638 1070 M2635 1064 L2635 1076" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2629" cy="1070" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M1657 144 L1657 156 M1662 144 L1662 156" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2650,850 2630,850 2630,930 2540,930 2540,1280 440,1280 440,240 470,240 470,230 500,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2650 844 L2638 850 L2650 856 M2650 850 L2638 850 M2635 844 L2635 856" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2629" cy="850" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M493 224 L493 236 M488 224 L488 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<polyline points="2650,1210 2550,1210 2550,1290 840,1290 840,220 820,220 820,230 790,230" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/>
+<path d="M2650 1204 L2638 1210 L2650 1216 M2650 1210 L2638 1210 M2635 1204 L2635 1216" stroke="#555" stroke-width="1.2" fill="none"/>
+<circle cx="2629" cy="1210" r="3.2" fill="#FFF" stroke="#555" stroke-width="1.2"/>
+<path d="M797 224 L797 236 M802 224 L802 236" stroke="#555" stroke-width="1.2" fill="none"/>
+<g><rect x="73" y="73" width="290" height="210" fill="#000" opacity=".12"/>
+<rect x="70" y="70" width="290" height="210" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="70" y="70" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="215.0" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">auth_tokens</text>
+<use href="#pk" x="77" y="105"/>
+<text x="100" y="114.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="352" y="114.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="77" y="125"/>
+<text x="100" y="134.5" font-size="12.5" fill="#111">user_id</text>
+<text x="352" y="134.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="77" y="145"/>
+<text x="100" y="154.5" font-size="12.5" fill="#111">purpose</text>
+<text x="352" y="154.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(20)</text>
+<use href="#col" x="77" y="165"/>
+<text x="100" y="174.5" font-size="12.5" fill="#111">token_hash</text>
+<text x="352" y="174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(64)</text>
+<use href="#col" x="77" y="185"/>
+<text x="100" y="194.5" font-size="12.5" fill="#111">expires_at</text>
+<text x="352" y="194.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="77" y="205"/>
+<text x="100" y="214.5" font-size="12.5" fill="#111">used_at</text>
+<text x="352" y="214.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="77" y="225"/>
+<text x="100" y="234.5" font-size="12.5" fill="#111">revoked_at</text>
+<text x="352" y="234.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="77" y="245"/>
+<text x="100" y="254.5" font-size="12.5" fill="#111">created_ip</text>
+<text x="352" y="254.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(45)</text>
+<use href="#col" x="77" y="265"/>
+<text x="100" y="274.5" font-size="12.5" fill="#111">created_at</text>
+<text x="352" y="274.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="73" y="353" width="290" height="130" fill="#000" opacity=".12"/>
+<rect x="70" y="350" width="290" height="130" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="70" y="350" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="215.0" y="370" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">chat_conversations</text>
+<use href="#pk" x="77" y="385"/>
+<text x="100" y="394.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="352" y="394.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="77" y="405"/>
+<text x="100" y="414.5" font-size="12.5" fill="#111">user_id</text>
+<text x="352" y="414.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="77" y="425"/>
+<text x="100" y="434.5" font-size="12.5" fill="#111">title</text>
+<text x="352" y="434.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(120)</text>
+<use href="#col" x="77" y="445"/>
+<text x="100" y="454.5" font-size="12.5" fill="#111">created_at</text>
+<text x="352" y="454.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="77" y="465"/>
+<text x="100" y="474.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="352" y="474.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="73" y="553" width="290" height="210" fill="#000" opacity=".12"/>
+<rect x="70" y="550" width="290" height="210" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="70" y="550" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="215.0" y="570" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">chat_messages</text>
+<use href="#pk" x="77" y="585"/>
+<text x="100" y="594.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="352" y="594.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="77" y="605"/>
+<text x="100" y="614.5" font-size="12.5" fill="#111">conversation_id</text>
+<text x="352" y="614.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="77" y="625"/>
+<text x="100" y="634.5" font-size="12.5" fill="#111">role</text>
+<text x="352" y="634.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="77" y="645"/>
+<text x="100" y="654.5" font-size="12.5" fill="#111">text</text>
+<text x="352" y="654.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#col" x="77" y="665"/>
+<text x="100" y="674.5" font-size="12.5" fill="#111">cards</text>
+<text x="352" y="674.5" text-anchor="end" font-size="10.5" fill="#555">JSONB</text>
+<use href="#col" x="77" y="685"/>
+<text x="100" y="694.5" font-size="12.5" fill="#111">links</text>
+<text x="352" y="694.5" text-anchor="end" font-size="10.5" fill="#555">JSONB</text>
+<use href="#col" x="77" y="705"/>
+<text x="100" y="714.5" font-size="12.5" fill="#111">source</text>
+<text x="352" y="714.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(300)</text>
+<use href="#col" x="77" y="725"/>
+<text x="100" y="734.5" font-size="12.5" fill="#111">mode</text>
+<text x="352" y="734.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="77" y="745"/>
+<text x="100" y="754.5" font-size="12.5" fill="#111">created_at</text>
+<text x="352" y="754.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="73" y="833" width="290" height="290" fill="#000" opacity=".12"/>
+<rect x="70" y="830" width="290" height="290" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="70" y="830" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="215.0" y="850" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">notifications</text>
+<use href="#pk" x="77" y="865"/>
+<text x="100" y="874.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="352" y="874.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="77" y="885"/>
+<text x="100" y="894.5" font-size="12.5" fill="#111">user_id</text>
+<text x="352" y="894.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="77" y="905"/>
+<text x="100" y="914.5" font-size="12.5" fill="#111">type</text>
+<text x="352" y="914.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(50)</text>
+<use href="#col" x="77" y="925"/>
+<text x="100" y="934.5" font-size="12.5" fill="#111">title</text>
+<text x="352" y="934.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(200)</text>
+<use href="#col" x="77" y="945"/>
+<text x="100" y="954.5" font-size="12.5" fill="#111">body</text>
+<text x="352" y="954.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(1000)</text>
+<use href="#col" x="77" y="965"/>
+<text x="100" y="974.5" font-size="12.5" fill="#111">entity_type</text>
+<text x="352" y="974.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(50)</text>
+<use href="#col" x="77" y="985"/>
+<text x="100" y="994.5" font-size="12.5" fill="#111">entity_id</text>
+<text x="352" y="994.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="77" y="1005"/>
+<text x="100" y="1014.5" font-size="12.5" fill="#111">channel</text>
+<text x="352" y="1014.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="77" y="1025"/>
+<text x="100" y="1034.5" font-size="12.5" fill="#111">delivery_status</text>
+<text x="352" y="1034.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="77" y="1045"/>
+<text x="100" y="1054.5" font-size="12.5" fill="#111">attempts</text>
+<text x="352" y="1054.5" text-anchor="end" font-size="10.5" fill="#555">SMALLINT</text>
+<use href="#col" x="77" y="1065"/>
+<text x="100" y="1074.5" font-size="12.5" fill="#111">sent_at</text>
+<text x="352" y="1074.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="77" y="1085"/>
+<text x="100" y="1094.5" font-size="12.5" fill="#111">read_at</text>
+<text x="352" y="1094.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="77" y="1105"/>
+<text x="100" y="1114.5" font-size="12.5" fill="#111">created_at</text>
+<text x="352" y="1114.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="73" y="1193" width="290" height="130" fill="#000" opacity=".12"/>
+<rect x="70" y="1190" width="290" height="130" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="70" y="1190" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="215.0" y="1210" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">system_settings</text>
+<use href="#pk" x="77" y="1225"/>
+<text x="100" y="1234.5" font-size="12.5" fill="#111" font-weight="bold">setting_key</text>
+<text x="352" y="1234.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="77" y="1245"/>
+<text x="100" y="1254.5" font-size="12.5" fill="#111">setting_value</text>
+<text x="352" y="1254.5" text-anchor="end" font-size="10.5" fill="#555">JSONB</text>
+<use href="#col" x="77" y="1265"/>
+<text x="100" y="1274.5" font-size="12.5" fill="#111">description</text>
+<text x="352" y="1274.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#fk" x="77" y="1285"/>
+<text x="100" y="1294.5" font-size="12.5" fill="#111">updated_by</text>
+<text x="352" y="1294.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="77" y="1305"/>
+<text x="100" y="1314.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="352" y="1314.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="503" y="193" width="290" height="410" fill="#000" opacity=".12"/>
+<rect x="500" y="190" width="290" height="410" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="500" y="190" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="645.0" y="210" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">users</text>
+<use href="#pk" x="507" y="225"/>
+<text x="530" y="234.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="782" y="234.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="507" y="245"/>
+<text x="530" y="254.5" font-size="12.5" fill="#111">email</text>
+<text x="782" y="254.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(255)</text>
+<use href="#col" x="507" y="265"/>
+<text x="530" y="274.5" font-size="12.5" fill="#111">phone</text>
+<text x="782" y="274.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(20)</text>
+<use href="#col" x="507" y="285"/>
+<text x="530" y="294.5" font-size="12.5" fill="#111">password_hash</text>
+<text x="782" y="294.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(255)</text>
+<use href="#col" x="507" y="305"/>
+<text x="530" y="314.5" font-size="12.5" fill="#111">full_name</text>
+<text x="782" y="314.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(150)</text>
+<use href="#col" x="507" y="325"/>
+<text x="530" y="334.5" font-size="12.5" fill="#111">role</text>
+<text x="782" y="334.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="507" y="345"/>
+<text x="530" y="354.5" font-size="12.5" fill="#111">status</text>
+<text x="782" y="354.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="507" y="365"/>
+<text x="530" y="374.5" font-size="12.5" fill="#111">date_of_birth</text>
+<text x="782" y="374.5" text-anchor="end" font-size="10.5" fill="#555">DATE</text>
+<use href="#col" x="507" y="385"/>
+<text x="530" y="394.5" font-size="12.5" fill="#111">gender</text>
+<text x="782" y="394.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="507" y="405"/>
+<text x="530" y="414.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="782" y="414.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#col" x="507" y="425"/>
+<text x="530" y="434.5" font-size="12.5" fill="#111">address</text>
+<text x="782" y="434.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="507" y="445"/>
+<text x="530" y="454.5" font-size="12.5" fill="#111">province</text>
+<text x="782" y="454.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="507" y="465"/>
+<text x="530" y="474.5" font-size="12.5" fill="#111">ward</text>
+<text x="782" y="474.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="507" y="485"/>
+<text x="530" y="494.5" font-size="12.5" fill="#111">email_verified_at</text>
+<text x="782" y="494.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="507" y="505"/>
+<text x="530" y="514.5" font-size="12.5" fill="#111">email_reminders</text>
+<text x="782" y="514.5" text-anchor="end" font-size="10.5" fill="#555">BOOLEAN</text>
+<use href="#col" x="507" y="525"/>
+<text x="530" y="534.5" font-size="12.5" fill="#111">terms_accepted_at</text>
+<text x="782" y="534.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="507" y="545"/>
+<text x="530" y="554.5" font-size="12.5" fill="#111">last_login_at</text>
+<text x="782" y="554.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="507" y="565"/>
+<text x="530" y="574.5" font-size="12.5" fill="#111">created_at</text>
+<text x="782" y="574.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="507" y="585"/>
+<text x="530" y="594.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="782" y="594.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="503" y="673" width="290" height="250" fill="#000" opacity=".12"/>
+<rect x="500" y="670" width="290" height="250" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="500" y="670" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="645.0" y="690" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">audit_logs</text>
+<use href="#pk" x="507" y="705"/>
+<text x="530" y="714.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="782" y="714.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="507" y="725"/>
+<text x="530" y="734.5" font-size="12.5" fill="#111">actor_id</text>
+<text x="782" y="734.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="507" y="745"/>
+<text x="530" y="754.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="782" y="754.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="507" y="765"/>
+<text x="530" y="774.5" font-size="12.5" fill="#111">entity_type</text>
+<text x="782" y="774.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(50)</text>
+<use href="#col" x="507" y="785"/>
+<text x="530" y="794.5" font-size="12.5" fill="#111">entity_id</text>
+<text x="782" y="794.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="507" y="805"/>
+<text x="530" y="814.5" font-size="12.5" fill="#111">action</text>
+<text x="782" y="814.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(50)</text>
+<use href="#col" x="507" y="825"/>
+<text x="530" y="834.5" font-size="12.5" fill="#111">old_values</text>
+<text x="782" y="834.5" text-anchor="end" font-size="10.5" fill="#555">JSONB</text>
+<use href="#col" x="507" y="845"/>
+<text x="530" y="854.5" font-size="12.5" fill="#111">new_values</text>
+<text x="782" y="854.5" text-anchor="end" font-size="10.5" fill="#555">JSONB</text>
+<use href="#col" x="507" y="865"/>
+<text x="530" y="874.5" font-size="12.5" fill="#111">request_id</text>
+<text x="782" y="874.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(64)</text>
+<use href="#col" x="507" y="885"/>
+<text x="530" y="894.5" font-size="12.5" fill="#111">ip_address</text>
+<text x="782" y="894.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(45)</text>
+<use href="#col" x="507" y="905"/>
+<text x="530" y="914.5" font-size="12.5" fill="#111">created_at</text>
+<text x="782" y="914.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="933" y="73" width="290" height="170" fill="#000" opacity=".12"/>
+<rect x="930" y="70" width="290" height="170" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="930" y="70" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1075.0" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">staffs</text>
+<use href="#pk" x="937" y="105"/>
+<text x="960" y="114.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="1212" y="114.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="125"/>
+<text x="960" y="134.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="1212" y="134.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="145"/>
+<text x="960" y="154.5" font-size="12.5" fill="#111">user_id</text>
+<text x="1212" y="154.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="937" y="165"/>
+<text x="960" y="174.5" font-size="12.5" fill="#111">staff_role</text>
+<text x="1212" y="174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(30)</text>
+<use href="#col" x="937" y="185"/>
+<text x="960" y="194.5" font-size="12.5" fill="#111">is_active</text>
+<text x="1212" y="194.5" text-anchor="end" font-size="10.5" fill="#555">BOOLEAN</text>
+<use href="#col" x="937" y="205"/>
+<text x="960" y="214.5" font-size="12.5" fill="#111">created_at</text>
+<text x="1212" y="214.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="937" y="225"/>
+<text x="960" y="234.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="1212" y="234.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="933" y="313" width="290" height="210" fill="#000" opacity=".12"/>
+<rect x="930" y="310" width="290" height="210" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="930" y="310" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1075.0" y="330" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">registrations</text>
+<use href="#pk" x="937" y="345"/>
+<text x="960" y="354.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="1212" y="354.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="365"/>
+<text x="960" y="374.5" font-size="12.5" fill="#111">campaign_id</text>
+<text x="1212" y="374.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="385"/>
+<text x="960" y="394.5" font-size="12.5" fill="#111">donor_id</text>
+<text x="1212" y="394.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="937" y="405"/>
+<text x="960" y="414.5" font-size="12.5" fill="#111">donation_type</text>
+<text x="1212" y="414.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(15)</text>
+<use href="#col" x="937" y="425"/>
+<text x="960" y="434.5" font-size="12.5" fill="#111">status</text>
+<text x="1212" y="434.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(15)</text>
+<use href="#col" x="937" y="445"/>
+<text x="960" y="454.5" font-size="12.5" fill="#111">source</text>
+<text x="1212" y="454.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="937" y="465"/>
+<text x="960" y="474.5" font-size="12.5" fill="#111">note</text>
+<text x="1212" y="474.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#col" x="937" y="485"/>
+<text x="960" y="494.5" font-size="12.5" fill="#111">registered_at</text>
+<text x="1212" y="494.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="937" y="505"/>
+<text x="960" y="514.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="1212" y="514.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="933" y="593" width="290" height="330" fill="#000" opacity=".12"/>
+<rect x="930" y="590" width="290" height="330" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="930" y="590" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1075.0" y="610" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">campaigns</text>
+<use href="#pk" x="937" y="625"/>
+<text x="960" y="634.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="1212" y="634.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="645"/>
+<text x="960" y="654.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="1212" y="654.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="937" y="665"/>
+<text x="960" y="674.5" font-size="12.5" fill="#111">name</text>
+<text x="1212" y="674.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(255)</text>
+<use href="#col" x="937" y="685"/>
+<text x="960" y="694.5" font-size="12.5" fill="#111">description</text>
+<text x="1212" y="694.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#col" x="937" y="705"/>
+<text x="960" y="714.5" font-size="12.5" fill="#111">start_time</text>
+<text x="1212" y="714.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="937" y="725"/>
+<text x="960" y="734.5" font-size="12.5" fill="#111">end_time</text>
+<text x="1212" y="734.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="937" y="745"/>
+<text x="960" y="754.5" font-size="12.5" fill="#111">location_name</text>
+<text x="1212" y="754.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(255)</text>
+<use href="#col" x="937" y="765"/>
+<text x="960" y="774.5" font-size="12.5" fill="#111">address</text>
+<text x="1212" y="774.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="937" y="785"/>
+<text x="960" y="794.5" font-size="12.5" fill="#111">province</text>
+<text x="1212" y="794.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="937" y="805"/>
+<text x="960" y="814.5" font-size="12.5" fill="#111">latitude</text>
+<text x="1212" y="814.5" text-anchor="end" font-size="10.5" fill="#555">DECIMAL(9,6)</text>
+<use href="#col" x="937" y="825"/>
+<text x="960" y="834.5" font-size="12.5" fill="#111">longitude</text>
+<text x="1212" y="834.5" text-anchor="end" font-size="10.5" fill="#555">DECIMAL(9,6)</text>
+<use href="#col" x="937" y="845"/>
+<text x="960" y="854.5" font-size="12.5" fill="#111">status</text>
+<text x="1212" y="854.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="937" y="865"/>
+<text x="960" y="874.5" font-size="12.5" fill="#111">cancel_reason</text>
+<text x="1212" y="874.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="937" y="885"/>
+<text x="960" y="894.5" font-size="12.5" fill="#111">created_at</text>
+<text x="1212" y="894.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="937" y="905"/>
+<text x="960" y="914.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="1212" y="914.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="933" y="993" width="290" height="170" fill="#000" opacity=".12"/>
+<rect x="930" y="990" width="290" height="170" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="930" y="990" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1075.0" y="1010" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">donor_callouts</text>
+<use href="#pk" x="937" y="1025"/>
+<text x="960" y="1034.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="1212" y="1034.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="1045"/>
+<text x="960" y="1054.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="1212" y="1054.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="937" y="1065"/>
+<text x="960" y="1074.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="1212" y="1074.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#fk" x="937" y="1085"/>
+<text x="960" y="1094.5" font-size="12.5" fill="#111">campaign_id</text>
+<text x="1212" y="1094.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="937" y="1105"/>
+<text x="960" y="1114.5" font-size="12.5" fill="#111">created_by</text>
+<text x="1212" y="1114.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="937" y="1125"/>
+<text x="960" y="1134.5" font-size="12.5" fill="#111">recipient_count</text>
+<text x="1212" y="1134.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="937" y="1145"/>
+<text x="960" y="1154.5" font-size="12.5" fill="#111">created_at</text>
+<text x="1212" y="1154.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="1363" y="113" width="290" height="330" fill="#000" opacity=".12"/>
+<rect x="1360" y="110" width="290" height="330" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="1360" y="110" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1505.0" y="130" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">hospitals</text>
+<use href="#pk" x="1367" y="145"/>
+<text x="1390" y="154.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="1642" y="154.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1367" y="165"/>
+<text x="1390" y="174.5" font-size="12.5" fill="#111">code</text>
+<text x="1642" y="174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(30)</text>
+<use href="#col" x="1367" y="185"/>
+<text x="1390" y="194.5" font-size="12.5" fill="#111">name</text>
+<text x="1642" y="194.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(255)</text>
+<use href="#col" x="1367" y="205"/>
+<text x="1390" y="214.5" font-size="12.5" fill="#111">address</text>
+<text x="1642" y="214.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="1367" y="225"/>
+<text x="1390" y="234.5" font-size="12.5" fill="#111">province</text>
+<text x="1642" y="234.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="1367" y="245"/>
+<text x="1390" y="254.5" font-size="12.5" fill="#111">district</text>
+<text x="1642" y="254.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="1367" y="265"/>
+<text x="1390" y="274.5" font-size="12.5" fill="#111">ward</text>
+<text x="1642" y="274.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#col" x="1367" y="285"/>
+<text x="1390" y="294.5" font-size="12.5" fill="#111">latitude</text>
+<text x="1642" y="294.5" text-anchor="end" font-size="10.5" fill="#555">DECIMAL(9,6)</text>
+<use href="#col" x="1367" y="305"/>
+<text x="1390" y="314.5" font-size="12.5" fill="#111">longitude</text>
+<text x="1642" y="314.5" text-anchor="end" font-size="10.5" fill="#555">DECIMAL(9,6)</text>
+<use href="#col" x="1367" y="325"/>
+<text x="1390" y="334.5" font-size="12.5" fill="#111">phone</text>
+<text x="1642" y="334.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(20)</text>
+<use href="#col" x="1367" y="345"/>
+<text x="1390" y="354.5" font-size="12.5" fill="#111">email</text>
+<text x="1642" y="354.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(255)</text>
+<use href="#col" x="1367" y="365"/>
+<text x="1390" y="374.5" font-size="12.5" fill="#111">status</text>
+<text x="1642" y="374.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="1367" y="385"/>
+<text x="1390" y="394.5" font-size="12.5" fill="#111">reject_reason</text>
+<text x="1642" y="394.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="1367" y="405"/>
+<text x="1390" y="414.5" font-size="12.5" fill="#111">created_at</text>
+<text x="1642" y="414.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1367" y="425"/>
+<text x="1390" y="434.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="1642" y="434.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="1363" y="513" width="290" height="510" fill="#000" opacity=".12"/>
+<rect x="1360" y="510" width="290" height="510" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="1360" y="510" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1505.0" y="530" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">donations</text>
+<use href="#pk" x="1367" y="545"/>
+<text x="1390" y="554.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="1642" y="554.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1367" y="565"/>
+<text x="1390" y="574.5" font-size="12.5" fill="#111">donor_id</text>
+<text x="1642" y="574.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1367" y="585"/>
+<text x="1390" y="594.5" font-size="12.5" fill="#111">registration_id</text>
+<text x="1642" y="594.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1367" y="605"/>
+<text x="1390" y="614.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="1642" y="614.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1367" y="625"/>
+<text x="1390" y="634.5" font-size="12.5" fill="#111">donation_type</text>
+<text x="1642" y="634.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(15)</text>
+<use href="#col" x="1367" y="645"/>
+<text x="1390" y="654.5" font-size="12.5" fill="#111">volume_ml</text>
+<text x="1642" y="654.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#fk" x="1367" y="665"/>
+<text x="1390" y="674.5" font-size="12.5" fill="#111">component_product_id</text>
+<text x="1642" y="674.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="1367" y="685"/>
+<text x="1390" y="694.5" font-size="12.5" fill="#111">component_quantity</text>
+<text x="1642" y="694.5" text-anchor="end" font-size="10.5" fill="#555">DECIMAL(10,2)</text>
+<use href="#col" x="1367" y="705"/>
+<text x="1390" y="714.5" font-size="12.5" fill="#111">component_unit</text>
+<text x="1642" y="714.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(5)</text>
+<use href="#col" x="1367" y="725"/>
+<text x="1390" y="734.5" font-size="12.5" fill="#111">donated_at</text>
+<text x="1642" y="734.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1367" y="745"/>
+<text x="1390" y="754.5" font-size="12.5" fill="#111">status</text>
+<text x="1642" y="754.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#fk" x="1367" y="765"/>
+<text x="1390" y="774.5" font-size="12.5" fill="#111">confirmed_by</text>
+<text x="1642" y="774.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1367" y="785"/>
+<text x="1390" y="794.5" font-size="12.5" fill="#111">confirmed_at</text>
+<text x="1642" y="794.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1367" y="805"/>
+<text x="1390" y="814.5" font-size="12.5" fill="#111">void_reason</text>
+<text x="1642" y="814.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#fk" x="1367" y="825"/>
+<text x="1390" y="834.5" font-size="12.5" fill="#111">voided_by</text>
+<text x="1642" y="834.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1367" y="845"/>
+<text x="1390" y="854.5" font-size="12.5" fill="#111">voided_at</text>
+<text x="1642" y="854.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1367" y="865"/>
+<text x="1390" y="874.5" font-size="12.5" fill="#111">note</text>
+<text x="1642" y="874.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#col" x="1367" y="885"/>
+<text x="1390" y="894.5" font-size="12.5" fill="#111">lab_status</text>
+<text x="1642" y="894.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="1367" y="905"/>
+<text x="1390" y="914.5" font-size="12.5" fill="#111">lab_blood_group</text>
+<text x="1642" y="914.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#col" x="1367" y="925"/>
+<text x="1390" y="934.5" font-size="12.5" fill="#111">lab_note</text>
+<text x="1642" y="934.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#fk" x="1367" y="945"/>
+<text x="1390" y="954.5" font-size="12.5" fill="#111">lab_checked_by</text>
+<text x="1642" y="954.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1367" y="965"/>
+<text x="1390" y="974.5" font-size="12.5" fill="#111">lab_checked_at</text>
+<text x="1642" y="974.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1367" y="985"/>
+<text x="1390" y="994.5" font-size="12.5" fill="#111">created_at</text>
+<text x="1642" y="994.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1367" y="1005"/>
+<text x="1390" y="1014.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="1642" y="1014.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="1793" y="73" width="290" height="470" fill="#000" opacity=".12"/>
+<rect x="1790" y="70" width="290" height="470" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="1790" y="70" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1935.0" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">patient_requests</text>
+<use href="#pk" x="1797" y="105"/>
+<text x="1820" y="114.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2072" y="114.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="125"/>
+<text x="1820" y="134.5" font-size="12.5" fill="#111">request_code</text>
+<text x="2072" y="134.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(30)</text>
+<use href="#fk" x="1797" y="145"/>
+<text x="1820" y="154.5" font-size="12.5" fill="#111">requester_id</text>
+<text x="2072" y="154.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="165"/>
+<text x="1820" y="174.5" font-size="12.5" fill="#111">contact_name</text>
+<text x="2072" y="174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(150)</text>
+<use href="#col" x="1797" y="185"/>
+<text x="1820" y="194.5" font-size="12.5" fill="#111">contact_phone</text>
+<text x="2072" y="194.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(20)</text>
+<use href="#col" x="1797" y="205"/>
+<text x="1820" y="214.5" font-size="12.5" fill="#111">patient_name</text>
+<text x="2072" y="214.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(150)</text>
+<use href="#fk" x="1797" y="225"/>
+<text x="1820" y="234.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="2072" y="234.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="245"/>
+<text x="1820" y="254.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="2072" y="254.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#fk" x="1797" y="265"/>
+<text x="1820" y="274.5" font-size="12.5" fill="#111">blood_product_id</text>
+<text x="2072" y="274.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="1797" y="285"/>
+<text x="1820" y="294.5" font-size="12.5" fill="#111">quantity_units</text>
+<text x="2072" y="294.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="1797" y="305"/>
+<text x="1820" y="314.5" font-size="12.5" fill="#111">needed_by</text>
+<text x="2072" y="314.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1797" y="325"/>
+<text x="1820" y="334.5" font-size="12.5" fill="#111">note</text>
+<text x="2072" y="334.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#col" x="1797" y="345"/>
+<text x="1820" y="354.5" font-size="12.5" fill="#111">consent_at</text>
+<text x="2072" y="354.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1797" y="365"/>
+<text x="1820" y="374.5" font-size="12.5" fill="#111">status</text>
+<text x="2072" y="374.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(12)</text>
+<use href="#fk" x="1797" y="385"/>
+<text x="1820" y="394.5" font-size="12.5" fill="#111">verified_by</text>
+<text x="2072" y="394.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="405"/>
+<text x="1820" y="414.5" font-size="12.5" fill="#111">verified_at</text>
+<text x="2072" y="414.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1797" y="425"/>
+<text x="1820" y="434.5" font-size="12.5" fill="#111">reject_reason</text>
+<text x="2072" y="434.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="1797" y="445"/>
+<text x="1820" y="454.5" font-size="12.5" fill="#111">resolution_note</text>
+<text x="2072" y="454.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#fk" x="1797" y="465"/>
+<text x="1820" y="474.5" font-size="12.5" fill="#111">linked_support_request_id</text>
+<text x="2072" y="474.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1797" y="485"/>
+<text x="1820" y="494.5" font-size="12.5" fill="#111">linked_campaign_id</text>
+<text x="2072" y="494.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="505"/>
+<text x="1820" y="514.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2072" y="514.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1797" y="525"/>
+<text x="1820" y="534.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2072" y="534.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="1793" y="613" width="290" height="370" fill="#000" opacity=".12"/>
+<rect x="1790" y="610" width="290" height="370" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="1790" y="610" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="1935.0" y="630" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">stock_txns</text>
+<use href="#pk" x="1797" y="645"/>
+<text x="1820" y="654.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2072" y="654.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1797" y="665"/>
+<text x="1820" y="674.5" font-size="12.5" fill="#111">stock_id</text>
+<text x="2072" y="674.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1797" y="685"/>
+<text x="1820" y="694.5" font-size="12.5" fill="#111">lot_id</text>
+<text x="2072" y="694.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="705"/>
+<text x="1820" y="714.5" font-size="12.5" fill="#111">txn_type</text>
+<text x="2072" y="714.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(20)</text>
+<use href="#col" x="1797" y="725"/>
+<text x="1820" y="734.5" font-size="12.5" fill="#111">quantity_change</text>
+<text x="2072" y="734.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="1797" y="745"/>
+<text x="1820" y="754.5" font-size="12.5" fill="#111">quantity_before</text>
+<text x="2072" y="754.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="1797" y="765"/>
+<text x="1820" y="774.5" font-size="12.5" fill="#111">quantity_after</text>
+<text x="2072" y="774.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="1797" y="785"/>
+<text x="1820" y="794.5" font-size="12.5" fill="#111">adjustment_reason</text>
+<text x="2072" y="794.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(25)</text>
+<use href="#col" x="1797" y="805"/>
+<text x="1820" y="814.5" font-size="12.5" fill="#111">reason_note</text>
+<text x="2072" y="814.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#fk" x="1797" y="825"/>
+<text x="1820" y="834.5" font-size="12.5" fill="#111">offer_id</text>
+<text x="2072" y="834.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1797" y="845"/>
+<text x="1820" y="854.5" font-size="12.5" fill="#111">patient_request_id</text>
+<text x="2072" y="854.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1797" y="865"/>
+<text x="1820" y="874.5" font-size="12.5" fill="#111">demand_id</text>
+<text x="2072" y="874.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="1797" y="885"/>
+<text x="1820" y="894.5" font-size="12.5" fill="#111">donation_id</text>
+<text x="2072" y="894.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="905"/>
+<text x="1820" y="914.5" font-size="12.5" fill="#111">idempotency_key</text>
+<text x="2072" y="914.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(100)</text>
+<use href="#fk" x="1797" y="925"/>
+<text x="1820" y="934.5" font-size="12.5" fill="#111">performed_by</text>
+<text x="2072" y="934.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="1797" y="945"/>
+<text x="1820" y="954.5" font-size="12.5" fill="#111">occurred_at</text>
+<text x="2072" y="954.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="1797" y="965"/>
+<text x="1820" y="974.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2072" y="974.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2223" y="73" width="290" height="250" fill="#000" opacity=".12"/>
+<rect x="2220" y="70" width="290" height="250" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2220" y="70" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2365.0" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">stocks</text>
+<use href="#pk" x="2227" y="105"/>
+<text x="2250" y="114.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2502" y="114.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2227" y="125"/>
+<text x="2250" y="134.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="2502" y="134.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2227" y="145"/>
+<text x="2250" y="154.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="2502" y="154.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#fk" x="2227" y="165"/>
+<text x="2250" y="174.5" font-size="12.5" fill="#111">product_spec_id</text>
+<text x="2502" y="174.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="185"/>
+<text x="2250" y="194.5" font-size="12.5" fill="#111">quantity_on_hand</text>
+<text x="2502" y="194.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="205"/>
+<text x="2250" y="214.5" font-size="12.5" fill="#111">quantity_reserved</text>
+<text x="2502" y="214.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="225"/>
+<text x="2250" y="234.5" font-size="12.5" fill="#111">min_stock_level</text>
+<text x="2502" y="234.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="245"/>
+<text x="2250" y="254.5" font-size="12.5" fill="#111">shareable_quantity</text>
+<text x="2502" y="254.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="265"/>
+<text x="2250" y="274.5" font-size="12.5" fill="#111">version</text>
+<text x="2502" y="274.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="285"/>
+<text x="2250" y="294.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2502" y="294.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2227" y="305"/>
+<text x="2250" y="314.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2502" y="314.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2223" y="393" width="290" height="170" fill="#000" opacity=".12"/>
+<rect x="2220" y="390" width="290" height="170" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2220" y="390" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2365.0" y="410" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">stock_lots</text>
+<use href="#pk" x="2227" y="425"/>
+<text x="2250" y="434.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2502" y="434.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2227" y="445"/>
+<text x="2250" y="454.5" font-size="12.5" fill="#111">stock_id</text>
+<text x="2502" y="454.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2227" y="465"/>
+<text x="2250" y="474.5" font-size="12.5" fill="#111">lot_code</text>
+<text x="2502" y="474.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(50)</text>
+<use href="#col" x="2227" y="485"/>
+<text x="2250" y="494.5" font-size="12.5" fill="#111">expires_at</text>
+<text x="2502" y="494.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2227" y="505"/>
+<text x="2250" y="514.5" font-size="12.5" fill="#111">quantity_on_hand</text>
+<text x="2502" y="514.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="525"/>
+<text x="2250" y="534.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2502" y="534.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2227" y="545"/>
+<text x="2250" y="554.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2502" y="554.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2223" y="633" width="290" height="290" fill="#000" opacity=".12"/>
+<rect x="2220" y="630" width="290" height="290" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2220" y="630" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2365.0" y="650" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">demands</text>
+<use href="#pk" x="2227" y="665"/>
+<text x="2250" y="674.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2502" y="674.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2227" y="685"/>
+<text x="2250" y="694.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="2502" y="694.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2227" y="705"/>
+<text x="2250" y="714.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="2502" y="714.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#fk" x="2227" y="725"/>
+<text x="2250" y="734.5" font-size="12.5" fill="#111">product_spec_id</text>
+<text x="2502" y="734.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="745"/>
+<text x="2250" y="754.5" font-size="12.5" fill="#111">required_quantity</text>
+<text x="2502" y="754.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="765"/>
+<text x="2250" y="774.5" font-size="12.5" fill="#111">needed_by</text>
+<text x="2502" y="774.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2227" y="785"/>
+<text x="2250" y="794.5" font-size="12.5" fill="#111">status</text>
+<text x="2502" y="794.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="2227" y="805"/>
+<text x="2250" y="814.5" font-size="12.5" fill="#111">note</text>
+<text x="2502" y="814.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="2227" y="825"/>
+<text x="2250" y="834.5" font-size="12.5" fill="#111">is_emergency</text>
+<text x="2502" y="834.5" text-anchor="end" font-size="10.5" fill="#555">BOOLEAN</text>
+<use href="#fk" x="2227" y="845"/>
+<text x="2250" y="854.5" font-size="12.5" fill="#111">support_request_id</text>
+<text x="2502" y="854.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2227" y="865"/>
+<text x="2250" y="874.5" font-size="12.5" fill="#111">patient_request_id</text>
+<text x="2502" y="874.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2227" y="885"/>
+<text x="2250" y="894.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2502" y="894.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2227" y="905"/>
+<text x="2250" y="914.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2502" y="914.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2223" y="993" width="290" height="270" fill="#000" opacity=".12"/>
+<rect x="2220" y="990" width="290" height="270" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2220" y="990" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2365.0" y="1010" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">forecast_snapshots</text>
+<use href="#pk" x="2227" y="1025"/>
+<text x="2250" y="1034.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2502" y="1034.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2227" y="1045"/>
+<text x="2250" y="1054.5" font-size="12.5" fill="#111">hospital_id</text>
+<text x="2502" y="1054.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2227" y="1065"/>
+<text x="2250" y="1074.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="2502" y="1074.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#fk" x="2227" y="1085"/>
+<text x="2250" y="1094.5" font-size="12.5" fill="#111">product_spec_id</text>
+<text x="2502" y="1094.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2227" y="1105"/>
+<text x="2250" y="1114.5" font-size="12.5" fill="#111">origin</text>
+<text x="2502" y="1114.5" text-anchor="end" font-size="10.5" fill="#555">DATE</text>
+<use href="#col" x="2227" y="1125"/>
+<text x="2250" y="1134.5" font-size="12.5" fill="#111">target_date</text>
+<text x="2502" y="1134.5" text-anchor="end" font-size="10.5" fill="#555">DATE</text>
+<use href="#col" x="2227" y="1145"/>
+<text x="2250" y="1154.5" font-size="12.5" fill="#111">h</text>
+<text x="2502" y="1154.5" text-anchor="end" font-size="10.5" fill="#555">SMALLINT</text>
+<use href="#col" x="2227" y="1165"/>
+<text x="2250" y="1174.5" font-size="12.5" fill="#111">method</text>
+<text x="2502" y="1174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#col" x="2227" y="1185"/>
+<text x="2250" y="1194.5" font-size="12.5" fill="#111">predicted</text>
+<text x="2502" y="1194.5" text-anchor="end" font-size="10.5" fill="#555">DOUBLE</text>
+<use href="#col" x="2227" y="1205"/>
+<text x="2250" y="1214.5" font-size="12.5" fill="#111">baseline</text>
+<text x="2502" y="1214.5" text-anchor="end" font-size="10.5" fill="#555">DOUBLE</text>
+<use href="#col" x="2227" y="1225"/>
+<text x="2250" y="1234.5" font-size="12.5" fill="#111">model_version</text>
+<text x="2502" y="1234.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(40)</text>
+<use href="#col" x="2227" y="1245"/>
+<text x="2250" y="1254.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2502" y="1254.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2653" y="73" width="290" height="190" fill="#000" opacity=".12"/>
+<rect x="2650" y="70" width="290" height="190" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2650" y="70" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2795.0" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">products</text>
+<use href="#pk" x="2657" y="105"/>
+<text x="2680" y="114.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2932" y="114.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="125"/>
+<text x="2680" y="134.5" font-size="12.5" fill="#111">code</text>
+<text x="2932" y="134.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(30)</text>
+<use href="#col" x="2657" y="145"/>
+<text x="2680" y="154.5" font-size="12.5" fill="#111">name</text>
+<text x="2932" y="154.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(150)</text>
+<use href="#col" x="2657" y="165"/>
+<text x="2680" y="174.5" font-size="12.5" fill="#111">kind</text>
+<text x="2932" y="174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(15)</text>
+<use href="#col" x="2657" y="185"/>
+<text x="2680" y="194.5" font-size="12.5" fill="#111">description</text>
+<text x="2932" y="194.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="2657" y="205"/>
+<text x="2680" y="214.5" font-size="12.5" fill="#111">is_active</text>
+<text x="2932" y="214.5" text-anchor="end" font-size="10.5" fill="#555">BOOLEAN</text>
+<use href="#col" x="2657" y="225"/>
+<text x="2680" y="234.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2932" y="234.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="245"/>
+<text x="2680" y="254.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2932" y="254.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2653" y="333" width="290" height="210" fill="#000" opacity=".12"/>
+<rect x="2650" y="330" width="290" height="210" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2650" y="330" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2795.0" y="350" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">product_specs</text>
+<use href="#pk" x="2657" y="365"/>
+<text x="2680" y="374.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2932" y="374.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#fk" x="2657" y="385"/>
+<text x="2680" y="394.5" font-size="12.5" fill="#111">product_id</text>
+<text x="2932" y="394.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="405"/>
+<text x="2680" y="414.5" font-size="12.5" fill="#111">code</text>
+<text x="2932" y="414.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(30)</text>
+<use href="#col" x="2657" y="425"/>
+<text x="2680" y="434.5" font-size="12.5" fill="#111">name</text>
+<text x="2932" y="434.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(150)</text>
+<use href="#col" x="2657" y="445"/>
+<text x="2680" y="454.5" font-size="12.5" fill="#111">unit_volume_ml</text>
+<text x="2932" y="454.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="465"/>
+<text x="2680" y="474.5" font-size="12.5" fill="#111">is_default</text>
+<text x="2932" y="474.5" text-anchor="end" font-size="10.5" fill="#555">BOOLEAN</text>
+<use href="#col" x="2657" y="485"/>
+<text x="2680" y="494.5" font-size="12.5" fill="#111">is_active</text>
+<text x="2932" y="494.5" text-anchor="end" font-size="10.5" fill="#555">BOOLEAN</text>
+<use href="#col" x="2657" y="505"/>
+<text x="2680" y="514.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2932" y="514.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="525"/>
+<text x="2680" y="534.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2932" y="534.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2653" y="613" width="290" height="310" fill="#000" opacity=".12"/>
+<rect x="2650" y="610" width="290" height="310" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2650" y="610" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2795.0" y="630" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">hospital_requests</text>
+<use href="#pk" x="2657" y="645"/>
+<text x="2680" y="654.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2932" y="654.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="665"/>
+<text x="2680" y="674.5" font-size="12.5" fill="#111">request_code</text>
+<text x="2932" y="674.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(30)</text>
+<use href="#fk" x="2657" y="685"/>
+<text x="2680" y="694.5" font-size="12.5" fill="#111">requesting_hospital_id</text>
+<text x="2932" y="694.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="705"/>
+<text x="2680" y="714.5" font-size="12.5" fill="#111">blood_group</text>
+<text x="2932" y="714.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(3)</text>
+<use href="#fk" x="2657" y="725"/>
+<text x="2680" y="734.5" font-size="12.5" fill="#111">product_spec_id</text>
+<text x="2932" y="734.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="745"/>
+<text x="2680" y="754.5" font-size="12.5" fill="#111">quantity_needed</text>
+<text x="2932" y="754.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="765"/>
+<text x="2680" y="774.5" font-size="12.5" fill="#111">priority</text>
+<text x="2932" y="774.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(10)</text>
+<use href="#col" x="2657" y="785"/>
+<text x="2680" y="794.5" font-size="12.5" fill="#111">needed_by</text>
+<text x="2932" y="794.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="805"/>
+<text x="2680" y="814.5" font-size="12.5" fill="#111">status</text>
+<text x="2932" y="814.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(20)</text>
+<use href="#col" x="2657" y="825"/>
+<text x="2680" y="834.5" font-size="12.5" fill="#111">note</text>
+<text x="2932" y="834.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#fk" x="2657" y="845"/>
+<text x="2680" y="854.5" font-size="12.5" fill="#111">created_by</text>
+<text x="2932" y="854.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="865"/>
+<text x="2680" y="874.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2932" y="874.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="885"/>
+<text x="2680" y="894.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2932" y="894.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="905"/>
+<text x="2680" y="914.5" font-size="12.5" fill="#111">closed_at</text>
+<text x="2932" y="914.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<g><rect x="2653" y="993" width="290" height="390" fill="#000" opacity=".12"/>
+<rect x="2650" y="990" width="290" height="390" fill="#FFFFA8" stroke="#3A3A3A" stroke-width="1.3"/>
+<rect x="2650" y="990" width="290" height="30" fill="#FFFF8A" stroke="#3A3A3A" stroke-width="1.3"/>
+<text x="2795.0" y="1010" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">request_offers</text>
+<use href="#pk" x="2657" y="1025"/>
+<text x="2680" y="1034.5" font-size="12.5" fill="#111" font-weight="bold">id</text>
+<text x="2932" y="1034.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2657" y="1045"/>
+<text x="2680" y="1054.5" font-size="12.5" fill="#111">request_id</text>
+<text x="2932" y="1054.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#fk" x="2657" y="1065"/>
+<text x="2680" y="1074.5" font-size="12.5" fill="#111">supplier_hospital_id</text>
+<text x="2932" y="1074.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="1085"/>
+<text x="2680" y="1094.5" font-size="12.5" fill="#111">status</text>
+<text x="2932" y="1094.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(15)</text>
+<use href="#col" x="2657" y="1105"/>
+<text x="2680" y="1114.5" font-size="12.5" fill="#111">quantity_requested</text>
+<text x="2932" y="1114.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="1125"/>
+<text x="2680" y="1134.5" font-size="12.5" fill="#111">quantity</text>
+<text x="2932" y="1134.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="1145"/>
+<text x="2680" y="1154.5" font-size="12.5" fill="#111">quantity_received</text>
+<text x="2932" y="1154.5" text-anchor="end" font-size="10.5" fill="#555">INTEGER</text>
+<use href="#col" x="2657" y="1165"/>
+<text x="2680" y="1174.5" font-size="12.5" fill="#111">reject_reason</text>
+<text x="2932" y="1174.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#col" x="2657" y="1185"/>
+<text x="2680" y="1194.5" font-size="12.5" fill="#111">failure_reason</text>
+<text x="2932" y="1194.5" text-anchor="end" font-size="10.5" fill="#555">VARCHAR(500)</text>
+<use href="#fk" x="2657" y="1205"/>
+<text x="2680" y="1214.5" font-size="12.5" fill="#111">responded_by</text>
+<text x="2932" y="1214.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="1225"/>
+<text x="2680" y="1234.5" font-size="12.5" fill="#111">responded_at</text>
+<text x="2932" y="1234.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#fk" x="2657" y="1245"/>
+<text x="2680" y="1254.5" font-size="12.5" fill="#111">dispatched_by</text>
+<text x="2932" y="1254.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="1265"/>
+<text x="2680" y="1274.5" font-size="12.5" fill="#111">dispatched_at</text>
+<text x="2932" y="1274.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#fk" x="2657" y="1285"/>
+<text x="2680" y="1294.5" font-size="12.5" fill="#111">received_by</text>
+<text x="2932" y="1294.5" text-anchor="end" font-size="10.5" fill="#555">BIGINT</text>
+<use href="#col" x="2657" y="1305"/>
+<text x="2680" y="1314.5" font-size="12.5" fill="#111">received_at</text>
+<text x="2932" y="1314.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="1325"/>
+<text x="2680" y="1334.5" font-size="12.5" fill="#111">note</text>
+<text x="2932" y="1334.5" text-anchor="end" font-size="10.5" fill="#555">TEXT</text>
+<use href="#col" x="2657" y="1345"/>
+<text x="2680" y="1354.5" font-size="12.5" fill="#111">created_at</text>
+<text x="2932" y="1354.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+<use href="#col" x="2657" y="1365"/>
+<text x="2680" y="1374.5" font-size="12.5" fill="#111">updated_at</text>
+<text x="2932" y="1374.5" text-anchor="end" font-size="10.5" fill="#555">TIMESTAMP</text>
+</g>
+<use href="#pk" x="70" y="1435"/><text x="92" y="1444" font-size="12">Khóa chính (PK)</text>
+<use href="#fk" x="210" y="1435"/><text x="232" y="1444" font-size="12">Khóa ngoại (FK)</text>
+<line x1="360" y1="1440" x2="420" y2="1440" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="6,4"/><text x="430" y="1444" font-size="12">Quan hệ 1 – n (chân chim ở phía "nhiều")</text>
+</svg>

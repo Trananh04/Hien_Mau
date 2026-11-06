@@ -114,6 +114,7 @@ SCREENS = [
     S("SCR-57", "Cảnh báo toàn hệ thống", "Quản trị", (ADMIN,), ("bloodbank:admin_alerts",)),
     S("SCR-58", "Theo dõi trợ lý hỏi đáp", "Quản trị", (ADMIN,), ("bloodbank:admin_assistant",)),
     S("SCR-59", "Dự báo AI", "Quản trị", (ADMIN,), ("bloodbank:admin_forecast",)),
+    S("SCR-60", "AI gợi ý người hiến", "Quản trị", (ADMIN,), ("bloodbank:admin_donor_ai",)),
     S("SCR-50", "Người dùng", "Quản trị", (ADMIN,), ("bloodbank:admin_users",)),
     S("SCR-51", "Bệnh viện & tài khoản nhân viên", "Quản trị", (ADMIN,), (
         "bloodbank:admin_hospitals", "bloodbank:admin_hospital_create", "bloodbank:admin_hospital_edit")),

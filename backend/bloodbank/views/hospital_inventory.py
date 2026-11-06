@@ -12,6 +12,7 @@ from bloodbank.services import inventory as inv
 from bloodbank.services import callout, donor_match, lab
 from bloodbank.services import forecast as fc
 from bloodbank.services.common import BusinessError
+from bloodbank.services.donor_ml import predict as donor_ai
 
 from .helpers import attempt, date_or_none, int_or_none, new_key, paginate, safe_next
 
@@ -198,10 +199,16 @@ def donor_suggest(request):
         shortage = int_or_none(request.GET.get("thieu"))    # từ dự báo (thiếu dự kiến) hoặc ca khẩn (phần bệnh viện chưa lo)
     rows = donor_match.suggest(h, bg, radius, mode=mode)
     stats = donor_match.response_stats(h)
-    n_suggest = min(donor_match.suggested_count(shortage, stats["rate"], mode), len(rows))
+    ai = bool(rows) and "prob" in rows[0]               # danh sách đang xếp theo khả năng nhận lời (AI)
+    if ai:
+        n_suggest = donor_ai.count_for(rows, shortage, donor_match.MAX_SEND)
+    else:
+        n_suggest = min(donor_match.suggested_count(shortage, stats["rate"], mode), len(rows))
     for i, r in enumerate(rows):
         r["preselected"] = i < n_suggest
     return render(request, "hospital/donor_suggest.html", {
+        "ai": ai, "ai_meta": donor_ai.active_meta() if ai else None,
+        "ai_expected": round(donor_ai.expected(rows, n_suggest), 1) if ai else None,
         "blood_group": bg, "mode": mode, "radius": radius, "radius_choices": donor_match.RADIUS_CHOICES,
         "can_radius": h.latitude is not None, "shortage": shortage, "rows": rows, "stats": stats,
         "n_suggest": n_suggest, "max_send": donor_match.MAX_SEND,

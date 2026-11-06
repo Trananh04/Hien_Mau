@@ -6,6 +6,8 @@ mã còn nằm trong đó — nên không thể gửi tới người không đ�
 phiền theo từng người: mỗi người tối đa 1 lời kêu gọi / `donor_invite_cooldown_days` ngày (mọi bệnh viện); kêu gọi
 KHẨN dùng `donor_invite_urgent_cooldown_days` và mời đến thẳng bệnh viện trong ngày thay vì đợt hiến.
 """
+import logging
+
 from django.utils import timezone
 
 from accounts.models import BLOOD_GROUP_VALUES, User
@@ -37,7 +39,8 @@ def with_callout_info(hospital, rows):
         mode = "urgent" if r.get("urgent") else "stock"
         key = (r["blood_group"], mode)
         if r["shortage"] and key not in seen:
-            seen[key] = (len(donor_match.suggest(hospital, r["blood_group"], default_radius(hospital, mode), mode=mode)),
+            seen[key] = (len(donor_match.suggest(hospital, r["blood_group"], default_radius(hospital, mode), mode=mode,
+                                                 rank=False)),
                          last_callout(hospital, r["blood_group"]))
         r["mode"] = mode
         r["callout_count"], r["last_callout"] = seen.get(key, (0, None))
@@ -54,10 +57,12 @@ def donor_callout(staff, blood_group, codes, radius_km=None, request=None, mode=
     mode = donor_match.mode_of(mode)
     hospital, now = staff.hospital, timezone.now()
     with business_transaction():
-        first = {r["code"]: r["user_id"] for r in donor_match.suggest(hospital, blood_group, radius_km, now, mode)}
+        first = {r["code"]: r["user_id"] for r in donor_match.suggest(hospital, blood_group, radius_km, now, mode,
+                                                                       rank=False)}
         # Khóa tài khoản được chọn để hai nhân viên (hoặc hai bệnh viện) gửi cùng lúc không mời trùng người
         list(User.objects.select_for_update().filter(pk__in=[first[c] for c in codes if c in first]).order_by("pk"))
-        pool = {r["code"]: r["user_id"] for r in donor_match.suggest(hospital, blood_group, radius_km, now, mode)}
+        pool = {r["code"]: r["user_id"] for r in donor_match.suggest(hospital, blood_group, radius_km, now, mode,
+                                                                      rank=False)}
         ids = [pool[c] for c in codes if c in pool]
         require(ids, "ERR-STATE-INVALID",
                 "Những người đã chọn không còn đủ điều kiện (vừa được kêu gọi hoặc vừa hiến máu). Tải lại danh sách gợi ý.")
@@ -80,7 +85,25 @@ def donor_callout(staff, blood_group, codes, radius_km=None, request=None, mode=
             title = f"{hospital.name} đang cần máu nhóm {blood_group}"
         alert(users, "donor_callout", title,
               f"Bạn đã đủ thời gian nghỉ giữa 2 lần hiến. {where} Bác sĩ sẽ khám sàng lọc trước khi hiến.", entity=callout)
-        audit(staff.user, callout, "donor_callout",
-              new={"blood_group": blood_group, "mode": mode, "recipients": len(users), "codes": [c for c in codes if c in pool],
-                   "campaign_id": campaign.pk if campaign else None}, hospital=hospital, request=request)
+        new = {"blood_group": blood_group, "mode": mode, "recipients": len(users), "codes": [c for c in codes if c in pool],
+               "campaign_id": campaign.pk if campaign else None}
+        ai = _ai_probs(hospital, ids, mode, now, campaign is not None)
+        if ai:
+            new["ai"] = ai          # để so khả năng nhận lời AI dự đoán với thực tế (donor_ml.monitor)
+        audit(staff.user, callout, "donor_callout", new=new, hospital=hospital, request=request)
     return len(users), campaign, len(codes) - len(users)
+
+
+def _ai_probs(hospital, ids, mode, now, has_campaign):
+    """{"version", "probs": {mã ẩn danh: xác suất}} khi danh sách đang do AI xếp hạng; lỗi AI không chặn việc gửi."""
+    from bloodbank.services.donor_ml import predict
+
+    try:
+        scored = predict.score(hospital, ids, mode, now, has_campaign)
+    except Exception:
+        logging.getLogger(__name__).exception("Không tính được khả năng nhận lời khi gửi kêu gọi")
+        return None
+    if not scored:
+        return None
+    return {"version": (predict.active_meta() or {}).get("version"),
+            "probs": {donor_match.donor_code(hospital, uid): round(p, 4) for uid, (p, _) in scored.items()}}

@@ -182,11 +182,14 @@ FORECAST_SCHEDULED_TRAINING = True    # tác vụ định kỳ được phép hu
 # để không làm chậm web chạy cùng máy
 FORECAST_TRAIN_HOURS = tuple(int(x) for x in os.environ.get("FORECAST_TRAIN_HOURS", "2,5").split(","))
 FORECAST_TRAIN_THREADS = int(os.environ.get("FORECAST_TRAIN_THREADS", "2"))
+# AI gợi ý người hiến (dự đoán khả năng nhận lời): mô hình do `manage.py train_donor_model` ghi ra; học lại cùng khung giờ
+DONOR_AI_MODEL_DIR = Path(os.environ.get("DONOR_AI_MODEL_DIR", BASE_DIR / "var" / "donor_ai"))
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     import tempfile
 
     FORECAST_MODEL_DIR = Path(tempfile.gettempdir()) / "hien_mau_test_forecast"   # test không đụng mô hình thật
     FORECAST_SCHEDULED_TRAINING = False
+    DONOR_AI_MODEL_DIR = Path(tempfile.gettempdir()) / "hien_mau_test_donor_ai"
 
 # Email: chạy thật (DEBUG=0) có EMAIL_HOST → gửi qua SMTP (Resend: smtp.resend.com:465, user "resend", mật khẩu = API key).
 # Dev (DEBUG=1) luôn in ra console dù .env có EMAIL_HOST — dùng chung .env với bản chạy thật mà không gửi mail thật.

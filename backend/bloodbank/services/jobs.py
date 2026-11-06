@@ -100,6 +100,7 @@ def run_all(now=None):
         "chat_purged": _purge_chat(now),
         "emails_retried": outbox.sweep(now),
         **_forecast(now),
+        **_donor_ai(now),
     }
 
 
@@ -115,6 +116,17 @@ def _forecast(now=None):
     except Exception:
         logging.getLogger(__name__).exception("Tác vụ dự báo thất bại")
         return {"forecast_snapshots": "error"}
+
+
+def _donor_ai(now=None):
+    # Lỗi AI gợi ý người hiến (kể cả thiếu thư viện) không được chặn các tác vụ nghiệp vụ
+    try:
+        from bloodbank.services.donor_ml import monitor
+
+        return {"donor_ai_retrain": monitor.nightly_check(now)}
+    except Exception:
+        logging.getLogger(__name__).exception("Tác vụ AI gợi ý người hiến thất bại")
+        return {"donor_ai_retrain": "error"}
 
 
 def _purge_chat(now=None):

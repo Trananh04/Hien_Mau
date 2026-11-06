@@ -235,6 +235,9 @@ def save_setting(actor, key, raw, request=None):
     elif isinstance(default, int):
         require(isinstance(value, int) and not isinstance(value, bool) and value > 0, "ERR-VALIDATION",
                 "Giá trị phải là số nguyên dương.")
+    elif isinstance(default, float):            # tỷ lệ (ví dụ phần danh sách dành cho người mới)
+        require(isinstance(value, (int, float)) and not isinstance(value, bool) and 0 <= value <= 0.5,
+                "ERR-VALIDATION", "Giá trị phải là tỷ lệ từ 0 đến 0.5 (ví dụ 0.15).")
     with business_transaction():
         row, _ = SystemSetting.objects.get_or_create(
             setting_key=key, defaults={"setting_value": value, "description": SystemSetting.DEFAULTS[key][1]})
@@ -266,6 +269,29 @@ def forecast_request_training(actor, request=None):
     registry.request_training()
     with business_transaction():
         audit(actor, None, "create", new={"train_requested": True}, entity_type="forecast_model", entity_id=0,
+              request=request)
+
+
+# ---------------------------------------------------------------- AI gợi ý người hiến (cùng cách quản lý với dự báo)
+def donor_ai_activate(actor, version, request=None):
+    from bloodbank.services.donor_ml import registry
+
+    old = (registry.active_meta() or {}).get("version")
+    try:
+        registry.activate(str(version or ""))
+    except (FileNotFoundError, OSError, ValueError):
+        raise BusinessError("ERR-NOT-FOUND")
+    with business_transaction():
+        audit(actor, None, "update", old={"version": old}, new={"version": version}, entity_type="donor_ai_model",
+              entity_id=0, request=request)
+
+
+def donor_ai_request_training(actor, request=None):
+    from bloodbank.services.donor_ml import registry
+
+    registry.request_training()
+    with business_transaction():
+        audit(actor, None, "create", new={"train_requested": True}, entity_type="donor_ai_model", entity_id=0,
               request=request)
 
 

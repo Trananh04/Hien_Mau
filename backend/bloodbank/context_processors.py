@@ -34,6 +34,7 @@ ADMIN_NAV = [
     ("Hệ thống", "Phân quyền", "bloodbank:admin_permissions", "key-round"),
     ("Hệ thống", "Trợ lý hỏi đáp", "bloodbank:admin_assistant", "message-circle-heart"),
     ("Hệ thống", "Dự báo AI", "bloodbank:admin_forecast", "chart-line"),
+    ("Hệ thống", "AI gợi ý người hiến", "bloodbank:admin_donor_ai", "user-search"),
     ("Hệ thống", "Cấu hình", "bloodbank:admin_settings", "sliders-horizontal"),
     ("Hệ thống", "Nhật ký hệ thống", "bloodbank:admin_audit", "scroll-text"),
 ]
